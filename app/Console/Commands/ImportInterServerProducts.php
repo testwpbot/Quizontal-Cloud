@@ -135,11 +135,24 @@ class ImportInterServerProducts extends Command
     {
         $stock = $orderForm['locationStock'] ?? [];
         if (!is_array($stock) || !$stock) return true;
+        $hasRecognisableStockValue = false;
         foreach ($stock as $location) {
-            $value = $location[$platform] ?? false;
-            if ($value === true || $this->number($value) > 0 || (is_string($value) && strtolower($value) === 'yes')) return true;
+            if (!is_array($location) || !array_key_exists($platform, $location)) continue;
+            $value = $location[$platform];
+            if (is_bool($value)) {
+                $hasRecognisableStockValue = true;
+                if ($value) return true;
+                continue;
+            }
+            if (is_numeric($value)) {
+                $hasRecognisableStockValue = true;
+                if ((float) $value > 0) return true;
+                continue;
+            }
+            if (is_string($value) && in_array(strtolower($value), ['yes', 'available', 'in stock'], true)) return true;
         }
-        return false;
+        // Keep plans visible when InterServer changes this optional stock field's structure.
+        return !$hasRecognisableStockValue;
     }
 
     private function normalize(array $raw, int $index, float $rate, float $profit): array
