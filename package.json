@@ -1,14 +1,17 @@
 {
-  "name": "quizontal-cloud",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Quizontal Cloud VPS storefront and InterServer catalog importer",
-  "type": "module",
-  "scripts": {
-    "dev": "node --watch server.js",
-    "start": "node server.js",
-    "import:products": "node scripts/import-products.js"
-  },
-  "engines": { "node": ">=18" },
-  "dependencies": { "express": "^4.21.2" }
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.7"
+    }
 }

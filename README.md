@@ -1,41 +1,65 @@
-# Quizontal Cloud
+# Quizontal Cloud — Laravel + FossBilling
 
-A dark/light VPS storefront for **Quizontal Cloud**, built to display InterServer VPS catalog prices in Sri Lankan Rupees (LKR), after a fixed USD profit markup. It links customers to FossBilling for sign-in and checkout.
+This repository is the **Laravel 12 storefront** for Quizontal Cloud. It displays an InterServer VPS catalog in LKR and sends customers to a dedicated **FossBilling client area** for billing, invoices, support and service management.
 
-## Quick start
+> FossBilling is a separate PHP application with its own database and installer. It must not be embedded inside Laravel's `public/` directory. Deploy it on a dedicated subdomain such as `https://billing.yourdomain.com`, then point the Laravel `FOSSBILLING_URL` at that address. The storefront's **Client area** button and `/client-area` route redirect there.
+
+## Local Laravel setup
+
+The project requires PHP 8.2+, Composer, and the PHP extensions required by Laravel. This coding environment does not include PHP or Composer, so dependency installation and automated tests must be run on your development machine or server.
 
 ```bash
 cp .env.example .env
-npm install
-npm run dev
+composer install
+php artisan key:generate
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-Open `http://localhost:3000`. The site initially displays the clearly-labelled demo catalog in `data/catalog.sample.json` so it remains usable before the first import.
+## InterServer catalog and LKR pricing
 
-## Production configuration
+Set the following values in `.env`:
 
-1. Create a FossBilling installation (normally at `billing.your-domain.com`). Set `FOSSBILLING_URL` to it. The **Client area** link uses its normal client-login route. Set `FOSSBILLING_ORDER_URL` to your exact FossBilling order URL after you have created matching products there.
-2. Set the InterServer API URL, API key, ExchangeRate-API key, a long random `IMPORT_TOKEN`, and `PROFIT_USD=1` in `.env`. Keep `.env` outside git.
-3. Import catalog data with either:
+```dotenv
+INTERSERVER_API_URL=https://my.interserver.net/apiv2
+INTERSERVER_API_KEY=your_new_interserver_key
+EXCHANGERATE_API_KEY=your_new_exchangerate_api_key
+PROFIT_USD=1
+FOSSBILLING_URL=https://billing.example.com
+FOSSBILLING_ORDER_URL=https://billing.example.com/order
+```
 
-   ```bash
-   npm run import:products
-   # or
-   curl -X POST https://your-domain/api/admin/import -H "Authorization: Bearer YOUR_IMPORT_TOKEN"
-   ```
+Then import products:
 
-   The importer requests InterServer's VPS ordering-information endpoint (`/vps/order`) with `X-API-KEY`, obtains the USD→LKR rate from ExchangeRate-API, then saves catalog prices as `(provider monthly USD + PROFIT_USD) × USD/LKR`. It supports several common response shapes but does not create provider orders.
-4. Review `data/products.json` after importing, then create the equivalent products in FossBilling. Set an order URL that maps product IDs to your FossBilling product/order flow. This separation is intentional: billing should collect payment before a provider order is placed.
+```bash
+php artisan interserver:import-products
+```
 
-## Security and fulfilment
+The command calls InterServer's VPS ordering-information endpoint, obtains the USD/LKR rate, adds exactly `PROFIT_USD` to the provider monthly USD price, converts it to LKR, and stores the private catalog in `storage/app/private/catalog.json`. Until then, the storefront shows a clearly marked demo catalog.
 
-- The browser never sees provider or exchange-rate API keys. The import runs server-side only and its HTTP trigger is bearer-token protected.
-- Restrict `/api/admin/import` at your reverse proxy as well, and run it from a scheduled job (e.g. daily) rather than exposing it widely.
-- FossBilling and InterServer provisioning require a server-side module/webhook and FossBilling API credentials, which are not included here. Do **not** issue InterServer provisioning requests from this public storefront.
-- Make sure your advertised rate, $1 markup policy, taxes, payment gateway charges, refund policy, and LKR rounding comply with your business requirements.
+## FossBilling installation
 
-## Routes
+On a PHP 8.2+ server with MySQL 8+/MariaDB 10.3+, run the deployment helper from this repository (or follow `deploy/FOSS_BILLING.md`):
 
-- `GET /api/catalog` — public normalized catalog
-- `GET /api/health` — service health
-- `POST /api/admin/import` — refresh catalog; `Authorization: Bearer <IMPORT_TOKEN>`
+```bash
+export FOSSBILLING_DIR=/var/www/billing
+sudo -E bash deploy/install-fossbilling.sh
+```
+
+Create a separate MySQL database/user first, complete FossBilling's web installer at the billing subdomain, and create matching products in its admin panel. Use a FossBilling payment gateway and an InterServer provisioning module/webhook before accepting orders. Do not place InterServer orders directly from the public browser.
+
+## Scheduled updates
+
+Run this daily as the web-server user after Laravel is installed:
+
+```cron
+15 2 * * * cd /var/www/quizontal-cloud && php artisan interserver:import-products >> /dev/null 2>&1
+```
+
+FossBilling also needs its own scheduler, described in `deploy/FOSS_BILLING.md`.
+
+## Security
+
+- Never commit `.env`, provider keys, database passwords, or FossBilling admin credentials.
+- Rotate any credential that has been pasted into a chat or other public location.
+- Use HTTPS for both storefront and billing portal.
+- Review provider prices, LKR rounding, taxes, gateway fees, refund terms, and local business requirements before enabling checkout.

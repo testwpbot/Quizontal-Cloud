@@ -1,9 +1,0 @@
-{
-  "updatedAt": "Demo catalog — import your InterServer plans before going live",
-  "exchangeRate": 300,
-  "products": [
-    {"id":"demo-kvm-1","name":"Cloud 1","category":"general","providerProductId":"demo-1","cpu":1,"ramGb":2,"storageGb":40,"storageType":"NVMe","bandwidthGb":2000,"basePriceUsd":6,"retailPriceUsd":7,"priceLkr":2100,"available":true},
-    {"id":"demo-kvm-2","name":"Cloud 2","category":"general","providerProductId":"demo-2","cpu":2,"ramGb":4,"storageGb":80,"storageType":"NVMe","bandwidthGb":4000,"basePriceUsd":12,"retailPriceUsd":13,"priceLkr":3900,"available":true},
-    {"id":"demo-kvm-4","name":"Cloud 4","category":"general","providerProductId":"demo-4","cpu":4,"ramGb":8,"storageGb":160,"storageType":"NVMe","bandwidthGb":8000,"basePriceUsd":24,"retailPriceUsd":25,"priceLkr":7500,"available":true}
-  ]
-}
