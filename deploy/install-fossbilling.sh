@@ -31,8 +31,17 @@ release_json=$(curl --fail --silent --show-error --location --retry 3 \
   -H 'Accept: application/vnd.github+json' \
   -H 'User-Agent: Quizontal-Cloud-FossBilling-Installer' \
   https://api.github.com/repos/FOSSBilling/FOSSBilling/releases/latest)
-release_url=$(printf '%s\n' "$release_json" | sed -n 's/^[[:space:]]*"browser_download_url": "\(.*FOSSBilling-.*\.zip\)"[,]\{0,1\}$/\1/p' | head -n 1)
-[[ -n "$release_url" ]] || { echo 'Could not determine the official FOSSBilling release download URL.' >&2; exit 1; }
+release_url=$(printf '%s' "$release_json" | php -r '
+    $release = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
+    foreach ($release["assets"] ?? [] as $asset) {
+        if (preg_match("/^FOSSBilling-.*\\.zip$/", $asset["name"] ?? "")) {
+            echo $asset["browser_download_url"];
+            exit(0);
+        }
+    }
+    exit(1);
+') || { echo 'Could not parse the official FOSSBilling release metadata from GitHub.' >&2; exit 1; }
+[[ -n "$release_url" ]] || { echo 'The latest FOSSBilling GitHub release did not contain a FOSSBilling zip asset.' >&2; exit 1; }
 curl --fail --location --retry 3 "$release_url" --output "$tmp/fossbilling.zip"
 unzip -q "$tmp/fossbilling.zip" -d "$tmp/extracted"
 # Stable archives may either contain htdocs directly or inside one top-level directory.
