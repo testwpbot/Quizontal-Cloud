@@ -1,0 +1,14 @@
+{
+  "name": "quizontal-cloud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quizontal Cloud VPS storefront and InterServer catalog importer",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "import:products": "node scripts/import-products.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.21.2" }
+}
