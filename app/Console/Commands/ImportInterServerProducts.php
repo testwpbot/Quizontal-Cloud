@@ -11,7 +11,7 @@ use RuntimeException;
 
 class ImportInterServerProducts extends Command
 {
-    protected $signature = 'interserver:import-products';
+    protected $signature = 'interserver:import-products {--debug : Print InterServer response keys only; never prints credentials}';
     protected $description = 'Import the InterServer VPS catalog, add the USD margin, and save LKR prices';
 
     public function handle(): int
@@ -38,7 +38,16 @@ class ImportInterServerProducts extends Command
         $rate = (float) data_get($exchange, 'conversion_rates.LKR');
         if ($rate <= 0) throw new RuntimeException('ExchangeRate-API did not return a valid LKR rate.');
         $products = collect($this->unwrap($provider))->map(fn ($item, $index) => $this->normalize((array) $item, $index, $rate, $profit))->filter(fn ($product) => $product['basePriceUsd'] > 0)->values()->all();
-        if (!$products) { $this->error('No billable VPS plans were found. Update the normalizer for the API response schema.'); return self::FAILURE; }
+        if (!$products) {
+            $this->error('No billable VPS plans were found. The InterServer response shape needs to be mapped before it can be imported.');
+            $this->line('Run: php artisan interserver:import-products --debug');
+            if ($this->option('debug')) {
+                $this->newLine();
+                $this->info('InterServer response structure (field names only; no credentials or values):');
+                foreach ($this->describePayload($provider) as $line) $this->line($line);
+            }
+            return self::FAILURE;
+        }
         Storage::disk('local')->put('catalog.json', json_encode(['updatedAt' => now()->toIso8601String(), 'exchangeRate' => $rate, 'profitUsd' => $profit, 'products' => $products], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         $this->info('Imported '.count($products)." products at USD/LKR {$rate} with a USD {$profit} margin.");
         return self::SUCCESS;
@@ -49,6 +58,23 @@ class ImportInterServerProducts extends Command
         if (is_array($payload) && array_is_list($payload)) return $payload;
         foreach (['products', 'plans', 'vps', 'data', 'items', 'orders'] as $key) if (is_array(data_get($payload, $key)) && array_is_list(data_get($payload, $key))) return data_get($payload, $key);
         return collect((array) $payload)->filter(fn ($value) => is_array($value) && array_is_list($value))->flatMap(fn ($items, $platform) => collect($items)->map(fn ($item) => array_merge((array) $item, ['platform' => $item['platform'] ?? $platform])))->all();
+    }
+
+    /** @return array<int, string> */
+    private function describePayload(mixed $value, string $path = '$', int $depth = 0): array
+    {
+        if ($depth > 3 || !is_array($value)) return [];
+        if (array_is_list($value)) {
+            if (!$value) return ["{$path}: empty list"];
+            $first = $value[0] ?? null;
+            if (!is_array($first)) return ["{$path}: list of ".gettype($first)];
+            return array_merge(["{$path}: list; item keys: ".implode(', ', array_keys($first))], $this->describePayload($first, "{$path}[0]", $depth + 1));
+        }
+        $lines = ["{$path}: object keys: ".implode(', ', array_keys($value))];
+        foreach ($value as $key => $child) {
+            if (is_array($child)) $lines = array_merge($lines, $this->describePayload($child, "{$path}.{$key}", $depth + 1));
+        }
+        return $lines;
     }
 
     private function normalize(array $raw, int $index, float $rate, float $profit): array
