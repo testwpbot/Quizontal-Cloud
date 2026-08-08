@@ -38,6 +38,9 @@ class ImportInterServerProducts extends Command
         $rate = (float) data_get($exchange, 'conversion_rates.LKR');
         if ($rate <= 0) throw new RuntimeException('ExchangeRate-API did not return a valid LKR rate.');
         $products = collect($this->unwrap($provider))->map(fn ($item, $index) => $this->normalize((array) $item, $index, $rate, $profit))->filter(fn ($product) => $product['basePriceUsd'] > 0)->values()->all();
+        // InterServer's current /vps/order response is an order-form configuration,
+        // not a pre-built plans array. Generate one sellable plan for every allowed slice count.
+        if (!$products) $products = $this->sliceProducts((array) $provider, $rate, $profit);
         if (!$products) {
             $this->error('No billable VPS plans were found. The InterServer response shape needs to be mapped before it can be imported.');
             $this->line('Run: php artisan interserver:import-products --debug');
@@ -75,6 +78,68 @@ class ImportInterServerProducts extends Command
             if (is_array($child)) $lines = array_merge($lines, $this->describePayload($child, "{$path}.{$key}", $depth + 1));
         }
         return $lines;
+    }
+
+    /**
+     * Build plans from InterServer's current VPS order-form fields.
+     * One slice is one vCPU plus the RAM, storage and transfer allocations returned by the API.
+     * The one USD profit is applied once to each monthly VPS plan, not to every slice.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function sliceProducts(array $orderForm, float $rate, float $profit): array
+    {
+        $maxSlices = max(1, (int) $this->number($orderForm['maxSlices'] ?? 0));
+        $ramGbPerSlice = $this->number($orderForm['ramSlice'] ?? 0) / 1024;
+        $nvmeGbPerSlice = $this->number($orderForm['hdSlice'] ?? 0);
+        $storageGbPerSlice = $this->number($orderForm['hdStorageSlice'] ?? 0);
+        $bandwidthGbPerSlice = $this->number($orderForm['bwSlice'] ?? 0);
+
+        $platforms = [
+            'kvm' => ['cost' => 'vpsSliceKvmLCost', 'category' => 'general', 'name' => 'KVM Linux', 'storage' => 'NVMe', 'minimumSlices' => 1, 'storageGb' => $nvmeGbPerSlice],
+            'kvmstorage' => ['cost' => 'vpsSliceKvmStorageCost', 'category' => 'storage', 'name' => 'KVM Storage', 'storage' => 'SATA', 'minimumSlices' => 1, 'storageGb' => $storageGbPerSlice],
+            'hyperv' => ['cost' => 'vpsSliceKvmWCost', 'category' => 'windows', 'name' => 'Hyper-V Windows', 'storage' => 'NVMe', 'minimumSlices' => 2, 'storageGb' => $nvmeGbPerSlice],
+        ];
+
+        $products = [];
+        foreach ($platforms as $platform => $definition) {
+            $perSliceCost = $this->number($orderForm[$definition['cost']] ?? 0);
+            if ($perSliceCost <= 0) continue;
+            for ($slices = $definition['minimumSlices']; $slices <= $maxSlices; $slices++) {
+                $base = round($perSliceCost * $slices, 2);
+                $retail = round(($base + $profit) * 100) / 100;
+                $products[] = [
+                    'id' => "interserver-{$platform}-{$slices}",
+                    // This encodes the selected InterServer platform and slice quantity for the billing/provisioning mapper.
+                    'providerProductId' => "{$platform}:{$slices}",
+                    'name' => "{$definition['name']} {$slices} ".($slices === 1 ? 'Slice' : 'Slices'),
+                    'category' => $definition['category'],
+                    'platform' => $platform,
+                    'slices' => $slices,
+                    'cpu' => $slices,
+                    'ramGb' => round($ramGbPerSlice * $slices, 2),
+                    'storageGb' => round($definition['storageGb'] * $slices, 2),
+                    'storageType' => $definition['storage'],
+                    'bandwidthGb' => round($bandwidthGbPerSlice * $slices, 2),
+                    'basePriceUsd' => $base,
+                    'retailPriceUsd' => $retail,
+                    'priceLkr' => round($retail * $rate),
+                    'available' => $this->platformAvailable($orderForm, $platform),
+                ];
+            }
+        }
+        return $products;
+    }
+
+    private function platformAvailable(array $orderForm, string $platform): bool
+    {
+        $stock = $orderForm['locationStock'] ?? [];
+        if (!is_array($stock) || !$stock) return true;
+        foreach ($stock as $location) {
+            $value = $location[$platform] ?? false;
+            if ($value === true || $this->number($value) > 0 || (is_string($value) && strtolower($value) === 'yes')) return true;
+        }
+        return false;
     }
 
     private function normalize(array $raw, int $index, float $rate, float $profit): array
