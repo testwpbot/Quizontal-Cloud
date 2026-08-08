@@ -27,8 +27,12 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 curl --fail --location --retry 3 https://fossbilling.org/downloads/stable --output "$tmp/fossbilling.zip"
 unzip -q "$tmp/fossbilling.zip" -d "$tmp/extracted"
-source_dir=$(find "$tmp/extracted" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-[[ -n "$source_dir" ]] || source_dir="$tmp/extracted"
+# Stable archives may either contain htdocs directly or inside one top-level directory.
+source_dir="$tmp/extracted"
+if [[ ! -d "$source_dir/htdocs" ]]; then
+  source_dir=$(find "$tmp/extracted" -mindepth 1 -maxdepth 2 -type d -name htdocs -printf '%h\n' | head -n 1)
+fi
+[[ -n "$source_dir" && -d "$source_dir/htdocs" ]] || { echo 'Could not locate the FOSSBilling htdocs directory in the stable archive.' >&2; exit 1; }
 cp -a "$source_dir"/. "$FOSSBILLING_DIR"/
 chown -R www-data:www-data "$FOSSBILLING_DIR"
 find "$FOSSBILLING_DIR" -type d -exec chmod 0750 {} +

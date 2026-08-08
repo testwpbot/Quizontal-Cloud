@@ -63,3 +63,7 @@ FossBilling also needs its own scheduler, described in `deploy/FOSS_BILLING.md`.
 - Rotate any credential that has been pasted into a chat or other public location.
 - Use HTTPS for both storefront and billing portal.
 - Review provider prices, LKR rounding, taxes, gateway fees, refund terms, and local business requirements before enabling checkout.
+
+## Local one-address testing
+
+For a local setup where the public website is `http://localhost/` and the FossBilling dashboard is `http://localhost/client-area/`, follow [deploy/LOCALHOST.md](deploy/LOCALHOST.md). It includes exact Nginx, PHP, MariaDB, Laravel, FossBilling, and database setup steps.

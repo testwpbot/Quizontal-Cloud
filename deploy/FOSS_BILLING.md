@@ -2,12 +2,12 @@
 
 ## Topology
 
-Use two separate applications and databases:
+Use two separate applications and databases. They may be on separate subdomains in production, or share one host using `/client-area/` in a local test environment:
 
 | Address | Application | Purpose |
 |---|---|---|
-| `https://quizontalcloud.example` | Laravel storefront | Marketing, LKR catalog, links to billing |
-| `https://billing.quizontalcloud.example` | FossBilling | Client dashboard, orders, payments, tickets, invoices |
+| `https://quizontalcloud.example` or `http://localhost/` | Laravel storefront | Marketing, LKR catalog, links to billing |
+| `https://billing.quizontalcloud.example` or `http://localhost/client-area/` | FossBilling | Client dashboard, orders, payments, tickets, invoices |
 
 Do **not** copy FOSSBilling under the Laravel `public` folder and do not share their databases. This keeps the Laravel application and billing system independently upgradeable and avoids exposing billing files through Laravel routing.
 
@@ -63,3 +63,5 @@ The Laravel InterServer price/catalog importer can run daily:
 2. Ensure Laravel `APP_DEBUG=false`, separate database passwords, and HTTPS are enabled.
 3. Configure an off-site database backup policy for FossBilling.
 4. Test an order, invoice, payment, provisioning callback, cancellation, and client portal login using test accounts.
+
+For the localhost `/client-area/` setup, use [LOCALHOST.md](LOCALHOST.md) and the included Nginx configuration instead of a billing subdomain.
