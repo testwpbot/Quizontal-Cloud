@@ -25,7 +25,15 @@ fi
 install -d -m 0750 -o www-data -g www-data "$FOSSBILLING_DIR"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-curl --fail --location --retry 3 https://fossbilling.org/downloads/stable --output "$tmp/fossbilling.zip"
+# fossbilling.org's old /downloads/stable URL may disappear or return 404.
+# Resolve the current signed release asset from the official GitHub release API instead.
+release_json=$(curl --fail --silent --show-error --location --retry 3 \
+  -H 'Accept: application/vnd.github+json' \
+  -H 'User-Agent: Quizontal-Cloud-FossBilling-Installer' \
+  https://api.github.com/repos/FOSSBilling/FOSSBilling/releases/latest)
+release_url=$(printf '%s\n' "$release_json" | sed -n 's/^[[:space:]]*"browser_download_url": "\(.*FOSSBilling-.*\.zip\)"[,]\{0,1\}$/\1/p' | head -n 1)
+[[ -n "$release_url" ]] || { echo 'Could not determine the official FOSSBilling release download URL.' >&2; exit 1; }
+curl --fail --location --retry 3 "$release_url" --output "$tmp/fossbilling.zip"
 unzip -q "$tmp/fossbilling.zip" -d "$tmp/extracted"
 # Stable archives may either contain htdocs directly or inside one top-level directory.
 source_dir="$tmp/extracted"
