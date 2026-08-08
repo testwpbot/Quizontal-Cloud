@@ -44,20 +44,21 @@ release_url=$(printf '%s' "$release_json" | php -r '
 [[ -n "$release_url" ]] || { echo 'The latest FOSSBilling GitHub release did not contain a FOSSBilling zip asset.' >&2; exit 1; }
 curl --fail --location --retry 3 "$release_url" --output "$tmp/fossbilling.zip"
 unzip -q "$tmp/fossbilling.zip" -d "$tmp/extracted"
-# FOSSBilling 0.8 uses src/ as its web root. Older stable archives use htdocs/.
-# Releases may also wrap these folders in one top-level directory.
+# Current FOSSBilling release archives package the contents of src/ directly
+# (index.php, library/, modules/, etc.). Older packages can contain src/ or htdocs/.
 source_dir="$tmp/extracted"
 web_root=""
 for candidate in "$source_dir" "$tmp/extracted"/*; do
+  [[ -f "$candidate/index.php" && -d "$candidate/library" ]] && { source_dir="$candidate"; web_root="."; break; }
   [[ -d "$candidate/src" && -f "$candidate/src/index.php" ]] && { source_dir="$candidate"; web_root="src"; break; }
   [[ -d "$candidate/htdocs" && -f "$candidate/htdocs/index.php" ]] && { source_dir="$candidate"; web_root="htdocs"; break; }
 done
-[[ -n "$web_root" ]] || { echo 'Could not locate the FOSSBilling src/ or htdocs/ web root in the stable archive.' >&2; exit 1; }
+[[ -n "$web_root" ]] || { echo 'Could not locate a FOSSBilling web root in the stable archive.' >&2; exit 1; }
 cp -a "$source_dir"/. "$FOSSBILLING_DIR"/
 chown -R www-data:www-data "$FOSSBILLING_DIR"
 find "$FOSSBILLING_DIR" -type d -exec chmod 0750 {} +
 find "$FOSSBILLING_DIR" -type f -exec chmod 0640 {} +
 
 echo "FOSSBilling files are installed in $FOSSBILLING_DIR."
-echo "Next: point your web server at $FOSSBILLING_DIR/$web_root, create an empty MySQL/MariaDB database, then complete the web installer."
+echo "Next: point your web server at $FOSSBILLING_DIR${web_root:+/$web_root}, create an empty MySQL/MariaDB database, then complete the web installer."
 echo 'After installation, remove the installer as directed by FOSSBilling and add its cron job.'
