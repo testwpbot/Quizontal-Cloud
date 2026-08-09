@@ -5,6 +5,7 @@ A wallet-first bank transfer workflow for FOSSBilling 0.8.5:
 - Customers submit a wallet deposit amount, bank reference, and JPG/PNG/PDF receipt.
 - Receipts are stored under FOSSBilling's private `data/uploads` directory.
 - Wallet pages show the complete submission history with color-coded statuses.
+- Invoice payment methods use branded icons, clear labels, and wallet-only rules: deposits show Manual Bank Transfer; product and renewal invoices show Quizontal Cloud Wallet.
 - Administrators review, approve, or reject submissions.
 - Approval records the manual transaction, marks the deposit invoice paid, credits the wallet, and retries existing unpaid invoices against the new balance.
 - The `onBeforeClientCheckout` hook blocks product checkout when wallet balance is insufficient.
