@@ -14,6 +14,12 @@ class Client extends \Api_Abstract
         return $this->getService()->search($data);
     }
 
+    public function create_funds_invoice($data): string
+    {
+        if (!isset($data['amount'])) throw new \FOSSBilling\InformationException('Amount is required.');
+        return $this->getService()->createFundsInvoice($this->getIdentity(), $data['amount']);
+    }
+
     public function config($data): array
     {
         $config = $this->getService()->getConfig();

@@ -66,19 +66,22 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         ], $config);
     }
 
+    public function createFundsInvoice(\Model_Client $client, mixed $amount): string
+    {
+        if (!is_numeric($amount) || (float) $amount <= 0) throw new InformationException('Enter a valid deposit amount.');
+        $this->ensureClientCurrency($client);
+        $invoiceService = $this->di['mod_service']('Invoice');
+        $invoice = $invoiceService->generateFundsInvoice($client, (float) $amount);
+        $invoiceService->approveInvoice($invoice, ['id' => $invoice->id]);
+        return (string) $invoice->hash;
+    }
+
     public function submit(\Model_Client $client, mixed $amount, string $reference, ?UploadedFile $file, ?string $invoiceHash = null): array
     {
         $reference = trim($reference);
         if ($reference === '' || mb_strlen($reference) > 191) throw new InformationException('Enter a valid bank transfer reference.');
         $this->validateUpload($file);
-
-        if (!$client->currency) {
-            $currencyService = $this->di['mod_service']('currency');
-            $currency = method_exists($currencyService, 'getDefault') ? $currencyService->getDefault() : $currencyService->getCurrencyRepository()->findDefault();
-            if ($currency === null) throw new InformationException('A default currency must be configured first.');
-            $client->currency = method_exists($currency, 'getCode') ? $currency->getCode() : $currency->code;
-            $this->di['db']->store($client);
-        }
+        $this->ensureClientCurrency($client);
 
         $invoiceService = $this->di['mod_service']('Invoice');
         if ($invoiceHash !== null && $invoiceHash !== '') {
@@ -226,6 +229,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $values[] = (int) $criteria['id'];
         $statement = $this->di['pdo']->prepare('UPDATE quizontal_bank_transfer SET '.implode(', ', $sets).' WHERE id = ?');
         $statement->execute($values);
+    }
+
+    private function ensureClientCurrency(\Model_Client $client): void
+    {
+        if ($client->currency) return;
+        $currencyService = $this->di['mod_service']('currency');
+        $currency = method_exists($currencyService, 'getDefault') ? $currencyService->getDefault() : $currencyService->getCurrencyRepository()->findDefault();
+        if ($currency === null) throw new InformationException('A default currency must be configured first.');
+        $client->currency = method_exists($currency, 'getCode') ? $currency->getCode() : $currency->code;
+        $this->di['db']->store($client);
     }
 
     private function getManualGateway(): \Model_PayGateway

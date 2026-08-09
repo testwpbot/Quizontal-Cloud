@@ -13,7 +13,7 @@
         <div class="card-header py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div><h1 class="mb-1">{{ 'Wallet'|trans }}</h1><span class="small text-muted">{{ 'Here you can manage and track your account balance.'|trans }}</span></div>
-                <form method="post" class="form-inline api-form d-flex gap-2 justify-content-end" action="{{ 'api/client/invoice/funds_invoice'|link }}" data-api-jsonp="onAfterInvoiceCreated">
+                <form method="post" class="form-inline api-form d-flex gap-2 justify-content-end" action="{{ 'api/client/quizontalbanktransfer/create_funds_invoice'|link }}" data-api-jsonp="onAfterInvoiceCreated">
                     <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
                     <input class="form-control w-50" type="text" name="amount" placeholder="0" required="required">
                     <button class="btn btn-primary" type="submit">{{ 'Add fund'|trans }}</button>
