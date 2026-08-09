@@ -15,6 +15,13 @@ class Admin extends \Api_Abstract
         return $this->getService()->search((array) $data);
     }
 
+    public function set_notification_email($data): bool
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('quizontalbanktransfer', 'manage');
+        if (empty($data['email'])) throw new InformationException('Administrator email is required.');
+        return $this->getService()->setAdminNotificationEmail((string) $data['email']);
+    }
+
     public function get($data): array
     {
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('quizontalbanktransfer', 'view');

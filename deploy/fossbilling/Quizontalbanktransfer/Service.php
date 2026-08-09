@@ -62,7 +62,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return array_merge([
             'bank_name' => '', 'account_name' => 'Quizontal Cloud', 'account_number' => '',
             'branch' => '', 'swift_code' => '', 'instructions' => '', 'max_file_mb' => 5,
-            'wallet_only_checkout' => true,
+            'admin_notification_email' => '', 'wallet_only_checkout' => true,
         ], $config);
     }
 
@@ -113,7 +113,53 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             (string) $client->currency, $reference, $originalName, $storedName, $mimeType,
             $fileSize, 'pending', $now, $now,
         ]);
-        return ['id' => (int) $this->di['pdo']->lastInsertId(), 'invoice_hash' => (string) $invoice->hash];
+        $submissionId = (int) $this->di['pdo']->lastInsertId();
+        try {
+            $this->sendReceiptSubmittedEmails($client, $submissionId, $invoice);
+        } catch (\Throwable $exception) {
+            error_log('Receipt submission email could not be queued: '.$exception->getMessage());
+        }
+        return ['id' => $submissionId, 'invoice_hash' => (string) $invoice->hash];
+    }
+
+    public function setAdminNotificationEmail(string $email): bool
+    {
+        $email = strtolower(trim($email));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new InformationException('A valid administrator notification email is required.');
+        $extension = $this->di['mod_service']('extension');
+        $config = (array) $extension->getConfig('mod_quizontalbanktransfer');
+        $config['ext'] = 'mod_quizontalbanktransfer';
+        $config['admin_notification_email'] = $email;
+        return $extension->setConfig($config);
+    }
+
+    private function sendReceiptSubmittedEmails(\Model_Client $client, int $submissionId, \Model_Invoice $invoice): void
+    {
+        $submission = $this->get($submissionId);
+        $invoiceData = $this->di['mod_service']('Invoice')->toApiArray($invoice, true, $client);
+        $customer = $this->di['mod_service']('Client')->toApiArray($client);
+        $emailService = $this->di['mod_service']('Email');
+        $common = [
+            'code' => 'mod_quizontalbanktransfer_receipt_submitted',
+            'submission' => $submission,
+            'invoice' => $invoiceData,
+            'customer' => $customer,
+            'review_url' => $this->di['url']->adminLink('quizontalbanktransfer/'.$submissionId),
+            'wallet_url' => $this->di['url']->link('client/balance'),
+            'send_now' => true,
+        ];
+        $emailService->sendTemplate($common + [
+            'to_client' => (int) $client->id,
+            'recipient_type' => 'customer',
+        ]);
+        $adminEmail = (string) ($this->getConfig()['admin_notification_email'] ?? '');
+        if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+            $emailService->sendTemplate($common + [
+                'to' => $adminEmail,
+                'to_name' => 'Quizontal Cloud Administrator',
+                'recipient_type' => 'admin',
+            ]);
+        }
     }
 
     public function search(array $data): array

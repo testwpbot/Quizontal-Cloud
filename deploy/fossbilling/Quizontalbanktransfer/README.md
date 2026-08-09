@@ -26,7 +26,7 @@ Activate the module and connect its checkout hook through the API (this works ev
 bash deploy/activate-quizontal-bank-transfer.sh
 ```
 
-The script reads `FOSSBILLING_URL` and `FOSSBILLING_ADMIN_API_KEY` from Laravel's `.env` without displaying the key. It prints the direct module settings URL when complete.
+The script reads `FOSSBILLING_URL`, `FOSSBILLING_ADMIN_API_KEY`, and `QUIZONTAL_ADMIN_EMAIL` from Laravel's `.env` without displaying secrets. It generates the receipt-submitted email template in FossBilling Admin, synchronizes the administrator recipient, and prints the direct module settings URL.
 
 Then:
 
@@ -54,6 +54,16 @@ Admin review page:
 ```
 
 Paths vary if your FOSSBilling base/admin URLs are customized.
+
+## Receipt submission email
+
+Activation creates an editable FossBilling Admin email template with action code:
+
+```text
+mod_quizontalbanktransfer_receipt_submitted
+```
+
+Each receipt submission sends an immediate confirmation to the customer and an administrator review notification to `QUIZONTAL_ADMIN_EMAIL`. The receipt itself is not attached; the administrator receives an authenticated review link.
 
 ## Important controls
 
