@@ -57,13 +57,15 @@ Paths vary if your FOSSBilling base/admin URLs are customized.
 
 ## Receipt submission email
 
-Activation creates an editable FossBilling Admin email template with action code:
+Activation reconnects hooks for all active modules and enables generated transactional email templates, including invoices, orders, support tickets, staff replies, account events, and the custom receipt notification. Activation creates an editable FossBilling Admin email template with action code:
 
 ```text
 mod_quizontalbanktransfer_receipt_submitted
 ```
 
 Each receipt submission sends an immediate confirmation to the customer, pauses briefly for local SMTP throttling, and then sends an administrator notification to `QUIZONTAL_ADMIN_EMAIL`. The admin version avoids attachments and external/action links; the administrator signs in normally and opens **Invoices → Bank Transfer Receipts**. Inbox placement still depends primarily on the sender domain's SPF, DKIM, DMARC, and reverse-DNS configuration.
+
+Core FOSSBilling lifecycle emails are queued. Install `deploy/install-xampp-fossbilling-cron.sh` so invoice-created, invoice-paid, ticket-opened, staff-replied, renewal, and other queued notifications are delivered every five minutes.
 
 ## Important controls
 
