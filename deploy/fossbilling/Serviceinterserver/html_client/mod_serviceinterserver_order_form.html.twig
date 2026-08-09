@@ -1,5 +1,21 @@
 {% set platform = product.config.platform|default('kvm') %}
 {% set is_windows = platform == 'hyperv' %}
+<style>
+#quizontal-vps-config{--qc-accent:#e31c64;--qc-accent-soft:#fff1f6;--qc-border:#d8dce3;--qc-text:#20242b;--qc-muted:#6b7280}
+#quizontal-vps-config .qc-location-card{position:relative;background:#fff!important;border:1px solid var(--qc-border)!important;color:var(--qc-text)!important;min-height:72px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease}
+#quizontal-vps-config .qc-location-card:hover{background:var(--qc-accent-soft)!important;border-color:var(--qc-accent)!important;color:var(--qc-text)!important;transform:translateY(-1px);box-shadow:0 5px 16px rgba(227,28,100,.12)}
+#quizontal-vps-config .btn-check:checked+.qc-location-card{background:var(--qc-accent-soft)!important;border:2px solid var(--qc-accent)!important;color:var(--qc-text)!important;box-shadow:0 0 0 3px rgba(227,28,100,.12)}
+#quizontal-vps-config .btn-check:checked+.qc-location-card:after{content:'✓';position:absolute;right:10px;top:8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--qc-accent);color:#fff;font-size:12px;font-weight:700}
+#quizontal-vps-config .btn-check:focus+.qc-location-card{box-shadow:0 0 0 3px rgba(227,28,100,.2)!important}
+#quizontal-vps-config .qc-os-trigger{background:#fff!important;border:1px solid var(--qc-border)!important;color:var(--qc-text)!important;min-height:76px;transition:border-color .18s ease,box-shadow .18s ease}
+#quizontal-vps-config .qc-os-trigger:hover,#quizontal-vps-config .qc-os-trigger:focus,#quizontal-vps-config .qc-os-trigger[aria-expanded=true]{background:var(--qc-accent-soft)!important;border-color:var(--qc-accent)!important;color:var(--qc-text)!important;box-shadow:0 0 0 3px rgba(227,28,100,.1)!important}
+#quizontal-vps-config .qc-os-trigger strong,#quizontal-vps-config .qc-os-option strong{color:var(--qc-text)!important}
+#quizontal-vps-config .qc-os-trigger small,#quizontal-vps-config .qc-os-option small,#quizontal-vps-config .qc-location-card small{color:var(--qc-muted)!important}
+#quizontal-vps-config .qc-os-menu{border:1px solid var(--qc-border);border-radius:12px;max-height:330px;overflow-y:auto}
+#quizontal-vps-config .qc-os-option{color:var(--qc-text)!important;border:1px solid transparent;transition:background .15s ease,border-color .15s ease}
+#quizontal-vps-config .qc-os-option:hover,#quizontal-vps-config .qc-os-option:focus{background:var(--qc-accent-soft)!important;border-color:rgba(227,28,100,.3)!important;color:var(--qc-text)!important}
+#quizontal-vps-config #qc-hostname:focus{border-color:var(--qc-accent);box-shadow:0 0 0 3px rgba(227,28,100,.12)}
+</style>
 <div class="card border-0 bg-light mb-3" id="quizontal-vps-config">
   <div class="card-body p-3 p-md-4">
     <div class="d-flex align-items-center gap-3 mb-4">
@@ -12,7 +28,7 @@
       {% for id, name in {1:'New Jersey', 2:'Los Angeles', 3:'Dallas, TX'} %}
       <div class="col-12 col-md-4">
         <input class="btn-check qc-location" type="radio" name="location" id="qc-location-{{ id }}" value="{{ id }}" {% if id == 1 %}checked{% endif %}>
-        <label class="btn btn-outline-secondary w-100 d-flex align-items-center gap-2 p-3 text-start" for="qc-location-{{ id }}">
+        <label class="btn qc-location-card w-100 d-flex align-items-center gap-2 p-3 text-start" for="qc-location-{{ id }}">
           <img src="{{ 'us-flag.svg'|mod_asset_url('serviceinterserver') }}" width="34" height="22" alt="United States flag" style="object-fit:cover;border-radius:3px">
           <span><strong class="d-block">{{ name }}</strong><small class="text-muted">United States</small></span>
         </label>
@@ -22,11 +38,11 @@
 
     <label class="form-label fw-bold">Operating system</label>
     <div class="dropdown mb-4">
-      <button class="btn btn-outline-secondary bg-white w-100 d-flex align-items-center justify-content-between p-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="qc-os-button">
+      <button class="btn qc-os-trigger w-100 d-flex align-items-center justify-content-between p-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="qc-os-button">
         <span class="d-flex align-items-center gap-3"><img id="qc-os-icon" src="{{ (is_windows ? 'windows.svg' : 'ubuntu.svg')|mod_asset_url('serviceinterserver') }}" width="34" height="34" alt=""><span class="text-start"><strong id="qc-os-title">{{ is_windows ? 'Windows Server 2022' : 'Ubuntu 24.04 LTS' }}</strong><small class="text-muted d-block">64-bit server image</small></span></span>
         <span>▾</span>
       </button>
-      <ul class="dropdown-menu w-100 shadow p-2">
+      <ul class="dropdown-menu qc-os-menu w-100 shadow p-2">
         {% if is_windows %}
           {% set systems = {
             'windows|Windows2019Standard|Windows Server 2019|windows.svg': 'Long-term support',
