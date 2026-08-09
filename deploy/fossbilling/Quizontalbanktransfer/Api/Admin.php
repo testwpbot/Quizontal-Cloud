@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Box\Mod\Quizontalbanktransfer\Api;
 
-use FOSSBilling\Validation\Api\RequiredParams;
+use FOSSBilling\InformationException;
 
-class Admin extends \FOSSBilling\Api\AbstractApi
+/** FOSSBilling 0.7-compatible administrator API. */
+class Admin extends \Api_Abstract
 {
     public function get_list($data): array
     {
@@ -14,24 +15,26 @@ class Admin extends \FOSSBilling\Api\AbstractApi
         return $this->getService()->search((array) $data);
     }
 
-    #[RequiredParams(['id' => 'Submission ID is required'])]
     public function get($data): array
     {
         $this->checkPermissions('quizontalbanktransfer', 'view');
+        if (empty($data['id'])) throw new InformationException('Submission ID is required.');
         return $this->getService()->get((int) $data['id']);
     }
 
-    #[RequiredParams(['id' => 'Submission ID is required', 'transaction_id' => 'Bank transaction ID is required'])]
     public function approve($data): bool
     {
         $this->checkPermissions('quizontalbanktransfer', 'manage');
+        if (empty($data['id'])) throw new InformationException('Submission ID is required.');
+        if (empty($data['transaction_id'])) throw new InformationException('Bank transaction ID is required.');
         return $this->getService()->approve((int) $data['id'], (string) $data['transaction_id'], (string) ($data['note'] ?? ''));
     }
 
-    #[RequiredParams(['id' => 'Submission ID is required', 'note' => 'Rejection reason is required'])]
     public function reject($data): bool
     {
         $this->checkPermissions('quizontalbanktransfer', 'manage');
+        if (empty($data['id'])) throw new InformationException('Submission ID is required.');
+        if (empty($data['note'])) throw new InformationException('Rejection reason is required.');
         return $this->getService()->reject((int) $data['id'], (string) $data['note']);
     }
 }

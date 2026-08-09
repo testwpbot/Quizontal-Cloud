@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Box\Mod\Quizontalbanktransfer;
 
 use FOSSBilling\InformationException;
-use FOSSBilling\PaginationOptions;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Service implements \FOSSBilling\InjectionAwareInterface
@@ -74,9 +73,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $this->validateUpload($file);
 
         if (!$client->currency) {
-            $currency = $this->di['mod_service']('currency')->getCurrencyRepository()->findDefault();
+            $currencyService = $this->di['mod_service']('currency');
+            $currency = method_exists($currencyService, 'getDefault') ? $currencyService->getDefault() : $currencyService->getCurrencyRepository()->findDefault();
             if ($currency === null) throw new InformationException('A default currency must be configured first.');
-            $client->currency = $currency->getCode();
+            $client->currency = method_exists($currency, 'getCode') ? $currency->getCode() : $currency->code;
             $this->di['db']->store($client);
         }
 
@@ -86,7 +86,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             if (!$invoice instanceof \Model_Invoice) throw new InformationException('Deposit invoice not found.');
             if ($invoice->status !== \Model_Invoice::STATUS_UNPAID) throw new InformationException('Only unpaid deposit invoices can receive a receipt.');
             if (!$invoiceService->isInvoiceTypeDeposit($invoice)) throw new InformationException('The selected invoice is not a wallet deposit invoice.');
-            if ($this->di['dbal']->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id])) throw new InformationException('A receipt was already submitted for this invoice.');
+            if ($this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id])) throw new InformationException('A receipt was already submitted for this invoice.');
             $amount = $invoiceService->getTotalWithTax($invoice);
         } else {
             if (!is_numeric($amount) || (float) $amount <= 0) throw new InformationException('Enter a valid deposit amount.');
@@ -104,14 +104,13 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $storedName = bin2hex(random_bytes(24)).'.'.$this->extensionForMime($mimeType);
         $file->move($this->ensureUploadDirectory(), $storedName);
         $now = date('Y-m-d H:i:s');
-        $this->di['dbal']->insert('quizontal_bank_transfer', [
-            'client_id' => (int) $client->id, 'invoice_id' => (int) $invoice->id,
-            'amount' => number_format((float) $amount, 2, '.', ''), 'currency' => (string) $client->currency,
-            'reference' => $reference, 'original_name' => $originalName,
-            'stored_name' => $storedName, 'mime_type' => $mimeType, 'file_size' => $fileSize,
-            'status' => 'pending', 'created_at' => $now, 'updated_at' => $now,
+        $statement = $this->di['pdo']->prepare('INSERT INTO quizontal_bank_transfer (client_id, invoice_id, amount, currency, reference, original_name, stored_name, mime_type, file_size, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute([
+            (int) $client->id, (int) $invoice->id, number_format((float) $amount, 2, '.', ''),
+            (string) $client->currency, $reference, $originalName, $storedName, $mimeType,
+            $fileSize, 'pending', $now, $now,
         ]);
-        return ['id' => (int) $this->di['dbal']->lastInsertId(), 'invoice_hash' => (string) $invoice->hash];
+        return ['id' => (int) $this->di['pdo']->lastInsertId(), 'invoice_hash' => (string) $invoice->hash];
     }
 
     public function search(array $data): array
@@ -121,12 +120,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if (!empty($data['client_id'])) { $sql .= ' AND r.client_id=:client_id'; $params[':client_id'] = (int) $data['client_id']; }
         if (!empty($data['status'])) { $sql .= ' AND r.status=:status'; $params[':status'] = (string) $data['status']; }
         $sql .= ' ORDER BY r.id DESC';
-        return $this->di['pager']->getPaginatedResultSet($sql, $params, PaginationOptions::fromArray($data));
+        return $this->di['pager']->getPaginatedResultSet($sql, $params, (int) ($data['per_page'] ?? 50), (int) ($data['page'] ?? 1));
     }
 
     public function get(int $id): array
     {
-        $row = $this->di['dbal']->fetchAssociative('SELECT r.*, i.hash AS invoice_hash, i.serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE r.id=?', [$id]);
+        $statement = $this->di['pdo']->prepare('SELECT r.*, i.hash AS invoice_hash, i.serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE r.id=?');
+        $statement->execute([$id]);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
         if (!$row) throw new InformationException('Bank transfer submission not found.');
         return $row;
     }
@@ -137,14 +138,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if ($row['status'] !== 'pending') throw new InformationException('Only pending submissions can be approved.');
         $transactionId = trim($transactionId);
         if ($transactionId === '') throw new InformationException('A bank transaction ID is required.');
-        $duplicate = $this->di['dbal']->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE transaction_id=? AND id<>?', [$transactionId, $id]);
+        $duplicate = $this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE transaction_id=? AND id<>?', [$transactionId, $id]);
         if ($duplicate) throw new InformationException('This bank transaction ID was already used.');
 
         $invoice = $this->di['db']->getExistingModelById('Invoice', (int) $row['invoice_id'], 'Deposit invoice not found.');
         if ($invoice->status === \Model_Invoice::STATUS_PAID) throw new InformationException('This deposit invoice is already paid.');
         if (!$this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice)) throw new InformationException('The linked invoice is not a wallet deposit invoice.');
 
-        $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'processing', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+        $this->updateSubmission( ['status' => 'processing', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
         try {
             $gateway = $this->getManualGateway();
             $invoice->gateway_id = (int) $gateway->id;
@@ -155,7 +156,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 // FOSSBilling 0.8+: admin confirmation no longer credits deposit invoices itself.
                 $client = $this->di['mod_service']('Client')->get(['id' => (int) $row['client_id']]);
                 $description = 'Quizontal Cloud bank transfer '.$transactionId;
-                $existingCredit = $this->di['dbal']->fetchOne(
+                $existingCredit = $this->fetchOne(
                     'SELECT id FROM client_balance WHERE client_id=? AND type=? AND rel_id=?',
                     [(int) $row['client_id'], 'quizontal_bank_transfer', (string) $invoice->id]
                 );
@@ -167,10 +168,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 // FOSSBilling 0.7: the Custom adapter credits the deposit while processing.
                 $this->di['api_admin']->invoice_mark_as_paid(['id' => (int) $invoice->id, 'transactionId' => $transactionId, 'execute' => true]);
             }
-            $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+            $this->updateSubmission( ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
             return true;
         } catch (\Throwable $e) {
-            $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'pending', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+            $this->updateSubmission( ['status' => 'pending', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
             throw $e;
         }
     }
@@ -180,7 +181,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $row = $this->get($id);
         if ($row['status'] !== 'pending') throw new InformationException('Only pending submissions can be rejected.');
         if (trim($note) === '') throw new InformationException('A rejection reason is required.');
-        $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'rejected', 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+        $this->updateSubmission( ['status' => 'rejected', 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
         return true;
     }
 
@@ -197,6 +198,28 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $total = (float) $di['mod_service']('Cart')->toApiArray($cart)['total'];
         $balance = (float) $di['mod_service']('Client', 'Balance')->getClientBalance($client);
         if ($balance < $total) throw new InformationException('Please add enough funds to your Quizontal Cloud wallet before placing this order.');
+    }
+
+    private function fetchOne(string $sql, array $params): mixed
+    {
+        $statement = $this->di['pdo']->prepare($sql);
+        $statement->execute($params);
+        return $statement->fetchColumn();
+    }
+
+    private function updateSubmission(array $data, array $criteria): void
+    {
+        $allowed = ['status', 'transaction_id', 'admin_note', 'updated_at'];
+        $sets = [];
+        $values = [];
+        foreach ($data as $column => $value) {
+            if (!in_array($column, $allowed, true)) throw new \InvalidArgumentException('Invalid receipt update column.');
+            $sets[] = "`{$column}` = ?";
+            $values[] = $value;
+        }
+        $values[] = (int) $criteria['id'];
+        $statement = $this->di['pdo']->prepare('UPDATE quizontal_bank_transfer SET '.implode(', ', $sets).' WHERE id = ?');
+        $statement->execute($values);
     }
 
     private function getManualGateway(): \Model_PayGateway

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Box\Mod\Quizontalbanktransfer\Api;
 
-class Client extends \FOSSBilling\Api\AbstractApi
+/** FOSSBilling 0.7-compatible client API. */
+class Client extends \Api_Abstract
 {
     public function get_list($data): array
     {
+        $data = (array) $data;
         $data['client_id'] = (int) $this->getIdentity()->id;
-        return $this->getService()->search((array) $data);
+        return $this->getService()->search($data);
     }
 
     public function config($data): array
