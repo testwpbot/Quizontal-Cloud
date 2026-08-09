@@ -36,8 +36,8 @@ class ValidateInterServerVpsOrderTest extends TestCase
             $payload = $request->data();
             return $payload['platform'] === 'kvm'
                 && $payload['slices'] === 1
-                && isset($payload['rootpass'])
-                && strlen($payload['rootpass']) >= 16;
+                && isset($payload['rootPassword'])
+                && strlen($payload['rootPassword']) >= 16;
         });
         Http::assertNotSent(fn (Request $request) => $request->method() === 'POST');
     }

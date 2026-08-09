@@ -64,7 +64,7 @@ class ValidateInterServerVpsOrder extends Command
 
         $this->warn('VALIDATION-ONLY MODE — this command never sends POST and cannot place an order.');
         $this->table(['Field', 'Value'], collect($payload)
-            ->except(['rootpass', 'coupon'])
+            ->except(['rootPassword', 'coupon'])
             ->map(fn ($value, $field) => [$field, is_scalar($value) ? (string) $value : json_encode($value)])
             ->values()->all());
 
@@ -114,17 +114,17 @@ class ValidateInterServerVpsOrder extends Command
     private function payload(): array
     {
         return [
-            'os' => trim((string) $this->option('os')),
+            'osDistro' => trim((string) $this->option('os')),
             'slices' => (int) $this->option('slices'),
             'platform' => strtolower(trim((string) $this->option('platform'))),
-            'controlpanel' => strtolower(trim((string) $this->option('controlpanel'))),
+            'controlPanel' => strtolower(trim((string) $this->option('controlpanel'))),
             'period' => (int) $this->option('period'),
             'location' => (int) $this->option('location'),
-            'version' => trim((string) $this->option('os-version')),
+            'osVersion' => trim((string) $this->option('os-version')),
             'hostname' => strtolower(trim((string) $this->option('hostname'))),
             'coupon' => trim((string) $this->option('coupon')),
             // Generated only for validation, never printed or persisted.
-            'rootpass' => Str::password(24, symbols: true),
+            'rootPassword' => Str::password(24, symbols: true),
         ];
     }
 
@@ -137,9 +137,9 @@ class ValidateInterServerVpsOrder extends Command
         if ($payload['slices'] < 1 || $payload['slices'] > $max) $errors[] = "--slices must be between 1 and {$max}.";
         if ($payload['platform'] === 'hyperv' && $payload['slices'] < 2) $errors[] = 'Hyper-V Windows requires at least 2 slices.';
         if ($payload['location'] < 1) $errors[] = '--location must be a valid InterServer location ID.';
-        if ($payload['os'] === '') $errors[] = '--os is required and must match an InterServer template identifier.';
-        if ($payload['version'] === '') $errors[] = '--os-version is required and must match the selected template family/version.';
-        if (!in_array($payload['controlpanel'], ['none', 'cpanel', 'da'], true)) $errors[] = '--controlpanel must be none, cpanel, or da.';
+        if ($payload['osDistro'] === '') $errors[] = '--os is required and must match an InterServer template identifier.';
+        if ($payload['osVersion'] === '') $errors[] = '--os-version is required and must match the selected template family/version.';
+        if (!in_array($payload['controlPanel'], ['none', 'cpanel', 'da'], true)) $errors[] = '--controlpanel must be none, cpanel, or da.';
         if ($payload['period'] < 1 || $payload['period'] > 36) $errors[] = '--period must be between 1 and 36 months.';
         if (!filter_var($payload['hostname'], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($payload['hostname'], '.')) $errors[] = '--hostname must be a fully-qualified hostname.';
         return $errors;
