@@ -59,7 +59,11 @@ class ImportInterServerProducts extends Command
             }
             return self::FAILURE;
         }
-        Storage::disk('local')->put('catalog.json', json_encode(['updatedAt' => now()->toIso8601String(), 'exchangeRate' => $rate, 'profitUsd' => $profit, 'products' => $products], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $catalog = json_encode(['updatedAt' => now()->toIso8601String(), 'exchangeRate' => $rate, 'profitUsd' => $profit, 'products' => $products], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        if (!Storage::disk('local')->put('catalog.json', $catalog)) {
+            $this->error('Catalog import was calculated but could not be saved to storage/app/private/catalog.json. Check storage ownership and permissions.');
+            return self::FAILURE;
+        }
         $this->info('Imported '.count($products)." products at USD/LKR {$rate} with a USD {$profit} margin.");
         return self::SUCCESS;
     }
