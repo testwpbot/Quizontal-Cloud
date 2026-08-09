@@ -71,21 +71,34 @@ class ValidateInterServerVpsOrder extends Command
         try {
             // InterServer's REST API uses PUT /vps/order for validation and
             // POST /vps/order for the real purchase. Never change this to POST here.
-            $response = $client->put($url.'/vps/order', $payload)->throw()->json();
+            $httpResponse = $client->put($url.'/vps/order', $payload);
         } catch (ConnectionException) {
             $this->error('Could not reach InterServer while validating the VPS order.');
             return self::FAILURE;
         } catch (\Throwable $exception) {
             report($exception);
-            $this->error('InterServer rejected the validation request. Check the Laravel log for the HTTP error.');
+            $this->error('The validation request failed before InterServer returned a response.');
             return self::FAILURE;
         }
 
-        $safe = $this->redact((array) $response);
+        $decoded = $httpResponse->json();
+        if (!is_array($decoded)) {
+            $this->error("InterServer returned HTTP {$httpResponse->status()} with a non-JSON response. Check the Laravel log/provider availability.");
+            return self::FAILURE;
+        }
+
+        $safe = $this->redact($decoded);
+        $safe = ['http_status' => $httpResponse->status()] + $safe;
         $status = strtolower((string) ($safe['status'] ?? 'unknown'));
         $this->newLine();
         $this->line(json_encode($safe, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         $this->newLine();
+
+        if (!$httpResponse->successful()) {
+            $message = (string) ($safe['status_text'] ?? $safe['message'] ?? $safe['error'] ?? 'Review the response above.');
+            $this->error("InterServer returned HTTP {$httpResponse->status()}: {$message}");
+            return self::FAILURE;
+        }
 
         if ($status === 'ok' || $status === 'success' || ($safe['valid'] ?? false) === true) {
             $this->info('InterServer accepted the VPS configuration for validation. No VPS was purchased.');
