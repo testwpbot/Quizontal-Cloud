@@ -76,6 +76,18 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     {
         $token = (string) $this->di['request']->request->get('CSRFToken', '');
         $expected = (string) $this->di['session']->get('csrf_token');
-        if ($token === '' || $expected === '' || !hash_equals($expected, $token)) throw new InformationException('CSRF token invalid', null, 403);
+
+        // FOSSBilling 0.7 derives its Twig/API token from the PHP session ID.
+        // FOSSBilling 0.8 stores a random token in the session instead.
+        if ($expected === '') {
+            $sessionId = session_status() === PHP_SESSION_ACTIVE
+                ? session_id()
+                : (string) ($_COOKIE['PHPSESSID'] ?? '');
+            $expected = $sessionId !== '' ? md5($sessionId) : '';
+        }
+
+        if ($token === '' || $expected === '' || !hash_equals($expected, $token)) {
+            throw new InformationException('CSRF token invalid', null, 403);
+        }
     }
 }
