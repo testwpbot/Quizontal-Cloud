@@ -57,10 +57,11 @@ Paths vary if your FOSSBilling base/admin URLs are customized.
 
 ## Receipt submission email
 
-Activation reconnects hooks for all active modules and enables generated transactional email templates, including invoices, orders, support tickets, staff replies, account events, and the custom receipt notification. Activation creates an editable FossBilling Admin email template with action code:
+Activation reconnects hooks for all active modules and enables generated transactional email templates. It installs Quizontal-branded defaults for invoices, payment confirmations/reminders, support ticket events, account signup, and password reset. New invoice emails use an editable custom template and include a generated PDF attachment. Activation creates editable FossBilling Admin templates including:
 
 ```text
 mod_quizontalbanktransfer_receipt_submitted
+mod_quizontalbanktransfer_invoice_created
 ```
 
 Each receipt submission sends an immediate confirmation to the customer, pauses briefly for local SMTP throttling, and then sends an administrator notification to `QUIZONTAL_ADMIN_EMAIL`. The admin version avoids attachments and external/action links; the administrator signs in normally and opens **Invoices → Bank Transfer Receipts**. Inbox placement still depends primarily on the sender domain's SPF, DKIM, DMARC, and reverse-DNS configuration.

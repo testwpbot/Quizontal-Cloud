@@ -5,6 +5,7 @@ set -Eeuo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SOURCE_DIR="$SCRIPT_DIR/fossbilling/Quizontalbanktransfer"
 THEME_OVERRIDES_DIR="$SCRIPT_DIR/fossbilling/theme-overrides"
+EMAIL_OVERRIDES_DIR="$SCRIPT_DIR/fossbilling/email-template-overrides"
 
 if [[ $EUID -ne 0 ]]; then
   echo 'Run as root: sudo -E bash deploy/install-quizontal-bank-transfer.sh' >&2
@@ -48,6 +49,21 @@ if [[ -d "$THEME_OVERRIDES_DIR" && -d "$APP_ROOT/themes" ]]; then
     for override in "$THEME_OVERRIDES_DIR"/*.twig; do
       [[ -f "$override" ]] || continue
       install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$override" "$theme_dir/html_custom/$(basename "$override")"
+    done
+  done
+fi
+
+# Install reproducible branded defaults for core transactional emails. The
+# activation helper resets the corresponding database templates afterward.
+if [[ -d "$EMAIL_OVERRIDES_DIR" ]]; then
+  for module_dir in "$EMAIL_OVERRIDES_DIR"/*; do
+    [[ -d "$module_dir" ]] || continue
+    module_name=$(basename "$module_dir")
+    target_email_dir="$MODULES_DIR/$module_name/html_email"
+    [[ -d "$target_email_dir" ]] || continue
+    for template in "$module_dir"/*.twig; do
+      [[ -f "$template" ]] || continue
+      install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$template" "$target_email_dir/$(basename "$template")"
     done
   done
 fi

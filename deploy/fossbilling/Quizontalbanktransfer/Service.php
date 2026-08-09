@@ -14,6 +14,30 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function setDi(\Pimple\Container $di): void { $this->di = $di; }
     public function getDi(): ?\Pimple\Container { return $this->di; }
 
+    public static function onAfterAdminInvoiceApprove(\Box_Event $event): void
+    {
+        $params = $event->getParameters();
+        $di = $event->getDi();
+        try {
+            $di['mod_service']('quizontalbanktransfer')->sendInvoiceCreatedWithPdf((int) ($params['id'] ?? 0));
+        } catch (\Throwable $exception) {
+            error_log('Branded invoice PDF email failed; queuing HTML fallback: '.$exception->getMessage());
+            try {
+                $invoiceModel = $di['db']->load('Invoice', (int) ($params['id'] ?? 0));
+                if ($invoiceModel instanceof \Model_Invoice) {
+                    $invoice = $di['mod_service']('Invoice')->toApiArray($invoiceModel, true);
+                    $di['mod_service']('Email')->sendTemplate([
+                        'to_client' => (int) $invoiceModel->client_id,
+                        'code' => 'mod_quizontalbanktransfer_invoice_created',
+                        'invoice' => $invoice,
+                    ]);
+                }
+            } catch (\Throwable $fallbackException) {
+                error_log('Invoice email fallback failed: '.$fallbackException->getMessage());
+            }
+        }
+    }
+
     public function getModulePermissions(): array
     {
         return [
@@ -64,6 +88,82 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'branch' => '', 'swift_code' => '', 'instructions' => '', 'max_file_mb' => 5,
             'admin_notification_email' => '', 'wallet_only_checkout' => true,
         ], $config);
+    }
+
+    public function configureInvoiceNotifications(): bool
+    {
+        // The module sends the branded invoice-created message directly with a
+        // PDF attachment, so disable the legacy duplicate notification.
+        $statement = $this->di['pdo']->prepare("UPDATE email_template SET enabled=0 WHERE action_code='mod_invoice_created'");
+        $statement->execute();
+        return true;
+    }
+
+    public function sendInvoiceCreatedWithPdf(int $invoiceId): void
+    {
+        if ($invoiceId < 1) return;
+        $invoiceModel = $this->di['db']->load('Invoice', $invoiceId);
+        if (!$invoiceModel instanceof \Model_Invoice) return;
+        $client = $this->di['db']->load('Client', (int) $invoiceModel->client_id);
+        if (!$client instanceof \Model_Client || !filter_var($client->email, FILTER_VALIDATE_EMAIL)) return;
+
+        $invoiceService = $this->di['mod_service']('Invoice');
+        $invoice = $invoiceService->toApiArray($invoiceModel, true, $client);
+        $customer = $this->di['mod_service']('Client')->toApiArray($client);
+        $template = $this->di['db']->findOne('EmailTemplate', 'action_code = ?', ['mod_quizontalbanktransfer_invoice_created']);
+        if (!$template instanceof \Model_EmailTemplate || !$template->enabled) return;
+        $vars = ['invoice' => $invoice, 'c' => $customer];
+        $renderer = $this->di['mod_service']('System');
+        $subject = trim((string) $renderer->renderString((string) $template->subject, true, $vars));
+        $content = (string) $renderer->renderString((string) $template->content, true, $vars);
+        $pdf = $this->buildInvoicePdf($invoice, $customer);
+
+        $company = $this->di['mod_service']('System')->getCompany();
+        $emailConfig = (array) $this->di['mod']('email')->getConfig();
+        $message = (new \Symfony\Component\Mime\Email())
+            ->from(new \Symfony\Component\Mime\Address((string) $company['email'], (string) $company['name']))
+            ->to(new \Symfony\Component\Mime\Address((string) $client->email, trim($client->first_name.' '.$client->last_name)))
+            ->subject($subject)
+            ->html($content)
+            ->attach($pdf, 'Invoice-'.$invoice['serie_nr'].'.pdf', 'application/pdf');
+        $transport = \Symfony\Component\Mailer\Transport::fromDsn($this->mailerDsn($emailConfig));
+        (new \Symfony\Component\Mailer\Mailer($transport))->send($message);
+    }
+
+    private function buildInvoicePdf(array $invoice, array $customer): string
+    {
+        $rows = '';
+        foreach ($invoice['lines'] ?? [] as $line) {
+            $title = htmlspecialchars((string) ($line['title'] ?? 'Service'), ENT_QUOTES, 'UTF-8');
+            $amount = number_format((float) ($line['total'] ?? 0), 2);
+            $rows .= "<tr><td>{$title}</td><td style=\"text-align:right\">{$invoice['currency']} {$amount}</td></tr>";
+        }
+        $name = htmlspecialchars(trim(($customer['first_name'] ?? '').' '.($customer['last_name'] ?? '')), ENT_QUOTES, 'UTF-8');
+        $number = htmlspecialchars((string) $invoice['serie_nr'], ENT_QUOTES, 'UTF-8');
+        $total = number_format((float) $invoice['total'], 2);
+        $html = "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font-family:DejaVu Sans,sans-serif;color:#20242b;font-size:12px}.top{border-top:6px solid #e31c64;padding-top:20px}h1{font-size:24px}.brand{font-size:20px;font-weight:bold}.pink{color:#e31c64}table{width:100%;border-collapse:collapse;margin-top:25px}th,td{padding:11px;border-bottom:1px solid #ddd}th{text-align:left;background:#f5f6f8}.total{font-size:18px;font-weight:bold;text-align:right;margin-top:18px}</style></head><body><div class=\"top\"><div class=\"brand\">Quizontal <span class=\"pink\">Cloud</span></div><h1>Invoice {$number}</h1><p>Bill to: {$name}</p><p>Issued: ".htmlspecialchars((string) $invoice['created_at'], ENT_QUOTES, 'UTF-8')."</p><table><thead><tr><th>Description</th><th style=\"text-align:right\">Amount</th></tr></thead><tbody>{$rows}</tbody></table><div class=\"total\">Total: {$invoice['currency']} {$total}</div></div></body></html>";
+        $pdf = new \Dompdf\Dompdf();
+        $pdf->setPaper('A4');
+        $pdf->loadHtml($html);
+        $pdf->render();
+        return $pdf->output();
+    }
+
+    private function mailerDsn(array $config): string
+    {
+        $mailer = (string) ($config['mailer'] ?? 'sendmail');
+        if ($mailer === 'sendmail') return 'sendmail://default';
+        if ($mailer === 'custom') return (string) ($config['custom_dsn'] ?? '');
+        if ($mailer === 'sendgrid') return 'sendgrid://'.rawurlencode((string) ($config['sendgrid_key'] ?? '')).'@default';
+        if ($mailer === 'smtp') {
+            $host = rawurlencode(trim((string) ($config['smtp_host'] ?? '')));
+            $port = (int) ($config['smtp_port'] ?? 25);
+            $user = rawurlencode(trim((string) ($config['smtp_username'] ?? '')));
+            $pass = rawurlencode((string) ($config['smtp_password'] ?? ''));
+            $auth = $user !== '' ? $user.($pass !== '' ? ':'.$pass : '').'@' : '';
+            return "smtp://{$auth}{$host}:{$port}";
+        }
+        throw new InformationException('Unsupported mail transport for invoice attachment.');
     }
 
     public function createFundsInvoice(\Model_Client $client, mixed $amount): string
