@@ -13,7 +13,7 @@ BILLING_URL=${BILLING_URL%/}; INTERSERVER_URL=${INTERSERVER_URL:-https://my.inte
 api() { local endpoint=$1 data=$2 response; response=$(curl -sS -u "admin:$ADMIN_KEY" -H 'Content-Type: application/json' -X POST "$BILLING_URL/api/admin/$endpoint" -d "$data"); if [[ $(jq -r '.error // empty' <<<"$response") != '' ]]; then jq -r '.error.message' <<<"$response" >&2; exit 1; fi; jq . <<<"$response"; }
 api extension/activate '{"id":"serviceinterserver","type":"mod"}'
 api hook/batch_connect '{"mod":"serviceinterserver"}'
-CONFIG=$(jq -n --arg url "$INTERSERVER_URL" --arg key "$INTERSERVER_KEY" '{ext:"mod_serviceinterserver",api_url:$url,api_key:$key,mode:"validate_only",cost_tolerance_usd:"0.01"}')
+CONFIG=$(jq -n --arg url "$INTERSERVER_URL" --arg key "$INTERSERVER_KEY" '{ext:"mod_serviceinterserver",api_url:$url,api_key:$key,mode:"test",live_confirmation:"",cost_tolerance_usd:"0.01"}')
 api extension/config_save "$CONFIG"
-echo 'Serviceinterserver is active in VALIDATION-ONLY mode. No provider POST order operation exists in this module.'
+echo 'Cloud provisioning is active in TEST mode. Switch to live only from the administrator settings after testing.'
 echo "Settings: $BILLING_URL/admin/extension/settings/serviceinterserver"

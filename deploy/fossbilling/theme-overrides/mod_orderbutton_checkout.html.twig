@@ -12,6 +12,7 @@
 #qc-cart .qc-promo input{min-width:0}
 #qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
 #qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
+#qc-checkout-loading{display:none;position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,.94);place-items:center}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
 @media(max-width:600px){ #qc-cart .qc-product-row{grid-template-columns:1fr auto}.qc-product-row .qc-remove{grid-column:2}.qc-promo{flex-direction:column}}
 </style>
 <div class="accordion-item" id="qc-cart">
@@ -63,14 +64,16 @@
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
         <div class="alert alert-success">The full order total will be deducted from your Quizontal Cloud Wallet.</div>
         {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
-        <button class="btn btn-primary btn-lg" type="submit">Pay with wallet &amp; place order</button>
+        <button class="btn btn-primary btn-lg" id="qc-place-order" type="submit">Pay with wallet &amp; place order</button>
       </form>
       {% endif %}
     </div></div>
   </div>
   {% endif %}
 </div>
+<div id="qc-checkout-loading"><div class="qc-checkout-box text-center"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3>Placing your order securely…</h3><p class="text-muted">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
 <script>
 $('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).attr('data-cart-item-id');if(confirm('Remove this item from your cart?')){bb.post('guest/cart/remove_item',{id:id,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});}});
 $('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim();var message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
+$('#qc-place-order').on('click',function(){var form=this.closest('form');if(!form || form.checkValidity()){var overlay=document.getElementById('qc-checkout-loading');overlay.classList.add('show');setTimeout(function(){overlay.classList.remove('show');},30000);}});
 </script>

@@ -1,11 +1,11 @@
 <div class="card-body">
-  <h4>InterServer product mapping</h4>
+  <h4>Cloud provider product mapping</h4>
   <p class="text-muted">Mappings are maintained by <code>php artisan fossbilling:sync-products</code>.</p>
   <table class="table table-bordered"><tbody>
-    <tr><th>Provider</th><td>{{ product.config.provider|default('Not configured') }}</td></tr>
+    <tr><th>Source</th><td>Private infrastructure mapping</td></tr>
     <tr><th>Platform</th><td>{{ product.config.platform|default('Not configured') }}</td></tr>
     <tr><th>Plan units</th><td>{{ product.config.slices|default('Not configured') }}</td></tr>
     <tr><th>Expected provider cost</th><td>USD {{ product.config.expected_cost_usd|default('Not configured') }}</td></tr>
-    <tr><th>Provisioning mode</th><td><span class="badge bg-warning text-dark">Validation only</span></td></tr>
+    <tr><th>Provisioning mode</th><td><span class="badge bg-secondary">Controlled globally</span></td></tr>
   </tbody></table>
 </div>

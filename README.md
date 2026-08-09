@@ -50,7 +50,7 @@ The validator sends only `GET /vps/order` and `PUT /vps/order`. It never sends t
 
 ## InterServer provisioning validation
 
-A FOSSBilling 0.7-compatible `Serviceinterserver` module is included under `deploy/fossbilling/Serviceinterserver`. It adds clean, branded location and operating-system selectors and validates paid VPS orders against InterServer without purchasing anything. Install it with `deploy/install-interserver-provisioning.sh`, activate it with `deploy/activate-interserver-provisioning.sh`, then run the product sync. See [`deploy/fossbilling/Serviceinterserver/README.md`](deploy/fossbilling/Serviceinterserver/README.md).
+A FOSSBilling 0.7-compatible `Serviceinterserver` module is included under `deploy/fossbilling/Serviceinterserver`. It adds branded location/OS selectors, safe test validation, confirmation-locked live ordering, duplicate reconciliation, service details, one-time encrypted credentials, usage display, and power controls. It defaults to test mode. Install it with `deploy/install-interserver-provisioning.sh`, activate it with `deploy/activate-interserver-provisioning.sh`, then run product sync. See [`deploy/fossbilling/Serviceinterserver/README.md`](deploy/fossbilling/Serviceinterserver/README.md).
 
 ## FossBilling installation
 

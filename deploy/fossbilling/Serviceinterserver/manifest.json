@@ -2,9 +2,9 @@
   "id": "serviceinterserver",
   "type": "mod",
   "name": "Quizontal Cloud InterServer VPS",
-  "description": "Validation-only InterServer VPS provisioning service for Quizontal Cloud.",
+  "description": "Quizontal Cloud VPS provisioning, synchronization, usage, credentials, and server controls.",
   "icon_url": "icon.svg",
   "author": "Quizontal Cloud",
   "license": "Proprietary",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

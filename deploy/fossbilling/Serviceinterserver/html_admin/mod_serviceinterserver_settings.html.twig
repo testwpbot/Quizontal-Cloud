@@ -1,14 +1,21 @@
 {% extends "layout_default.html.twig" %}
 {% set active_menu = 'system' %}
 {% set params = admin.extension_config_get({ext:'mod_serviceinterserver'}) %}
-{% block meta_title %}InterServer Provisioning Settings{% endblock %}
+{% set current_mode = params.mode == 'live' ? 'live' : 'test' %}
+{% block meta_title %}Cloud Provisioning Settings{% endblock %}
 {% block content %}
-<div class="card"><div class="card-header"><div><h2 class="card-title">InterServer VPS provisioning</h2><p class="card-subtitle">Validation-only mode cannot purchase a VPS.</p></div></div>
-<form method="post" action="{{ 'api/admin/extension/config_save'|link }}" class="api-form" data-api-msg="Settings updated"><input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"><input type="hidden" name="ext" value="mod_serviceinterserver">
-<div class="card-body"><div class="alert alert-warning"><strong>Safety lock:</strong> this module version supports validation only. It contains no provider POST order request.</div><div class="row g-3">
-<div class="col-md-8"><label class="form-label">InterServer API URL</label><input class="form-control" name="api_url" value="{{ params.api_url|default('https://my.interserver.net/apiv2') }}" required></div>
-<div class="col-md-4"><label class="form-label">Mode</label><input class="form-control" name="mode" value="validate_only" readonly></div>
-<div class="col-12"><label class="form-label">InterServer API key</label><input class="form-control" type="password" name="api_key" value="{{ params.api_key }}" autocomplete="new-password" required><small class="form-hint">Stored in encrypted FossBilling extension configuration.</small></div>
-<div class="col-md-4"><label class="form-label">Allowed provider price difference (USD)</label><input class="form-control" type="number" step="0.01" min="0" name="cost_tolerance_usd" value="{{ params.cost_tolerance_usd|default('0.01') }}"></div>
-</div></div><div class="card-footer"><button class="btn btn-primary" type="submit">Save provisioning settings</button></div></form></div>
+<style>
+.qc-mode{--qc:#e31c64;--qc-soft:#fff1f6}.qc-mode-card{border:1px solid #dfe3e8;border-radius:12px;padding:18px;background:#fff;cursor:pointer}.btn-check:checked+.qc-mode-card{border:2px solid var(--qc);background:var(--qc-soft);box-shadow:0 0 0 3px rgba(227,28,100,.1)}.qc-live-warning{border-left:4px solid var(--qc);background:var(--qc-soft)}
+</style>
+<div class="card qc-mode"><div class="card-header"><div><h2 class="card-title">Cloud provisioning</h2><p class="card-subtitle">Control whether paid VPS orders are validated or purchased.</p></div></div>
+<form method="post" action="{{ 'api/admin/extension/config_save'|link }}" class="api-form" data-api-msg="Provisioning settings updated"><input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"><input type="hidden" name="ext" value="mod_serviceinterserver">
+<div class="card-body">
+<label class="form-label fw-bold mb-2">Provisioning mode</label><div class="row g-3 mb-4">
+<div class="col-md-6"><input class="btn-check qc-mode-input" type="radio" name="mode" value="test" id="qc-mode-test" {% if current_mode == 'test' %}checked{% endif %}><label class="qc-mode-card d-block h-100" for="qc-mode-test"><strong class="d-block fs-4">Test mode</strong><span class="text-muted">Validates configuration and pricing. No server is purchased.</span></label></div>
+<div class="col-md-6"><input class="btn-check qc-mode-input" type="radio" name="mode" value="live" id="qc-mode-live" {% if current_mode == 'live' %}checked{% endif %}><label class="qc-mode-card d-block h-100" for="qc-mode-live"><strong class="d-block fs-4">Live mode</strong><span class="text-muted">Paid orders purchase real infrastructure and incur provider charges.</span></label></div>
+</div>
+<div id="qc-live-confirm" class="qc-live-warning rounded p-3 mb-4" {% if current_mode != 'live' %}style="display:none"{% endif %}><strong class="d-block mb-2">Live purchase safety confirmation</strong><p class="mb-2">Type <code>ENABLE LIVE VPS ORDERS</code> exactly. Saving live mode can cause the next paid order to purchase a real server.</p><input class="form-control" name="live_confirmation" value="{{ params.live_confirmation }}" autocomplete="off" placeholder="ENABLE LIVE VPS ORDERS"></div>
+<div class="row g-3"><div class="col-md-8"><label class="form-label">Infrastructure API URL</label><input class="form-control" name="api_url" value="{{ params.api_url|default('https://my.interserver.net/apiv2') }}" required></div><div class="col-md-4"><label class="form-label">Price tolerance (USD)</label><input class="form-control" type="number" step="0.01" min="0" name="cost_tolerance_usd" value="{{ params.cost_tolerance_usd|default('0.01') }}"></div><div class="col-12"><label class="form-label">Infrastructure API key</label><input class="form-control" type="password" name="api_key" value="{{ params.api_key }}" autocomplete="new-password" required><small class="form-hint">Stored in encrypted extension configuration and never shown to customers.</small></div></div>
+</div><div class="card-footer"><button class="btn btn-primary" type="submit">Save provisioning mode</button></div></form></div>
+<script>document.querySelectorAll('.qc-mode-input').forEach(function(el){el.addEventListener('change',function(){document.getElementById('qc-live-confirm').style.display=document.getElementById('qc-mode-live').checked?'block':'none';});});</script>
 {% endblock %}
