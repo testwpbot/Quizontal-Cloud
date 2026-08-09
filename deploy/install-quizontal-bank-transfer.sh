@@ -27,11 +27,13 @@ done
 }
 TARGET_DIR="$MODULES_DIR/Quizontalbanktransfer"
 
-install -d -m 0750 -o www-data -g www-data "$TARGET_DIR"
+install -d -m 0755 -o www-data -g www-data "$TARGET_DIR"
 cp -a "$SOURCE_DIR"/. "$TARGET_DIR"/
 chown -R www-data:www-data "$TARGET_DIR"
-find "$TARGET_DIR" -type d -exec chmod 0750 {} +
-find "$TARGET_DIR" -type f -exec chmod 0640 {} +
+# Module source and manifest contain no credentials. Keep them readable by the
+# PHP-FPM worker even when the pool runs as a user other than www-data.
+find "$TARGET_DIR" -type d -exec chmod 0755 {} +
+find "$TARGET_DIR" -type f -exec chmod 0644 {} +
 
 echo "Quizontal Cloud Bank Transfer module files installed in $TARGET_DIR."
 echo 'Next: run deploy/activate-quizontal-bank-transfer.sh from the Quizontal Cloud repository, then configure the bank details at the settings URL it prints.'
