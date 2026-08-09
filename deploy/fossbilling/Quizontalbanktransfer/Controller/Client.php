@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Box\Mod\Quizontalbanktransfer\Controller;
 
 use FOSSBilling\InformationException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class Client implements \FOSSBilling\InjectionAwareInterface
 {
@@ -63,13 +62,22 @@ class Client implements \FOSSBilling\InjectionAwareInterface
         return $app->redirect('quizontalbanktransfer?submitted='.$result['id']);
     }
 
-    public function get_receipt(\Box_App $app, $id): BinaryFileResponse
+    public function get_receipt(\Box_App $app, $id): string
     {
         $this->di['is_client_logged'];
         $service = $this->di['mod_service']('quizontalbanktransfer');
         $row = $service->get((int) $id);
         if ((int) $row['client_id'] !== (int) $this->di['loggedin_client']->id) throw new InformationException('You cannot access this receipt.');
-        return (new BinaryFileResponse($service->receiptPath($row)))->setContentDisposition('inline', $row['original_name']);
+        $path = $service->receiptPath($row);
+        if (!is_file($path) || !is_readable($path)) throw new InformationException('Receipt file not found.');
+        $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', basename((string) $row['original_name']));
+        header('Content-Type: '.(string) $row['mime_type']);
+        header('Content-Length: '.(string) filesize($path));
+        header('Content-Disposition: inline; filename="'.$filename.'"');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('X-Content-Type-Options: nosniff');
+        readfile($path);
+        return '';
     }
 
     private function checkCsrf(): void

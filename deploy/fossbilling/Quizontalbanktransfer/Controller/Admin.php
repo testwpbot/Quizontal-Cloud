@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Box\Mod\Quizontalbanktransfer\Controller;
 
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-
 class Admin implements \FOSSBilling\InjectionAwareInterface
 {
     protected ?\Pimple\Container $di = null;
@@ -30,11 +28,24 @@ class Admin implements \FOSSBilling\InjectionAwareInterface
     public function get_index(\Box_App $app): string { $this->di['is_admin_logged']; return $app->render('mod_quizontalbanktransfer_index'); }
     public function get_view(\Box_App $app, $id): string { $this->di['is_admin_logged']; return $app->render('mod_quizontalbanktransfer_view', ['submission_id' => (int) $id]); }
 
-    public function get_receipt(\Box_App $app, $id): BinaryFileResponse
+    public function get_receipt(\Box_App $app, $id): string
     {
         $this->di['is_admin_logged'];
         $service = $this->di['mod_service']('quizontalbanktransfer');
         $row = $service->get((int) $id);
-        return (new BinaryFileResponse($service->receiptPath($row)))->setContentDisposition('inline', $row['original_name']);
+        return $this->streamReceipt($service->receiptPath($row), $row);
+    }
+
+    private function streamReceipt(string $path, array $row): string
+    {
+        if (!is_file($path) || !is_readable($path)) throw new \FOSSBilling\InformationException('Receipt file not found.');
+        $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', basename((string) $row['original_name']));
+        header('Content-Type: '.(string) $row['mime_type']);
+        header('Content-Length: '.(string) filesize($path));
+        header('Content-Disposition: inline; filename="'.$filename.'"');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('X-Content-Type-Options: nosniff');
+        readfile($path);
+        return '';
     }
 }
