@@ -4,6 +4,9 @@
 {% block breadcrumb %}<li class="breadcrumb-item active">{{ 'Manual Bank Transfer'|trans }}</li>{% endblock %}
 
 {% block content %}
+<style>
+#qc-receipt-loading{display:none;position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,.94);place-items:center}#qc-receipt-loading.show{display:grid}.qc-receipt-box{width:min(520px,88vw);text-align:center}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
+</style>
 {% if request.submitted %}<div class="alert alert-success">Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.</div>{% endif %}
 <div class="row g-4">
   <div class="col-lg-6">
@@ -27,7 +30,7 @@
   <div class="col-lg-6">
     <div class="card h-100">
       <div class="card-header"><h2 class="card-title">Add funds to your wallet</h2></div>
-      <form method="post" action="{{ 'quizontalbanktransfer/submit'|url }}" enctype="multipart/form-data">
+      <form id="qc-receipt-form" method="post" action="{{ 'quizontalbanktransfer/submit'|url }}" enctype="multipart/form-data">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
         {% if deposit_invoice %}<input type="hidden" name="invoice_hash" value="{{ deposit_invoice.hash }}">{% endif %}
         <div class="card-body">
@@ -54,4 +57,8 @@
   {% for item in submissions.list %}<tr><td>#{{ item.id }}</td><td>{{ item.serie_nr }}</td><td>{{ item.amount|format_currency(item.currency) }}</td><td>{{ item.reference }}</td><td><span class="badge">{{ item.status }}</span>{% if item.admin_note %}<div class="small text-muted">{{ item.admin_note }}</div>{% endif %}</td><td>{{ item.created_at|format_date }}</td><td><a class="btn btn-sm" target="_blank" href="{{ ('quizontalbanktransfer/receipt/' ~ item.id)|url }}">Receipt</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted">No bank transfers submitted.</td></tr>{% endfor %}
   </tbody></table></div>
 </div>
+<div id="qc-receipt-loading"><div class="qc-receipt-box"><h2>Uploading your receipt…</h2><p class="text-muted">Securing your file and creating the verification request. Please keep this page open.</p><div class="qc-receipt-shimmer" style="width:52%;margin-left:auto;margin-right:auto"></div><div class="qc-receipt-shimmer"></div><div class="qc-receipt-shimmer" style="width:76%;margin-left:auto;margin-right:auto"></div></div></div>
+<script>
+var qcReceiptForm=document.getElementById('qc-receipt-form');if(qcReceiptForm)qcReceiptForm.addEventListener('submit',function(){if(this.checkValidity()){var overlay=document.getElementById('qc-receipt-loading');overlay.classList.add('show');setTimeout(function(){overlay.classList.remove('show');},30000);}});
+</script>
 {% endblock %}

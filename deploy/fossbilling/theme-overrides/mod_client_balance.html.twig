@@ -8,6 +8,7 @@
 
 {% block body_class %}client-balance{% endblock %}
 {% block content %}
+{% if request.receipt_submitted %}<div class="alert alert-success"><strong>Receipt submitted.</strong> Your transfer is pending administrator verification. This page will show the latest status.</div>{% endif %}
 <div class="row"><div class="col-md-12">
     <div class="card mb-4">
         <div class="card-header py-3">

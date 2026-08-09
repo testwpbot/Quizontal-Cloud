@@ -148,17 +148,32 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'wallet_url' => $this->di['url']->link('client/balance'),
             'send_now' => true,
         ];
-        $emailService->sendTemplate($common + [
+        $emailService->sendTemplate(array_merge($common, [
             'to_client' => (int) $client->id,
             'recipient_type' => 'customer',
-        ]);
+            'throw_exceptions' => false,
+        ]));
+
         $adminEmail = (string) ($this->getConfig()['admin_notification_email'] ?? '');
         if (filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
-            $emailService->sendTemplate($common + [
+            // Some local SMTP relays throttle two messages submitted in the same
+            // instant. A short delay keeps the web request responsive while avoiding
+            // that race; failed immediate delivery is retained in FOSSBilling's queue.
+            usleep(750000);
+            $adminMessage = array_merge($common, [
                 'to' => $adminEmail,
                 'to_name' => 'Quizontal Cloud Administrator',
                 'recipient_type' => 'admin',
+                'throw_exceptions' => true,
             ]);
+            try {
+                $sent = $emailService->sendTemplate($adminMessage);
+                if (!$sent) error_log('Administrator receipt email was not sent; verify that the template is enabled.');
+            } catch (\Throwable $exception) {
+                // sendTemplate queues before attempting immediate transport, so the
+                // existing queue record can be retried by the normal email cron.
+                error_log('Immediate administrator receipt email failed and remains queued: '.$exception->getMessage());
+            }
         }
     }
 

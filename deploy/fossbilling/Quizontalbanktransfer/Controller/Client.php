@@ -59,7 +59,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             $request->files->get('receipt'),
             ($hash = trim((string) $request->request->get('invoice_hash', ''))) !== '' ? $hash : null
         );
-        return $app->redirect('quizontalbanktransfer?submitted='.$result['id']);
+        return $app->redirect('client/balance?receipt_submitted='.$result['id']);
     }
 
     public function get_receipt(\Box_App $app, $id): string
