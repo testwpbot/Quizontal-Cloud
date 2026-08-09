@@ -4,6 +4,7 @@ A wallet-first bank transfer workflow for FOSSBilling 0.8.5:
 
 - Customers submit a wallet deposit amount, bank reference, and JPG/PNG/PDF receipt.
 - Receipts are stored under FOSSBilling's private `data/uploads` directory.
+- Wallet pages show the complete submission history with color-coded statuses.
 - Administrators review, approve, or reject submissions.
 - Approval records the manual transaction, marks the deposit invoice paid, and credits the wallet.
 - The `onBeforeClientCheckout` hook blocks product checkout when wallet balance is insufficient.

@@ -4,6 +4,7 @@ set -Eeuo pipefail
 : "${FOSSBILLING_DIR:=/var/www/fossbilling}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SOURCE_DIR="$SCRIPT_DIR/fossbilling/Quizontalbanktransfer"
+WALLET_OVERRIDE="$SCRIPT_DIR/fossbilling/theme-overrides/mod_client_balance.html.twig"
 
 if [[ $EUID -ne 0 ]]; then
   echo 'Run as root: sudo -E bash deploy/install-quizontal-bank-transfer.sh' >&2
@@ -37,9 +38,19 @@ chown -R "$WEB_USER:$WEB_GROUP" "$TARGET_DIR"
 find "$TARGET_DIR" -type d -exec chmod 0755 {} +
 find "$TARGET_DIR" -type f -exec chmod 0644 {} +
 
+# Override the legacy wallet page through each client theme's supported
+# html_custom directory so transfer status is always visible in Wallet.
+APP_ROOT=$(dirname "$MODULES_DIR")
+if [[ -f "$WALLET_OVERRIDE" && -d "$APP_ROOT/themes" ]]; then
+  for theme_dir in "$APP_ROOT/themes"/*; do
+    [[ -d "$theme_dir/html" ]] || continue
+    install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$theme_dir/html_custom"
+    install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$WALLET_OVERRIDE" "$theme_dir/html_custom/mod_client_balance.html.twig"
+  done
+fi
+
 # FOSSBilling caches active module controllers and Twig paths on disk. Clear
 # generated cache files so newly added client/admin routes are registered.
-APP_ROOT=$(dirname "$MODULES_DIR")
 if [[ -d "$APP_ROOT/data/cache" ]]; then
   find "$APP_ROOT/data/cache" -type f ! -name '.gitignore' -delete
 fi
