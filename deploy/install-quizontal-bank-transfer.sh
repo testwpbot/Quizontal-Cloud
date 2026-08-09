@@ -37,5 +37,12 @@ chown -R "$WEB_USER:$WEB_GROUP" "$TARGET_DIR"
 find "$TARGET_DIR" -type d -exec chmod 0755 {} +
 find "$TARGET_DIR" -type f -exec chmod 0644 {} +
 
+# FOSSBilling caches active module controllers and Twig paths on disk. Clear
+# generated cache files so newly added client/admin routes are registered.
+APP_ROOT=$(dirname "$MODULES_DIR")
+if [[ -d "$APP_ROOT/data/cache" ]]; then
+  find "$APP_ROOT/data/cache" -type f ! -name '.gitignore' -delete
+fi
+
 echo "Quizontal Cloud Bank Transfer module files installed in $TARGET_DIR (owner $WEB_USER:$WEB_GROUP)."
 echo 'Next: run deploy/activate-quizontal-bank-transfer.sh from the Quizontal Cloud repository, then configure the bank details at the settings URL it prints.'
