@@ -32,7 +32,7 @@ Then:
 
 ```html
 <p>Transfer the invoice amount to the Quizontal Cloud bank account, then upload your receipt.</p>
-<p><a class="btn btn-primary" href="http://billing.localhost/quizontal-bank-transfer/invoice/{{ invoice.hash }}">Upload payment receipt</a></p>
+<p><a class="btn btn-primary" href="http://billing.localhost/quizontal-bank-transfer?invoice_hash={{ invoice.hash }}">Upload payment receipt</a></p>
 ```
 
 3. Enable the **ClientBalance** gateway.

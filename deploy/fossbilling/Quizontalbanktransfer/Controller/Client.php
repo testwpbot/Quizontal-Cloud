@@ -24,13 +24,21 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     public function get_index(\Box_App $app): string
     {
         $this->di['is_client_logged'];
+        $hash = trim((string) $this->di['request']->query->get('invoice_hash', ''));
+        if ($hash !== '') return $this->renderInvoice($app, $hash);
+
         return $app->render('mod_quizontalbanktransfer_index', ['config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig()]);
     }
 
     public function get_invoice(\Box_App $app, $hash): string
     {
         $this->di['is_client_logged'];
-        $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [(string) $hash, $this->di['loggedin_client']->id]);
+        return $this->renderInvoice($app, (string) $hash);
+    }
+
+    private function renderInvoice(\Box_App $app, string $hash): string
+    {
+        $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [$hash, $this->di['loggedin_client']->id]);
         if (!$invoice instanceof \Model_Invoice || !$this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice)) {
             throw new InformationException('Deposit invoice not found.');
         }
