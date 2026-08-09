@@ -38,11 +38,11 @@ api_post 'hook/batch_connect' '{}'
 api_post 'email/batch_template_generate' '{}'
 api_post 'email/batch_template_enable' '{}'
 api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_submitted"}'
-api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_invoice_created"}'
-for template_code in mod_invoice_paid mod_invoice_payment_reminder mod_invoice_due_after mod_support_ticket_open mod_support_ticket_staff_reply mod_support_ticket_staff_close mod_client_signup mod_client_password_reset_request; do
+api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_status"}'
+for template_code in mod_invoice_created mod_invoice_paid mod_invoice_payment_reminder mod_invoice_due_after mod_support_ticket_open mod_support_ticket_staff_reply mod_support_ticket_staff_close mod_client_signup mod_client_password_reset_request; do
     api_post 'email/template_reset' "{\"code\":\"$template_code\"}"
 done
-api_post 'quizontalbanktransfer/configure_invoice_notifications' '{}'
+api_post 'quizontalbanktransfer/normalize_email_subjects' '{}'
 EMAIL_PAYLOAD=$(jq -n --arg email "$ADMIN_EMAIL" '{email:$email}')
 api_post 'quizontalbanktransfer/set_notification_email' "$EMAIL_PAYLOAD"
 

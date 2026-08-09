@@ -15,10 +15,10 @@ class Admin extends \Api_Abstract
         return $this->getService()->search((array) $data);
     }
 
-    public function configure_invoice_notifications($data): bool
+    public function normalize_email_subjects($data): bool
     {
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('quizontalbanktransfer', 'manage');
-        return $this->getService()->configureInvoiceNotifications();
+        return $this->getService()->normalizeEmailSubjects();
     }
 
     public function set_notification_email($data): bool
