@@ -116,7 +116,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function search(array $data): array
     {
         $params = [];
-        $sql = 'SELECT r.*, i.serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE 1';
+        $sql = 'SELECT r.*, CONCAT(COALESCE(i.serie, ''), COALESCE(i.nr, '')) AS serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE 1';
         if (!empty($data['client_id'])) { $sql .= ' AND r.client_id=:client_id'; $params[':client_id'] = (int) $data['client_id']; }
         if (!empty($data['status'])) { $sql .= ' AND r.status=:status'; $params[':status'] = (string) $data['status']; }
         $sql .= ' ORDER BY r.id DESC';
@@ -125,7 +125,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     public function get(int $id): array
     {
-        $statement = $this->di['pdo']->prepare('SELECT r.*, i.hash AS invoice_hash, i.serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE r.id=?');
+        $statement = $this->di['pdo']->prepare('SELECT r.*, i.hash AS invoice_hash, CONCAT(COALESCE(i.serie, ''), COALESCE(i.nr, '')) AS serie_nr, i.status AS invoice_status, CONCAT(c.first_name, " ", c.last_name) AS client_name, c.email AS client_email FROM quizontal_bank_transfer r JOIN invoice i ON i.id=r.invoice_id JOIN client c ON c.id=r.client_id WHERE r.id=?');
         $statement->execute([$id]);
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
         if (!$row) throw new InformationException('Bank transfer submission not found.');
