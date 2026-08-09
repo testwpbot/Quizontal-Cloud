@@ -1,0 +1,48 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+{% set active_menu = 'payments' %}
+{% block meta_title %}{{ 'Manual Bank Transfer'|trans }}{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">{{ 'Manual Bank Transfer'|trans }}</li>{% endblock %}
+
+{% block content %}
+{% if request.submitted %}<div class="alert alert-success">Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.</div>{% endif %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Quizontal Cloud bank details</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-5">Bank</dt><dd class="col-sm-7">{{ config.bank_name }}</dd>
+          <dt class="col-sm-5">Account name</dt><dd class="col-sm-7">{{ config.account_name }}</dd>
+          <dt class="col-sm-5">Account number</dt><dd class="col-sm-7"><strong>{{ config.account_number }}</strong></dd>
+          <dt class="col-sm-5">Branch</dt><dd class="col-sm-7">{{ config.branch }}</dd>
+          {% if config.swift_code %}<dt class="col-sm-5">SWIFT</dt><dd class="col-sm-7">{{ config.swift_code }}</dd>{% endif %}
+        </dl>
+        {% if config.instructions %}<hr><p class="text-muted mb-0">{{ config.instructions }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="card-title">Add funds to your wallet</h2></div>
+      <form method="post" action="{{ 'quizontal-bank-transfer/submit'|url }}" enctype="multipart/form-data">
+        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+        <div class="card-body">
+          <div class="mb-3"><label class="form-label">Amount (LKR)</label><input class="form-control" type="number" name="amount" min="1" step="0.01" required></div>
+          <div class="mb-3"><label class="form-label">Bank transfer reference</label><input class="form-control" type="text" name="reference" maxlength="191" required></div>
+          <div class="mb-3"><label class="form-label">Payment receipt</label><input class="form-control" type="file" name="receipt" accept="image/jpeg,image/png,application/pdf" required><small class="form-hint">JPG, PNG, or PDF. Maximum {{ config.max_file_mb }} MB.</small></div>
+          <div class="alert alert-warning mb-0">A receipt does not guarantee approval. Funds are credited only after the payment appears in our bank account.</div>
+        </div>
+        <div class="card-footer"><button class="btn btn-primary" type="submit">Submit transfer for verification</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header"><h2 class="card-title">Your submissions</h2></div>
+  <div class="table-responsive"><table class="table table-vcenter"><thead><tr><th>ID</th><th>Invoice</th><th>Amount</th><th>Reference</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
+  {% set submissions = client.quizontalbanktransfer_get_list({per_page: 50}) %}
+  {% for item in submissions.list %}<tr><td>#{{ item.id }}</td><td>{{ item.serie_nr }}</td><td>{{ item.amount|format_currency(item.currency) }}</td><td>{{ item.reference }}</td><td><span class="badge">{{ item.status }}</span>{% if item.admin_note %}<div class="small text-muted">{{ item.admin_note }}</div>{% endif %}</td><td>{{ item.created_at|format_date }}</td><td><a class="btn btn-sm" target="_blank" href="{{ ('quizontal-bank-transfer/receipt/' ~ item.id)|url }}">Receipt</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted">No bank transfers submitted.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}
