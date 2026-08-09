@@ -36,6 +36,18 @@ php artisan interserver:import-products
 
 The command calls InterServer's VPS ordering-information endpoint, obtains the USD/LKR rate, adds exactly `PROFIT_USD` to the provider monthly USD price, converts it to LKR, and stores the private catalog in `storage/app/private/catalog.json`. Until then, the storefront shows a clearly marked demo catalog.
 
+Before building live provisioning, inspect the current provider options and validate one configuration without purchasing anything:
+
+```bash
+php artisan interserver:validate-vps-order --show-options
+php artisan interserver:validate-vps-order \
+  --platform=kvm --slices=1 --location=LOCATION_ID \
+  --os=OS_TEMPLATE --version=OS_VERSION \
+  --hostname=validation.quizontal-cloud.invalid
+```
+
+The validator sends only `GET /vps/order` and `PUT /vps/order`. It never sends the purchasing `POST /vps/order` request, does not print the API key or generated validation password, and cannot create a VPS.
+
 ## FossBilling installation
 
 On a PHP 8.2+ server with MySQL 8+/MariaDB 10.3+, run the deployment helper from this repository (or follow `deploy/FOSS_BILLING.md`):
