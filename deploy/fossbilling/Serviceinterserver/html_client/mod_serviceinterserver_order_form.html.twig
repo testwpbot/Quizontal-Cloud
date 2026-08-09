@@ -65,6 +65,7 @@
         {% endfor %}
       </ul>
     </div>
+    <input type="hidden" name="period" value="1M">
     <input type="hidden" name="osDistro" id="qc-os-distro" value="{{ is_windows ? 'windows' : 'ubuntu' }}">
     <input type="hidden" name="osVersion" id="qc-os-version" value="{{ is_windows ? 'Windows2022' : 'ubuntu24' }}">
     <input type="hidden" name="controlPanel" value="none">
