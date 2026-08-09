@@ -163,8 +163,12 @@ class ImportInterServerProducts extends Command
         $ramMb = $this->number($this->firstValue($raw, ['ram_mb', 'memory_mb'], 0));
         $ram = $this->number($this->firstValue($raw, ['ram_gb', 'ram', 'memory'], $ramMb ? $ramMb / 1024 : 1));
         $id = (string) $this->firstValue($raw, ['id', 'product_id', 'plan_id', 'sku', 'name'], 'interserver-'.($index + 1));
+        $name = (string) $this->firstValue($raw, ['name', 'title', 'description', 'plan_name'], 'Cloud VPS Plan '.($index + 1));
+        // Preserve standard platform names while replacing provider-specific plan terminology.
+        $name = preg_replace('/\s+(\d+)\s+Slices?\b/i', ' Plan $1', $name);
+        $name = preg_replace('/\bSlices?\b/i', 'Plan', $name);
         $retail = round(($base + $profit) * 100) / 100;
-        return ['id' => 'interserver-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $id), 'providerProductId' => $id, 'name' => (string) $this->firstValue($raw, ['name', 'title', 'description', 'plan_name'], 'InterServer VPS '.($index + 1)), 'category' => $category, 'cpu' => $this->number($this->firstValue($raw, ['cpu', 'cores', 'vcpu', 'cpu_cores'], 1)), 'ramGb' => $ram, 'storageGb' => $this->number($this->firstValue($raw, ['storage_gb', 'disk_gb', 'disk', 'storage'], 0)), 'storageType' => $category === 'storage' ? 'SATA' : 'NVMe', 'bandwidthGb' => $this->number($this->firstValue($raw, ['bandwidth_gb', 'transfer_gb', 'bandwidth', 'transfer'], 0)), 'basePriceUsd' => $base, 'retailPriceUsd' => $retail, 'priceLkr' => round($retail * $rate), 'available' => $this->firstValue($raw, ['available', 'active'], true) !== false];
+        return ['id' => 'interserver-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $id), 'providerProductId' => $id, 'name' => $name, 'category' => $category, 'cpu' => $this->number($this->firstValue($raw, ['cpu', 'cores', 'vcpu', 'cpu_cores'], 1)), 'ramGb' => $ram, 'storageGb' => $this->number($this->firstValue($raw, ['storage_gb', 'disk_gb', 'disk', 'storage'], 0)), 'storageType' => $category === 'storage' ? 'SATA' : 'NVMe', 'bandwidthGb' => $this->number($this->firstValue($raw, ['bandwidth_gb', 'transfer_gb', 'bandwidth', 'transfer'], 0)), 'basePriceUsd' => $base, 'retailPriceUsd' => $retail, 'priceLkr' => round($retail * $rate), 'available' => $this->firstValue($raw, ['available', 'active'], true) !== false];
     }
     private function firstValue(array $source, array $keys, mixed $default): mixed { foreach ($keys as $key) if (isset($source[$key]) && $source[$key] !== '') return $source[$key]; return $default; }
     private function number(mixed $value): float { return (float) preg_replace('/[^0-9.-]/', '', (string) $value); }
