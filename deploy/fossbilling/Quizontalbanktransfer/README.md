@@ -63,7 +63,7 @@ Activation creates an editable FossBilling Admin email template with action code
 mod_quizontalbanktransfer_receipt_submitted
 ```
 
-Each receipt submission sends an immediate confirmation to the customer and an administrator review notification to `QUIZONTAL_ADMIN_EMAIL`. The receipt itself is not attached; the administrator receives an authenticated review link.
+Each receipt submission sends an immediate confirmation to the customer, pauses briefly for local SMTP throttling, and then sends an administrator notification to `QUIZONTAL_ADMIN_EMAIL`. The admin version avoids attachments and external/action links; the administrator signs in normally and opens **Invoices → Bank Transfer Receipts**. Inbox placement still depends primarily on the sender domain's SPF, DKIM, DMARC, and reverse-DNS configuration.
 
 ## Important controls
 

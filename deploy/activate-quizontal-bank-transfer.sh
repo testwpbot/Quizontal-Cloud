@@ -34,6 +34,7 @@ api_post() {
 api_post 'extension/activate' '{"id":"quizontalbanktransfer","type":"mod"}'
 api_post 'hook/batch_connect' '{"mod":"quizontalbanktransfer"}'
 api_post 'email/batch_template_generate' '{}'
+api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_submitted"}'
 EMAIL_PAYLOAD=$(jq -n --arg email "$ADMIN_EMAIL" '{email:$email}')
 api_post 'quizontalbanktransfer/set_notification_email' "$EMAIL_PAYLOAD"
 
