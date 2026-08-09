@@ -15,7 +15,7 @@ class Admin implements \FOSSBilling\InjectionAwareInterface
     public function fetchNavigation(): array
     {
         return ['subpages' => [[
-            'location' => 'invoices', 'label' => 'Bank Transfer Receipts', 'index' => 850,
+            'location' => 'invoice', 'label' => 'Bank Transfer Receipts', 'index' => 850,
             'uri' => $this->di['url']->adminLink('quizontalbanktransfer'), 'class' => '',
         ]]];
     }
