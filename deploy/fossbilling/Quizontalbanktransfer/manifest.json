@@ -1,0 +1,10 @@
+{
+  "id": "quizontalbanktransfer",
+  "type": "mod",
+  "name": "Quizontal Cloud Bank Transfer",
+  "description": "Wallet-first manual bank transfers with private receipt uploads and administrator approval.",
+  "icon_url": "icon.svg",
+  "author": "Quizontal Cloud",
+  "license": "Proprietary",
+  "version": "1.0.0"
+}

@@ -1,0 +1,17 @@
+{% extends "layout_default.html.twig" %}
+{% set active_menu = 'system' %}
+{% set params = admin.extension_config_get({ext: 'mod_quizontalbanktransfer'}) %}
+{% block meta_title %}Quizontal Cloud Bank Transfer Settings{% endblock %}
+{% block content %}
+<div class="card"><div class="card-header"><h2 class="card-title">Quizontal Cloud Bank Transfer</h2></div>
+<form method="post" action="{{ 'extension/config_save'|api_url }}" {{ fb_api_form({message: 'Configuration updated'|trans}) }}><input type="hidden" name="ext" value="mod_quizontalbanktransfer"><div class="card-body"><div class="row g-3">
+<div class="col-md-6"><label class="form-label">Bank name</label><input class="form-control" name="bank_name" value="{{ params.bank_name }}" required></div>
+<div class="col-md-6"><label class="form-label">Account name</label><input class="form-control" name="account_name" value="{{ params.account_name|default('Quizontal Cloud') }}" required></div>
+<div class="col-md-6"><label class="form-label">Account number</label><input class="form-control" name="account_number" value="{{ params.account_number }}" required></div>
+<div class="col-md-6"><label class="form-label">Branch</label><input class="form-control" name="branch" value="{{ params.branch }}"></div>
+<div class="col-md-6"><label class="form-label">SWIFT code</label><input class="form-control" name="swift_code" value="{{ params.swift_code }}"></div>
+<div class="col-md-6"><label class="form-label">Maximum receipt size (MB)</label><input class="form-control" type="number" min="1" max="20" name="max_file_mb" value="{{ params.max_file_mb|default(5) }}"></div>
+<div class="col-12"><label class="form-label">Additional instructions</label><textarea class="form-control" name="instructions">{{ params.instructions }}</textarea></div>
+<div class="col-12"><label class="form-check"><input type="hidden" name="wallet_only_checkout" value="0"><input class="form-check-input" type="checkbox" name="wallet_only_checkout" value="1" {% if params.wallet_only_checkout|default(true) %}checked{% endif %}><span class="form-check-label">Require enough wallet balance before checkout</span></label></div>
+</div></div><div class="card-footer"><button class="btn btn-primary" type="submit">Save settings</button></div></form></div>
+{% endblock %}

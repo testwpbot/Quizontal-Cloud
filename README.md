@@ -47,6 +47,10 @@ sudo -E bash deploy/install-fossbilling.sh
 
 Create a separate MySQL database/user first, complete FossBilling's web installer at the billing subdomain, and create matching products in its admin panel. Use a FossBilling payment gateway and an InterServer provisioning module/webhook before accepting orders. Do not place InterServer orders directly from the public browser.
 
+## Wallet-first manual bank transfers
+
+An installable FossBilling module for private receipt uploads, administrator approval, wallet credits, and wallet-only checkout is included in `deploy/fossbilling/Quizontalbanktransfer`. Follow [`deploy/QUIZONTAL_BANK_TRANSFER.md`](deploy/QUIZONTAL_BANK_TRANSFER.md) to install and configure it.
+
 ## Scheduled updates
 
 Run this daily as the web-server user after Laravel is installed:
