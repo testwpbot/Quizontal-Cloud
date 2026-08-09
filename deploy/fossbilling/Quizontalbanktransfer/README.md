@@ -32,7 +32,7 @@ Then:
 
 ```html
 <p>Transfer the invoice amount to the Quizontal Cloud bank account, then upload your receipt.</p>
-<p><a class="btn btn-primary" href="http://billing.localhost/quizontal-bank-transfer?invoice_hash={{ invoice.hash }}">Upload payment receipt</a></p>
+<p><a class="btn btn-primary" href="http://billing.localhost/quizontalbanktransfer?invoice_hash={{ invoice.hash }}">Upload payment receipt</a></p>
 ```
 
 3. Enable the **ClientBalance** gateway.
@@ -41,13 +41,13 @@ Then:
 Customer page:
 
 ```text
-/client-area/quizontal-bank-transfer
+/client-area/quizontalbanktransfer
 ```
 
 Admin review page:
 
 ```text
-/client-area/admin/quizontal-bank-transfer
+/client-area/admin/quizontalbanktransfer
 ```
 
 Paths vary if your FOSSBilling base/admin URLs are customized.

@@ -4,7 +4,7 @@ See [`fossbilling/Quizontalbanktransfer/README.md`](fossbilling/Quizontalbanktra
 
 ## Workflow
 
-1. Customer visits `/quizontal-bank-transfer` while logged into FossBilling.
+1. Customer visits `/quizontalbanktransfer` while logged into FossBilling.
 2. Customer enters an LKR amount, transfers it to the configured bank account, and uploads a receipt.
 3. The module creates a FossBilling deposit invoice and records the submission as `pending`.
 4. Admin opens **Bank Transfer Receipts**, verifies the bank account, and enters the real bank transaction ID.

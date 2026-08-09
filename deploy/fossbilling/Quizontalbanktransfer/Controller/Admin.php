@@ -16,15 +16,15 @@ class Admin implements \FOSSBilling\InjectionAwareInterface
     {
         return ['subpages' => [[
             'location' => 'invoices', 'label' => 'Bank Transfer Receipts', 'index' => 850,
-            'uri' => $this->di['url']->adminLink('quizontal-bank-transfer'), 'class' => '',
+            'uri' => $this->di['url']->adminLink('quizontalbanktransfer'), 'class' => '',
         ]]];
     }
 
     public function register(\Box_App &$app): void
     {
-        $app->get('/quizontal-bank-transfer', 'get_index', [], static::class);
-        $app->get('/quizontal-bank-transfer/:id', 'get_view', ['id' => '[0-9]+'], static::class);
-        $app->get('/quizontal-bank-transfer/receipt/:id', 'get_receipt', ['id' => '[0-9]+'], static::class);
+        $app->get('/quizontalbanktransfer', 'get_index', [], static::class);
+        $app->get('/quizontalbanktransfer/:id', 'get_view', ['id' => '[0-9]+'], static::class);
+        $app->get('/quizontalbanktransfer/receipt/:id', 'get_receipt', ['id' => '[0-9]+'], static::class);
     }
 
     public function get_index(\Box_App $app): string { $this->di['is_admin_logged']; return $app->render('mod_quizontalbanktransfer_index'); }

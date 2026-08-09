@@ -6,7 +6,7 @@
   <div class="card-header"><div><h2 class="card-title">Quizontal Cloud bank transfer receipts</h2><p class="card-subtitle">Verify the actual bank transaction before approving any receipt.</p></div></div>
   <div class="table-responsive"><table class="table table-vcenter"><thead><tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Reference</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>
   {% set submissions = admin.quizontalbanktransfer_get_list({per_page: 100, status: request.status}) %}
-  {% for item in submissions.list %}<tr><td>#{{ item.id }}</td><td>{{ item.client_name }}<div class="small text-muted">{{ item.client_email }}</div></td><td>{{ item.serie_nr }}</td><td>{{ item.amount|money(item.currency) }}</td><td>{{ item.reference }}</td><td><span class="badge">{{ item.status }}</span></td><td>{{ item.created_at|format_date }}</td><td><a class="btn btn-primary btn-sm" href="{{ ('quizontal-bank-transfer/' ~ item.id)|alink }}">Review</a></td></tr>{% else %}<tr><td colspan="8" class="text-center text-muted">No submissions found.</td></tr>{% endfor %}
+  {% for item in submissions.list %}<tr><td>#{{ item.id }}</td><td>{{ item.client_name }}<div class="small text-muted">{{ item.client_email }}</div></td><td>{{ item.serie_nr }}</td><td>{{ item.amount|money(item.currency) }}</td><td>{{ item.reference }}</td><td><span class="badge">{{ item.status }}</span></td><td>{{ item.created_at|format_date }}</td><td><a class="btn btn-primary btn-sm" href="{{ ('quizontalbanktransfer/' ~ item.id)|alink }}">Review</a></td></tr>{% else %}<tr><td colspan="8" class="text-center text-muted">No submissions found.</td></tr>{% endfor %}
   </tbody></table></div>
 </div>
 {% endblock %}

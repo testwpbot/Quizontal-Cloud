@@ -33,4 +33,4 @@ api_post 'hook/batch_connect' '{"mod":"quizontalbanktransfer"}'
 
 echo 'Quizontal Cloud Bank Transfer is active and its checkout hook is connected.'
 echo "Settings: $BILLING_URL/admin/extension/settings/quizontalbanktransfer"
-echo "Customer page: $BILLING_URL/quizontal-bank-transfer"
+echo "Customer page: $BILLING_URL/quizontalbanktransfer"

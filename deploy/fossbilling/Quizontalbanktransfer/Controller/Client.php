@@ -15,10 +15,10 @@ class Client implements \FOSSBilling\InjectionAwareInterface
 
     public function register(\Box_App &$app): void
     {
-        $app->get('/quizontal-bank-transfer', 'get_index', [], static::class);
-        $app->get('/quizontal-bank-transfer/invoice/:hash', 'get_invoice', ['hash' => '[a-z0-9]+'], static::class);
-        $app->post('/quizontal-bank-transfer/submit', 'post_submit', [], static::class);
-        $app->get('/quizontal-bank-transfer/receipt/:id', 'get_receipt', ['id' => '[0-9]+'], static::class);
+        $app->get('/quizontalbanktransfer', 'get_index', [], static::class);
+        $app->get('/quizontalbanktransfer/invoice/:hash', 'get_invoice', ['hash' => '[a-z0-9]+'], static::class);
+        $app->post('/quizontalbanktransfer/submit', 'post_submit', [], static::class);
+        $app->get('/quizontalbanktransfer/receipt/:id', 'get_receipt', ['id' => '[0-9]+'], static::class);
     }
 
     public function get_index(\Box_App $app): string
@@ -60,7 +60,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             $request->files->get('receipt'),
             ($hash = trim((string) $request->request->get('invoice_hash', ''))) !== '' ? $hash : null
         );
-        return $app->redirect('quizontal-bank-transfer?submitted='.$result['id']);
+        return $app->redirect('quizontalbanktransfer?submitted='.$result['id']);
     }
 
     public function get_receipt(\Box_App $app, $id): BinaryFileResponse
