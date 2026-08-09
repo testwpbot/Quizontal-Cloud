@@ -64,7 +64,7 @@ class ValidateInterServerVpsOrder extends Command
 
         $this->warn('VALIDATION-ONLY MODE — this command never sends POST and cannot place an order.');
         $this->table(['Field', 'Value'], collect($payload)
-            ->except(['rootPassword', 'coupon'])
+            ->except(['rootpass', 'coupon'])
             ->map(fn ($value, $field) => [$field, is_scalar($value) ? (string) $value : json_encode($value)])
             ->values()->all());
 
@@ -100,12 +100,14 @@ class ValidateInterServerVpsOrder extends Command
             return self::FAILURE;
         }
 
-        if ($status === 'ok' || $status === 'success' || ($safe['valid'] ?? false) === true) {
+        if ($status === 'ok' || $status === 'success' || ($safe['valid'] ?? false) === true || ($safe['continue'] ?? false) === true) {
             $this->info('InterServer accepted the VPS configuration for validation. No VPS was purchased.');
             return self::SUCCESS;
         }
 
-        $message = (string) ($safe['status_text'] ?? $safe['message'] ?? 'Review the response above.');
+        $message = isset($safe['errors']) && is_array($safe['errors'])
+            ? implode('; ', array_map('strval', $safe['errors']))
+            : (string) ($safe['status_text'] ?? $safe['message'] ?? 'Review the response above.');
         $this->error('Validation did not pass: '.$message);
         return self::FAILURE;
     }
@@ -124,7 +126,7 @@ class ValidateInterServerVpsOrder extends Command
             'hostname' => strtolower(trim((string) $this->option('hostname'))),
             'coupon' => trim((string) $this->option('coupon')),
             // Generated only for validation, never printed or persisted.
-            'rootPassword' => Str::password(24, symbols: true),
+            'rootpass' => Str::password(24, symbols: true),
         ];
     }
 

@@ -16,7 +16,7 @@ class ValidateInterServerVpsOrderTest extends TestCase
         ]);
         Http::fakeSequence('https://provider.test/apiv2/vps/order')
             ->push(['maxSlices' => 32], 200)
-            ->push(['status' => 'ok', 'service_cost' => 3, 'rootpass' => 'must-not-be-printed'], 200);
+            ->push(['continue' => true, 'service_cost' => 3, 'rootpass' => 'must-not-be-printed'], 200);
 
         $this->artisan('interserver:validate-vps-order', [
             '--platform' => 'kvm',
@@ -36,8 +36,8 @@ class ValidateInterServerVpsOrderTest extends TestCase
             $payload = $request->data();
             return $payload['vpsPlatform'] === 'kvm'
                 && $payload['slices'] === 1
-                && isset($payload['rootPassword'])
-                && strlen($payload['rootPassword']) >= 16;
+                && isset($payload['rootpass'])
+                && strlen($payload['rootpass']) >= 16;
         });
         Http::assertNotSent(fn (Request $request) => $request->method() === 'POST');
     }
