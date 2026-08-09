@@ -105,7 +105,7 @@ class SyncProductsToFossBilling extends Command
                     $fossbillingUrl, $apiKey, $productId, $title, $description, $priceLkr, $categoryId, $slug
                 );
 
-                if ($success) {
+                if ($success && $this->configureInterServerProduct($fossbillingUrl, $apiKey, (int) $productId, $product)) {
                     $this->line("  <fg=yellow>✓ Updated:</> {$title}");
                     $updated++;
                 } else {
@@ -118,7 +118,7 @@ class SyncProductsToFossBilling extends Command
                     $fossbillingUrl, $apiKey, $title, $description, $priceLkr, $categoryId, $slug
                 );
 
-                if ($productId) {
+                if ($productId && $this->configureInterServerProduct($fossbillingUrl, $apiKey, $productId, $product)) {
                     $this->line("  <fg=green>✓ Created:</> {$title} (ID: {$productId})");
                     $created++;
                 } else {
@@ -256,7 +256,7 @@ class SyncProductsToFossBilling extends Command
         // Step 1: Create the product (prepare)
         $result = $this->fossbillingApi($baseUrl, $apiKey, 'product/prepare', [
             'title' => $title,
-            'type' => 'custom',
+            'type' => 'interserver',
             'product_category_id' => $categoryId,
         ]);
 
@@ -336,6 +336,29 @@ class SyncProductsToFossBilling extends Command
 
         $result = $this->fossbillingApi($baseUrl, $apiKey, 'product/update', $data);
 
+        return $result !== null && ($result['result'] ?? false);
+    }
+
+    private function configureInterServerProduct(string $baseUrl, string $apiKey, int $productId, array $product): bool
+    {
+        $category = (string) ($product['category'] ?? 'general');
+        $platform = (string) ($product['platform'] ?? match ($category) {
+            'storage' => 'kvmstorage',
+            'windows' => 'hyperv',
+            default => 'kvm',
+        });
+        $slices = (int) ($product['slices'] ?? $product['cpu'] ?? 0);
+        $expectedCost = (float) ($product['basePriceUsd'] ?? 0);
+        if ($slices < 1 || $expectedCost <= 0) {
+            $this->error("Invalid provider mapping for FossBilling product {$productId}.");
+            return false;
+        }
+        $result = $this->fossbillingApi($baseUrl, $apiKey, 'serviceinterserver/configure_product', [
+            'id' => $productId,
+            'platform' => $platform,
+            'slices' => $slices,
+            'expected_cost_usd' => $expectedCost,
+        ]);
         return $result !== null && ($result['result'] ?? false);
     }
 

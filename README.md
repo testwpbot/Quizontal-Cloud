@@ -48,6 +48,10 @@ php artisan interserver:validate-vps-order \
 
 The validator sends only `GET /vps/order` and `PUT /vps/order`. It never sends the purchasing `POST /vps/order` request, does not print the API key or generated validation password, and cannot create a VPS.
 
+## InterServer provisioning validation
+
+A FOSSBilling 0.7-compatible `Serviceinterserver` module is included under `deploy/fossbilling/Serviceinterserver`. It adds clean, branded location and operating-system selectors and validates paid VPS orders against InterServer without purchasing anything. Install it with `deploy/install-interserver-provisioning.sh`, activate it with `deploy/activate-interserver-provisioning.sh`, then run the product sync. See [`deploy/fossbilling/Serviceinterserver/README.md`](deploy/fossbilling/Serviceinterserver/README.md).
+
 ## FossBilling installation
 
 On a PHP 8.2+ server with MySQL 8+/MariaDB 10.3+, run the deployment helper from this repository (or follow `deploy/FOSS_BILLING.md`):

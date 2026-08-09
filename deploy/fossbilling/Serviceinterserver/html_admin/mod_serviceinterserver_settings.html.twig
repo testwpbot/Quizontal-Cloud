@@ -1,0 +1,14 @@
+{% extends "layout_default.html.twig" %}
+{% set active_menu = 'system' %}
+{% set params = admin.extension_config_get({ext:'mod_serviceinterserver'}) %}
+{% block meta_title %}InterServer Provisioning Settings{% endblock %}
+{% block content %}
+<div class="card"><div class="card-header"><div><h2 class="card-title">InterServer VPS provisioning</h2><p class="card-subtitle">Validation-only mode cannot purchase a VPS.</p></div></div>
+<form method="post" action="{{ 'api/admin/extension/config_save'|link }}" class="api-form" data-api-msg="Settings updated"><input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"><input type="hidden" name="ext" value="mod_serviceinterserver">
+<div class="card-body"><div class="alert alert-warning"><strong>Safety lock:</strong> this module version supports validation only. It contains no provider POST order request.</div><div class="row g-3">
+<div class="col-md-8"><label class="form-label">InterServer API URL</label><input class="form-control" name="api_url" value="{{ params.api_url|default('https://my.interserver.net/apiv2') }}" required></div>
+<div class="col-md-4"><label class="form-label">Mode</label><input class="form-control" name="mode" value="validate_only" readonly></div>
+<div class="col-12"><label class="form-label">InterServer API key</label><input class="form-control" type="password" name="api_key" value="{{ params.api_key }}" autocomplete="new-password" required><small class="form-hint">Stored in encrypted FossBilling extension configuration.</small></div>
+<div class="col-md-4"><label class="form-label">Allowed provider price difference (USD)</label><input class="form-control" type="number" step="0.01" min="0" name="cost_tolerance_usd" value="{{ params.cost_tolerance_usd|default('0.01') }}"></div>
+</div></div><div class="card-footer"><button class="btn btn-primary" type="submit">Save provisioning settings</button></div></form></div>
+{% endblock %}
