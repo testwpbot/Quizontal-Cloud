@@ -57,7 +57,7 @@ Paths vary if your FOSSBilling base/admin URLs are customized.
 
 ## Receipt submission email
 
-Activation reconnects hooks for all active modules and enables generated transactional email templates. It installs Quizontal-branded defaults for FossBilling-generated invoices, payment confirmations/reminders, support ticket events, account signup, and password reset. Invoice emails use the core `mod_invoice_created` event and link to FossBilling's official invoice and PDF views. Activation also creates editable module templates:
+Activation reconnects hooks for all active modules and enables generated transactional email templates. It installs Quizontal-branded defaults for FossBilling-generated invoices, payment confirmations/reminders, support ticket events, account signup, and password reset. Invoice emails use the core `mod_invoice_created` template and attach the official PDF returned by FossBilling's own invoice PDF endpoint; no separate/custom invoice document is generated. Activation also creates editable module templates:
 
 ```text
 mod_quizontalbanktransfer_receipt_submitted

@@ -43,6 +43,7 @@ for template_code in mod_invoice_created mod_invoice_paid mod_invoice_payment_re
     api_post 'email/template_reset' "{\"code\":\"$template_code\"}"
 done
 api_post 'quizontalbanktransfer/normalize_email_subjects' '{}'
+api_post 'quizontalbanktransfer/configure_invoice_attachment_delivery' '{}'
 EMAIL_PAYLOAD=$(jq -n --arg email "$ADMIN_EMAIL" '{email:$email}')
 api_post 'quizontalbanktransfer/set_notification_email' "$EMAIL_PAYLOAD"
 

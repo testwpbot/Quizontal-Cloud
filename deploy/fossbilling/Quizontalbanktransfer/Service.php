@@ -14,6 +14,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function setDi(\Pimple\Container $di): void { $this->di = $di; }
     public function getDi(): ?\Pimple\Container { return $this->di; }
 
+    public static function onAfterAdminInvoiceApprove(\Box_Event $event): void
+    {
+        $params = $event->getParameters();
+        try {
+            $event->getDi()['mod_service']('quizontalbanktransfer')->sendNativeInvoiceWithAttachment((int) ($params['id'] ?? 0));
+        } catch (\Throwable $exception) {
+            error_log('Invoice attachment email failed: '.$exception->getMessage());
+        }
+    }
+
     public function getModulePermissions(): array
     {
         return [
@@ -64,6 +74,88 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'branch' => '', 'swift_code' => '', 'instructions' => '', 'max_file_mb' => 5,
             'admin_notification_email' => '', 'wallet_only_checkout' => true,
         ], $config);
+    }
+
+    public function configureInvoiceAttachmentDelivery(): bool
+    {
+        // The module sends the same native template with the official FossBilling
+        // PDF attached, so disable the duplicate queue-only core listener.
+        $this->di['pdo']->exec("UPDATE email_template SET enabled=0 WHERE action_code='mod_invoice_created'");
+        return true;
+    }
+
+    public function sendNativeInvoiceWithAttachment(int $invoiceId): void
+    {
+        if ($invoiceId < 1) return;
+        $invoiceModel = $this->di['db']->load('Invoice', $invoiceId);
+        if (!$invoiceModel instanceof \Model_Invoice) return;
+        $client = $this->di['db']->load('Client', (int) $invoiceModel->client_id);
+        if (!$client instanceof \Model_Client || !filter_var($client->email, FILTER_VALIDATE_EMAIL)) return;
+        $invoice = $this->di['mod_service']('Invoice')->toApiArray($invoiceModel, true, $client);
+        $customer = $this->di['mod_service']('Client')->toApiArray($client);
+        $template = $this->di['db']->findOne('EmailTemplate', 'action_code = ?', ['mod_invoice_created']);
+        if (!$template instanceof \Model_EmailTemplate) return;
+        $vars = ['invoice' => $invoice, 'c' => $customer];
+        $renderer = $this->di['mod_service']('System');
+        $subject = trim((string) $renderer->renderString((string) $template->subject, true, $vars));
+        $content = (string) $renderer->renderString((string) $template->content, true, $vars);
+        $pdf = $this->fetchOfficialInvoicePdf((string) $invoice['hash']);
+        $company = $this->di['mod_service']('System')->getCompany();
+        $emailConfig = (array) $this->di['mod']('email')->getConfig();
+
+        try {
+            $message = (new \Symfony\Component\Mime\Email())
+                ->from(new \Symfony\Component\Mime\Address((string) $company['email'], (string) $company['name']))
+                ->to(new \Symfony\Component\Mime\Address((string) $client->email, trim($client->first_name.' '.$client->last_name)))
+                ->subject($subject)
+                ->html($content)
+                ->attach($pdf, 'Invoice-'.$invoice['serie_nr'].'.pdf', 'application/pdf');
+            $transport = \Symfony\Component\Mailer\Transport::fromDsn($this->mailerDsn($emailConfig));
+            (new \Symfony\Component\Mailer\Mailer($transport))->send($message);
+        } catch (\Throwable $exception) {
+            // Preserve delivery through the normal queue if immediate attachment
+            // transport fails. The fallback keeps the official invoice links.
+            $this->di['mod_service']('Email')->sendMail(
+                (string) $client->email,
+                (string) $company['email'],
+                $subject,
+                $content,
+                trim($client->first_name.' '.$client->last_name),
+                (string) $company['name'],
+                (int) $client->id
+            );
+            throw $exception;
+        }
+    }
+
+    private function fetchOfficialInvoicePdf(string $hash): string
+    {
+        $url = $this->di['url']->link('invoice/pdf/'.$hash);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_FOLLOWLOCATION => true]);
+        $pdf = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        if ($pdf === false) { $error = curl_error($ch); curl_close($ch); throw new InformationException('Could not generate official invoice PDF: '.$error); }
+        curl_close($ch);
+        if ($status < 200 || $status >= 300 || !str_starts_with((string) $pdf, '%PDF-')) throw new InformationException('FossBilling did not return a valid invoice PDF.');
+        return (string) $pdf;
+    }
+
+    private function mailerDsn(array $config): string
+    {
+        $mailer = (string) ($config['mailer'] ?? 'sendmail');
+        if ($mailer === 'sendmail') return 'sendmail://default';
+        if ($mailer === 'custom') return (string) ($config['custom_dsn'] ?? '');
+        if ($mailer === 'sendgrid') return 'sendgrid://'.rawurlencode((string) ($config['sendgrid_key'] ?? '')).'@default';
+        if ($mailer === 'smtp') {
+            $host = rawurlencode(trim((string) ($config['smtp_host'] ?? '')));
+            $port = (int) ($config['smtp_port'] ?? 25);
+            $user = rawurlencode(trim((string) ($config['smtp_username'] ?? '')));
+            $pass = rawurlencode((string) ($config['smtp_password'] ?? ''));
+            $auth = $user !== '' ? $user.($pass !== '' ? ':'.$pass : '').'@' : '';
+            return "smtp://{$auth}{$host}:{$port}";
+        }
+        throw new InformationException('Unsupported mail transport for invoice attachment.');
     }
 
     public function createFundsInvoice(\Model_Client $client, mixed $amount): string
