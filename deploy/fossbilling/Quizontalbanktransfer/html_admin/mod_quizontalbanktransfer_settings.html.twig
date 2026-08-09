@@ -4,7 +4,7 @@
 {% block meta_title %}Quizontal Cloud Bank Transfer Settings{% endblock %}
 {% block content %}
 <div class="card"><div class="card-header"><h2 class="card-title">Quizontal Cloud Bank Transfer</h2></div>
-<form method="post" action="{{ 'extension/config_save'|api_url }}" {{ fb_api_form({message: 'Configuration updated'|trans}) }}><input type="hidden" name="ext" value="mod_quizontalbanktransfer"><div class="card-body"><div class="row g-3">
+<form method="post" action="{{ 'api/admin/extension/config_save'|link }}" class="api-form" data-api-msg="{{ 'Configuration updated'|trans }}"><input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"><input type="hidden" name="ext" value="mod_quizontalbanktransfer"><div class="card-body"><div class="row g-3">
 <div class="col-md-6"><label class="form-label">Bank name</label><input class="form-control" name="bank_name" value="{{ params.bank_name }}" required></div>
 <div class="col-md-6"><label class="form-label">Account name</label><input class="form-control" name="account_name" value="{{ params.account_name|default('Quizontal Cloud') }}" required></div>
 <div class="col-md-6"><label class="form-label">Account number</label><input class="form-control" name="account_number" value="{{ params.account_number }}" required></div>
