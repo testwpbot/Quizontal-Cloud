@@ -34,7 +34,7 @@ class ValidateInterServerVpsOrderTest extends TestCase
         Http::assertSent(function (Request $request): bool {
             if ($request->method() !== 'PUT') return false;
             $payload = $request->data();
-            return $payload['platform'] === 'kvm'
+            return $payload['vpsPlatform'] === 'kvm'
                 && $payload['slices'] === 1
                 && isset($payload['rootPassword'])
                 && strlen($payload['rootPassword']) >= 16;

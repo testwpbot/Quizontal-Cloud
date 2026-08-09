@@ -116,7 +116,7 @@ class ValidateInterServerVpsOrder extends Command
         return [
             'osDistro' => trim((string) $this->option('os')),
             'slices' => (int) $this->option('slices'),
-            'platform' => strtolower(trim((string) $this->option('platform'))),
+            'vpsPlatform' => strtolower(trim((string) $this->option('platform'))),
             'controlPanel' => strtolower(trim((string) $this->option('controlpanel'))),
             'period' => (int) $this->option('period'),
             'location' => (int) $this->option('location'),
@@ -132,10 +132,10 @@ class ValidateInterServerVpsOrder extends Command
     private function validateInput(array $payload, array $ordering): array
     {
         $errors = [];
-        if (!in_array($payload['platform'], ['kvm', 'kvmstorage', 'hyperv'], true)) $errors[] = '--platform must be kvm, kvmstorage, or hyperv.';
+        if (!in_array($payload['vpsPlatform'], ['kvm', 'kvmstorage', 'hyperv'], true)) $errors[] = '--platform must be kvm, kvmstorage, or hyperv.';
         $max = max(1, (int) ($ordering['maxSlices'] ?? 32));
         if ($payload['slices'] < 1 || $payload['slices'] > $max) $errors[] = "--slices must be between 1 and {$max}.";
-        if ($payload['platform'] === 'hyperv' && $payload['slices'] < 2) $errors[] = 'Hyper-V Windows requires at least 2 slices.';
+        if ($payload['vpsPlatform'] === 'hyperv' && $payload['slices'] < 2) $errors[] = 'Hyper-V Windows requires at least 2 slices.';
         if ($payload['location'] < 1) $errors[] = '--location must be a valid InterServer location ID.';
         if ($payload['osDistro'] === '') $errors[] = '--os is required and must match an InterServer template identifier.';
         if ($payload['osVersion'] === '') $errors[] = '--os-version is required and must match the selected template family/version.';
