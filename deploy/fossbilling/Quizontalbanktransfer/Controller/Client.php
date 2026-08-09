@@ -16,6 +16,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     public function register(\Box_App &$app): void
     {
         $app->get('/quizontal-bank-transfer', 'get_index', [], static::class);
+        $app->get('/quizontal-bank-transfer/invoice/:hash', 'get_invoice', ['hash' => '[a-z0-9]+'], static::class);
         $app->post('/quizontal-bank-transfer/submit', 'post_submit', [], static::class);
         $app->get('/quizontal-bank-transfer/receipt/:id', 'get_receipt', ['id' => '[0-9]+'], static::class);
     }
@@ -24,6 +25,19 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     {
         $this->di['is_client_logged'];
         return $app->render('mod_quizontalbanktransfer_index', ['config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig()]);
+    }
+
+    public function get_invoice(\Box_App $app, $hash): string
+    {
+        $this->di['is_client_logged'];
+        $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [(string) $hash, $this->di['loggedin_client']->id]);
+        if (!$invoice instanceof \Model_Invoice || !$this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice)) {
+            throw new InformationException('Deposit invoice not found.');
+        }
+        return $app->render('mod_quizontalbanktransfer_index', [
+            'config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig(),
+            'deposit_invoice' => $this->di['mod_service']('Invoice')->toApiArray($invoice, true, $this->di['loggedin_client']),
+        ]);
     }
 
     public function post_submit(\Box_App $app)
@@ -35,7 +49,8 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             $this->di['loggedin_client'],
             $request->request->get('amount'),
             (string) $request->request->get('reference', ''),
-            $request->files->get('receipt')
+            $request->files->get('receipt'),
+            ($hash = trim((string) $request->request->get('invoice_hash', ''))) !== '' ? $hash : null
         );
         return $app->redirect('quizontal-bank-transfer?submitted='.$result['id']);
     }

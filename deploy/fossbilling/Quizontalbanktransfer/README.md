@@ -28,7 +28,13 @@ The script reads `FOSSBILLING_URL` and `FOSSBILLING_ADMIN_API_KEY` from Laravel'
 Then:
 
 1. Open the printed extension settings URL and enter bank details.
-2. Enable FOSSBilling's **Custom** payment gateway, title it `Manual Bank Transfer`, accept `LKR`, and allow one-time payments.
+2. Enable FOSSBilling's **Custom** payment gateway, title it `Manual Bank Transfer`, accept `LKR`, and allow one-time payments. Put the following in **Single payment information** (adjust the host if needed):
+
+```html
+<p>Transfer the invoice amount to the Quizontal Cloud bank account, then upload your receipt.</p>
+<p><a class="btn btn-primary" href="http://billing.localhost/quizontal-bank-transfer/invoice/{{ invoice.hash }}">Upload payment receipt</a></p>
+```
+
 3. Enable the **ClientBalance** gateway.
 4. Keep **Invoice > Add Funds** enabled and set sensible minimum/maximum deposit values.
 

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Box\Mod\Quizontalbanktransfer;
 
-use Box\Mod\Invoice\Entity\PayGateway;
-use Box\Mod\Invoice\Entity\InvoiceItem;
 use FOSSBilling\InformationException;
 use FOSSBilling\PaginationOptions;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -69,9 +67,8 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         ], $config);
     }
 
-    public function submit(\Model_Client $client, mixed $amount, string $reference, ?UploadedFile $file): array
+    public function submit(\Model_Client $client, mixed $amount, string $reference, ?UploadedFile $file, ?string $invoiceHash = null): array
     {
-        if (!is_numeric($amount) || (float) $amount <= 0) throw new InformationException('Enter a valid deposit amount.');
         $reference = trim($reference);
         if ($reference === '' || mb_strlen($reference) > 191) throw new InformationException('Enter a valid bank transfer reference.');
         $this->validateUpload($file);
@@ -84,11 +81,22 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         $invoiceService = $this->di['mod_service']('Invoice');
-        $invoice = $invoiceService->generateFundsInvoice($client, (float) $amount);
+        if ($invoiceHash !== null && $invoiceHash !== '') {
+            $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [$invoiceHash, $client->id]);
+            if (!$invoice instanceof \Model_Invoice) throw new InformationException('Deposit invoice not found.');
+            if ($invoice->status !== \Model_Invoice::STATUS_UNPAID) throw new InformationException('Only unpaid deposit invoices can receive a receipt.');
+            if (!$invoiceService->isInvoiceTypeDeposit($invoice)) throw new InformationException('The selected invoice is not a wallet deposit invoice.');
+            if ($this->di['dbal']->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id])) throw new InformationException('A receipt was already submitted for this invoice.');
+            $amount = $invoiceService->getTotalWithTax($invoice);
+        } else {
+            if (!is_numeric($amount) || (float) $amount <= 0) throw new InformationException('Enter a valid deposit amount.');
+            $invoice = $invoiceService->generateFundsInvoice($client, (float) $amount);
+            $invoiceService->approveInvoice($invoice, ['id' => $invoice->id]);
+        }
+
         $gateway = $this->getManualGateway();
-        $invoice->gateway_id = $gateway->getId();
+        $invoice->gateway_id = (int) $gateway->id;
         $this->di['db']->store($invoice);
-        $invoiceService->approveInvoice($invoice, ['id' => $invoice->id]);
 
         $mimeType = (string) $file->getMimeType();
         $originalName = basename((string) $file->getClientOriginalName());
@@ -138,17 +146,27 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
         $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'processing', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
         try {
-            $client = $this->di['mod_service']('Client')->get(['id' => (int) $row['client_id']]);
-            $description = 'Quizontal Cloud bank transfer '.$transactionId;
-            $existingCredit = $this->di['dbal']->fetchOne(
-                'SELECT id FROM client_balance WHERE client_id=? AND type=? AND rel_id=?',
-                [(int) $row['client_id'], 'quizontal_bank_transfer', (string) $invoice->id]
-            );
-            if (!$existingCredit) {
-                $this->di['mod_service']('Client')->addFunds($client, (float) $row['amount'], $description, ['type' => 'quizontal_bank_transfer', 'rel_id' => (int) $invoice->id]);
-            }
             $gateway = $this->getManualGateway();
-            $this->di['mod_service']('Invoice')->markAsPaidByAdmin($invoice, ['gateway_id' => $gateway->getId(), 'transactionId' => $transactionId, 'execute' => true]);
+            $invoice->gateway_id = (int) $gateway->id;
+            $this->di['db']->store($invoice);
+            $invoiceService = $this->di['mod_service']('Invoice');
+
+            if (method_exists($invoiceService, 'markAsPaidByAdmin')) {
+                // FOSSBilling 0.8+: admin confirmation no longer credits deposit invoices itself.
+                $client = $this->di['mod_service']('Client')->get(['id' => (int) $row['client_id']]);
+                $description = 'Quizontal Cloud bank transfer '.$transactionId;
+                $existingCredit = $this->di['dbal']->fetchOne(
+                    'SELECT id FROM client_balance WHERE client_id=? AND type=? AND rel_id=?',
+                    [(int) $row['client_id'], 'quizontal_bank_transfer', (string) $invoice->id]
+                );
+                if (!$existingCredit) {
+                    $this->di['mod_service']('Client')->addFunds($client, (float) $row['amount'], $description, ['type' => 'quizontal_bank_transfer', 'rel_id' => (int) $invoice->id]);
+                }
+                $invoiceService->markAsPaidByAdmin($invoice, ['gateway_id' => (int) $gateway->id, 'transactionId' => $transactionId, 'execute' => true]);
+            } else {
+                // FOSSBilling 0.7: the Custom adapter credits the deposit while processing.
+                $this->di['api_admin']->invoice_mark_as_paid(['id' => (int) $invoice->id, 'transactionId' => $transactionId, 'execute' => true]);
+            }
             $this->di['dbal']->update('quizontal_bank_transfer', ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
             return true;
         } catch (\Throwable $e) {
@@ -181,10 +199,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if ($balance < $total) throw new InformationException('Please add enough funds to your Quizontal Cloud wallet before placing this order.');
     }
 
-    private function getManualGateway(): PayGateway
+    private function getManualGateway(): \Model_PayGateway
     {
-        $gateway = $this->di['em']->getRepository(PayGateway::class)->findEnabledByGateway('Custom');
-        if (!$gateway instanceof PayGateway) throw new InformationException('Enable and configure the Custom gateway as Manual Bank Transfer first.');
+        $gateway = $this->di['db']->findOne('PayGateway', 'gateway = ? AND enabled = 1', ['Custom']);
+        if (!$gateway instanceof \Model_PayGateway) throw new InformationException('Enable and configure the Custom gateway as Manual Bank Transfer first.');
         return $gateway;
     }
 
