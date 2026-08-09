@@ -288,6 +288,14 @@ class SyncProductsToFossBilling extends Command
             'pricing' => [
                 'type' => 'recurrent',
                 'recurrent' => [
+                    // FOSSBilling 0.8.x creates every standard period as enabled with a
+                    // zero price. Explicitly disable periods we do not sell; otherwise
+                    // price_starting_from is 0 and those periods may be ordered for free.
+                    '1W' => [
+                        'setup' => 0,
+                        'price' => 0,
+                        'enabled' => 0,
+                    ],
                     '1M' => [
                         'setup' => 0,
                         'price' => $priceLkr,
@@ -295,18 +303,28 @@ class SyncProductsToFossBilling extends Command
                     ],
                     '3M' => [
                         'setup' => 0,
-                        'price' => round($priceLkr * 3 * 0.95), // 5% discount for quarterly
-                        'enabled' => 1,
+                        'price' => 0,
+                        'enabled' => 0,
                     ],
                     '6M' => [
                         'setup' => 0,
-                        'price' => round($priceLkr * 6 * 0.90), // 10% discount for semi-annual
-                        'enabled' => 1,
+                        'price' => 0,
+                        'enabled' => 0,
                     ],
                     '1Y' => [
                         'setup' => 0,
-                        'price' => round($priceLkr * 12 * 0.85), // 15% discount for annual
-                        'enabled' => 1,
+                        'price' => 0,
+                        'enabled' => 0,
+                    ],
+                    '2Y' => [
+                        'setup' => 0,
+                        'price' => 0,
+                        'enabled' => 0,
+                    ],
+                    '3Y' => [
+                        'setup' => 0,
+                        'price' => 0,
+                        'enabled' => 0,
                     ],
                 ],
             ],

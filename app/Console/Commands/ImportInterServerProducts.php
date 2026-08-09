@@ -112,7 +112,7 @@ class ImportInterServerProducts extends Command
                     'id' => "interserver-{$platform}-{$slices}",
                     // This encodes the selected InterServer platform and slice quantity for the billing/provisioning mapper.
                     'providerProductId' => "{$platform}:{$slices}",
-                    'name' => "{$definition['name']} {$slices} ".($slices === 1 ? 'Slice' : 'Slices'),
+                    'name' => "{$definition['name']} Plan {$slices}",
                     'category' => $definition['category'],
                     'platform' => $platform,
                     'slices' => $slices,
