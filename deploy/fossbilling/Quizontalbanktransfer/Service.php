@@ -168,6 +168,12 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 // FOSSBilling 0.7: the Custom adapter credits the deposit while processing.
                 $this->di['api_admin']->invoice_mark_as_paid(['id' => (int) $invoice->id, 'transactionId' => $transactionId, 'execute' => true]);
             }
+
+            // Apply the newly confirmed wallet credit to any existing unpaid order
+            // or renewal invoices. New checkouts and newly generated renewals already
+            // request credit payment automatically in FossBilling.
+            $invoiceService->doBatchPayWithCredits(['client_id' => (int) $row['client_id']]);
+
             $this->updateSubmission( ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
             return true;
         } catch (\Throwable $e) {
