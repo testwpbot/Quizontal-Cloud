@@ -17,14 +17,20 @@ export FOSSBILLING_DIR=/var/www/fossbilling
 sudo -E bash deploy/install-quizontal-bank-transfer.sh
 ```
 
-In FOSSBilling Admin:
+Activate the module and connect its checkout hook through the API (this works even when your admin theme does not show Extensions or Hooks menus):
 
-1. Go to **Extensions** and activate **Quizontal Cloud Bank Transfer**.
-2. Open the extension settings and enter bank details.
-3. Enable FOSSBilling's **Custom** payment gateway, title it `Manual Bank Transfer`, accept `LKR`, and allow one-time payments.
-4. Enable the **ClientBalance** gateway.
-5. Keep **Invoice > Add Funds** enabled and set sensible minimum/maximum deposit values.
-6. In **Hooks**, reconnect hooks if `onBeforeClientCheckout` was not connected automatically.
+```bash
+bash deploy/activate-quizontal-bank-transfer.sh
+```
+
+The script reads `FOSSBILLING_URL` and `FOSSBILLING_ADMIN_API_KEY` from Laravel's `.env` without displaying the key. It prints the direct module settings URL when complete.
+
+Then:
+
+1. Open the printed extension settings URL and enter bank details.
+2. Enable FOSSBilling's **Custom** payment gateway, title it `Manual Bank Transfer`, accept `LKR`, and allow one-time payments.
+3. Enable the **ClientBalance** gateway.
+4. Keep **Invoice > Add Funds** enabled and set sensible minimum/maximum deposit values.
 
 Customer page:
 

@@ -20,4 +20,4 @@ find "$TARGET_DIR" -type d -exec chmod 0750 {} +
 find "$TARGET_DIR" -type f -exec chmod 0640 {} +
 
 echo 'Quizontal Cloud Bank Transfer module files installed.'
-echo 'Next: open FOSSBilling Admin > Extensions, activate Quizontal Cloud Bank Transfer, configure its settings, and reconnect hooks if requested.'
+echo 'Next: run deploy/activate-quizontal-bank-transfer.sh from the Quizontal Cloud repository, then configure the bank details at the settings URL it prints.'
