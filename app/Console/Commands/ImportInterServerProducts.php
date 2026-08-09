@@ -41,6 +41,14 @@ class ImportInterServerProducts extends Command
         // InterServer's current /vps/order response is an order-form configuration,
         // not a pre-built plans array. Generate one sellable plan for every allowed slice count.
         if (!$products) $products = $this->sliceProducts((array) $provider, $rate, $profit);
+
+        // Apply customer-facing terminology after either import path. InterServer can
+        // return pre-built names or order-form data, so normalizing only one path is insufficient.
+        $products = collect($products)->map(function (array $product): array {
+            $product['name'] = $this->customerFacingName((string) ($product['name'] ?? 'Cloud VPS'));
+            return $product;
+        })->all();
+
         if (!$products) {
             $this->error('No billable VPS plans were found. The InterServer response shape needs to be mapped before it can be imported.');
             $this->line('Run: php artisan interserver:import-products --debug');
@@ -164,12 +172,17 @@ class ImportInterServerProducts extends Command
         $ram = $this->number($this->firstValue($raw, ['ram_gb', 'ram', 'memory'], $ramMb ? $ramMb / 1024 : 1));
         $id = (string) $this->firstValue($raw, ['id', 'product_id', 'plan_id', 'sku', 'name'], 'interserver-'.($index + 1));
         $name = (string) $this->firstValue($raw, ['name', 'title', 'description', 'plan_name'], 'Cloud VPS Plan '.($index + 1));
-        // Preserve standard platform names while replacing provider-specific plan terminology.
-        $name = preg_replace('/\s+(\d+)\s+Slices?\b/i', ' Plan $1', $name);
-        $name = preg_replace('/\bSlices?\b/i', 'Plan', $name);
         $retail = round(($base + $profit) * 100) / 100;
         return ['id' => 'interserver-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $id), 'providerProductId' => $id, 'name' => $name, 'category' => $category, 'cpu' => $this->number($this->firstValue($raw, ['cpu', 'cores', 'vcpu', 'cpu_cores'], 1)), 'ramGb' => $ram, 'storageGb' => $this->number($this->firstValue($raw, ['storage_gb', 'disk_gb', 'disk', 'storage'], 0)), 'storageType' => $category === 'storage' ? 'SATA' : 'NVMe', 'bandwidthGb' => $this->number($this->firstValue($raw, ['bandwidth_gb', 'transfer_gb', 'bandwidth', 'transfer'], 0)), 'basePriceUsd' => $base, 'retailPriceUsd' => $retail, 'priceLkr' => round($retail * $rate), 'available' => $this->firstValue($raw, ['available', 'active'], true) !== false];
     }
+
+    private function customerFacingName(string $name): string
+    {
+        $renamed = preg_replace('/\s+(\d+)\s+Slices?\s*$/i', ' Plan $1', trim($name));
+
+        return str_ireplace([' Slices', ' Slice'], ' Plan', $renamed ?? trim($name));
+    }
+
     private function firstValue(array $source, array $keys, mixed $default): mixed { foreach ($keys as $key) if (isset($source[$key]) && $source[$key] !== '') return $source[$key]; return $default; }
     private function number(mixed $value): float { return (float) preg_replace('/[^0-9.-]/', '', (string) $value); }
 }
