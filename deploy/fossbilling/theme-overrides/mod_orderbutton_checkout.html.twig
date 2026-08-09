@@ -1,0 +1,76 @@
+{% set cart = guest.cart_get %}
+<style>
+#qc-cart{--qc-accent:#e31c64;--qc-soft:#fff1f6;--qc-border:#dfe3e8;--qc-text:#20242b}
+#qc-cart .qc-summary{background:#fff;border:1px solid var(--qc-border);border-radius:12px;overflow:hidden}
+#qc-cart .qc-product-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:16px;border-bottom:1px solid #edf0f3}
+#qc-cart .qc-total{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:#f7f8fa;font-size:18px}
+#qc-cart .qc-wallet{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:#fff}
+#qc-cart .qc-wallet-ready{border-color:#34a853;background:#f0fff4}
+#qc-cart .qc-wallet-short{border-color:#e6a700;background:#fff9e8}
+#qc-cart .qc-wallet-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:var(--qc-soft)}
+#qc-cart .qc-promo{display:flex;gap:8px;max-width:420px}
+#qc-cart .qc-promo input{min-width:0}
+#qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
+#qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
+@media(max-width:600px){#qc-cart .qc-product-row{grid-template-columns:1fr auto}.qc-product-row .qc-remove{grid-column:2}.qc-promo{flex-direction:column}}
+</style>
+<div class="accordion-item" id="qc-cart">
+  <h2 class="accordion-header">
+    <button class="accordion-button {% if not request.checkout %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#checkout">
+      <svg class="svg-icon me-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18a2 2 0 1 1 0 4 2 2 0 0 1 0-4M1 2h3.27l.94 2H20a1 1 0 0 1 .88 1.5l-3.58 6.47A2 2 0 0 1 15.55 13H8.1l-.9 1.63-.03.12a.25.25 0 0 0 .25.25H19v2H7a2 2 0 0 1-1.76-2.96L6.6 11.6 3 4H1V2m6 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4m9-7 2.78-5H6.14l2.36 5H16Z"/></svg>
+      <span>Review &amp; checkout</span>&nbsp;<span class="badge bg-success">{{ cart.items|length }}</span>
+    </button>
+  </h2>
+  {% if cart.items %}
+  <div id="checkout" class="accordion-collapse collapse {% if request.checkout and client %}show{% endif %}" data-bs-parent="#orderManager">
+    <div class="accordion-body"><div class="accordion-inner">
+      <div class="qc-summary mb-3">
+        {% for item in cart.items %}
+        <div class="qc-product-row">
+          <div><strong class="d-block">{{ item.title }}</strong><small class="text-muted">{% if item.period %}{{ item.period|period_title }}{% endif %}{% if item.quantity > 1 %} · Quantity {{ item.quantity }}{% endif %}</small></div>
+          <div class="fw-bold">{% if item.discount_price %}<del class="text-muted">{{ item.total|money_convert }}</del><br><span class="text-success">{{ (item.total-item.discount_price)|money_convert }}</span>{% else %}{{ item.total|money_convert }}{% endif %}</div>
+          <button data-cart-item-id="{{ item.id }}" class="btn btn-outline-danger btn-sm remove-cart-item qc-remove" type="button" title="Remove">×</button>
+        </div>
+        {% if item.setup_price != 0 %}<div class="qc-product-row"><div>{{ item.title }} setup</div><div class="fw-bold">{{ (item.setup_price-item.discount_setup)|money_convert }}</div><span></span></div>{% endif %}
+        {% endfor %}
+        {% set tax_amount = 0 %}
+        {% if client.client_is_taxable %}{% set tax_rate = client.invoice_get_tax_rate %}{% set tax_amount = cart.total * tax_rate / 100 %}{% endif %}
+        {% if cart.discount > 0 %}<div class="px-3 pt-3 d-flex justify-content-between text-success"><span>Discount</span><strong>- {{ cart.discount|money_convert }}</strong></div>{% endif %}
+        {% if tax_amount > 0 %}<div class="px-3 pt-2 d-flex justify-content-between"><span>VAT ({{ tax_rate }}%)</span><strong>{{ tax_amount|money_convert }}</strong></div>{% endif %}
+        <div class="qc-total"><strong>Total due today</strong><strong>{{ (cart.total+tax_amount)|money_convert }}</strong></div>
+      </div>
+
+      {% if not cart.promocode %}
+      <div class="mb-3"><label class="form-label fw-bold" for="qc-promocode">Coupon code</label><div class="qc-promo"><input class="form-control" type="text" id="qc-promocode" placeholder="Enter your code"><button class="btn btn-outline-secondary" id="qc-apply-promo" type="button">Apply code</button></div><div class="small mt-1" id="qc-promo-message"></div></div>
+      {% else %}
+      <div class="alert alert-success d-flex justify-content-between align-items-center"><span>Coupon <strong>{{ cart.promocode }}</strong> is applied.</span><a class="btn btn-sm btn-outline-success api-link" href="{{ 'api/guest/cart/remove_promo'|link({'CSRFToken':CSRFToken}) }}" data-api-reload="1">Remove</a></div>
+      {% endif %}
+
+      {% set amount_due = cart.total + tax_amount %}
+      {% set wallet_balance = client.client_balance_get_total %}
+      {% set enough_in_balance = wallet_balance >= amount_due %}
+      <div class="qc-wallet {{ enough_in_balance ? 'qc-wallet-ready' : 'qc-wallet-short' }} mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="qc-wallet-icon"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Wallet"></div>
+          <div class="flex-grow-1"><strong class="d-block fs-5">Quizontal Cloud Wallet</strong><span class="text-muted">Available balance: {{ wallet_balance|money_convert }}</span></div>
+          <span class="badge {{ enough_in_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ enough_in_balance ? 'Ready to pay' : 'Insufficient funds' }}</span>
+        </div>
+        {% if not enough_in_balance %}<hr><div class="d-flex flex-wrap align-items-center justify-content-between gap-2"><div><strong>Add {{ (amount_due-wallet_balance)|money_convert }}</strong> more to place this order.<div class="small text-muted">Product orders can only be paid from your wallet.</div></div><a class="btn btn-primary" href="{{ 'client/balance'|link }}">Add wallet funds</a></div>{% endif %}
+      </div>
+
+      {% if enough_in_balance %}
+      <form class="api-form" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
+        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+        <div class="alert alert-success">The full order total will be deducted from your Quizontal Cloud Wallet.</div>
+        {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
+        <button class="btn btn-primary btn-lg" type="submit">Pay with wallet &amp; place order</button>
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+<script>
+$('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).attr('data-cart-item-id');if(confirm('Remove this item from your cart?')){bb.post('guest/cart/remove_item',{id:id,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});}});
+$('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim();var message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
+</script>

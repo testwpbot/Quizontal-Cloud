@@ -3,6 +3,7 @@ set -Eeuo pipefail
 : "${FOSSBILLING_DIR:=/opt/lampp/htdocs}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SOURCE_DIR="$SCRIPT_DIR/fossbilling/Serviceinterserver"
+THEME_OVERRIDES_DIR="$SCRIPT_DIR/fossbilling/theme-overrides"
 [[ $EUID -eq 0 ]] || { echo 'Run with sudo -E.' >&2; exit 1; }
 [[ -d "$SOURCE_DIR" ]] || { echo "Module source missing: $SOURCE_DIR" >&2; exit 1; }
 MODULES_DIR=''
@@ -19,6 +20,16 @@ chown -R "$WEB_USER:$WEB_GROUP" "$TARGET"
 find "$TARGET" -type d -exec chmod 0755 {} +
 find "$TARGET" -type f -exec chmod 0644 {} +
 APP_ROOT=$(dirname "$MODULES_DIR")
+if [[ -d "$THEME_OVERRIDES_DIR" && -d "$APP_ROOT/themes" ]]; then
+  for theme_dir in "$APP_ROOT/themes"/*; do
+    [[ -d "$theme_dir/html" ]] || continue
+    install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$theme_dir/html_custom"
+    for override in "$THEME_OVERRIDES_DIR"/*.twig; do
+      [[ -f "$override" ]] || continue
+      install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$override" "$theme_dir/html_custom/$(basename "$override")"
+    done
+  done
+fi
 [[ -d "$APP_ROOT/data/cache" ]] && find "$APP_ROOT/data/cache" -type f ! -name '.gitignore' -delete
 echo "Quizontal InterServer validation module installed in $TARGET."
 echo 'Next: run bash deploy/activate-interserver-provisioning.sh from the repository.'
