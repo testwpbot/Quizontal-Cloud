@@ -15,7 +15,7 @@ class ValidateInterServerVpsOrder extends Command
         {--slices= : Number of VPS slices}
         {--location= : InterServer location ID}
         {--os= : InterServer template file/OS identifier}
-        {--version= : InterServer OS family/version identifier}
+        {--os-version= : InterServer OS family/version identifier}
         {--hostname=validation.quizontal-cloud.invalid : Validation-only hostname}
         {--controlpanel=none : none, cpanel, or da}
         {--period=1 : Billing period in months}
@@ -107,7 +107,7 @@ class ValidateInterServerVpsOrder extends Command
             'controlpanel' => strtolower(trim((string) $this->option('controlpanel'))),
             'period' => (int) $this->option('period'),
             'location' => (int) $this->option('location'),
-            'version' => trim((string) $this->option('version')),
+            'version' => trim((string) $this->option('os-version')),
             'hostname' => strtolower(trim((string) $this->option('hostname'))),
             'coupon' => trim((string) $this->option('coupon')),
             // Generated only for validation, never printed or persisted.
@@ -125,7 +125,7 @@ class ValidateInterServerVpsOrder extends Command
         if ($payload['platform'] === 'hyperv' && $payload['slices'] < 2) $errors[] = 'Hyper-V Windows requires at least 2 slices.';
         if ($payload['location'] < 1) $errors[] = '--location must be a valid InterServer location ID.';
         if ($payload['os'] === '') $errors[] = '--os is required and must match an InterServer template identifier.';
-        if ($payload['version'] === '') $errors[] = '--version is required and must match the selected template family/version.';
+        if ($payload['version'] === '') $errors[] = '--os-version is required and must match the selected template family/version.';
         if (!in_array($payload['controlpanel'], ['none', 'cpanel', 'da'], true)) $errors[] = '--controlpanel must be none, cpanel, or da.';
         if ($payload['period'] < 1 || $payload['period'] > 36) $errors[] = '--period must be between 1 and 36 months.';
         if (!filter_var($payload['hostname'], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($payload['hostname'], '.')) $errors[] = '--hostname must be a fully-qualified hostname.';

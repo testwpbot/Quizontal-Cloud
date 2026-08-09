@@ -42,7 +42,7 @@ Before building live provisioning, inspect the current provider options and vali
 php artisan interserver:validate-vps-order --show-options
 php artisan interserver:validate-vps-order \
   --platform=kvm --slices=1 --location=LOCATION_ID \
-  --os=OS_TEMPLATE --version=OS_VERSION \
+  --os=OS_TEMPLATE --os-version=OS_VERSION \
   --hostname=validation.quizontal-cloud.invalid
 ```
 

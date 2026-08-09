@@ -23,7 +23,7 @@ class ValidateInterServerVpsOrderTest extends TestCase
             '--slices' => 1,
             '--location' => 1,
             '--os' => 'ubuntu-template.tar.gz',
-            '--version' => 'ubuntu',
+            '--os-version' => 'ubuntu',
             '--hostname' => 'validation.quizontal-cloud.invalid',
         ])->expectsOutputToContain('No VPS was purchased.')
             ->doesntExpectOutput('must-not-be-printed')
