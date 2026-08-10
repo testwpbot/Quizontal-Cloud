@@ -196,6 +196,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         $model->status = 'submitting';
+        // Persist the generated credential before the non-idempotent request so it
+        // remains available if the provider creates the server but the response is incomplete.
+        $model->encrypted_root_password = $this->di['crypt']->encrypt($rootPassword, Config::getProperty('info.salt'));
         $model->updated_at = date('Y-m-d H:i:s');
         $this->di['db']->store($model);
 
@@ -210,9 +213,15 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         $providerId = $this->extractProviderId($response);
+        $reconciled = null;
         if ($providerId === null) {
-            $reconciled = $this->findProviderServiceByHostname((string) $model->hostname);
-            $providerId = $reconciled['id'] ?? null;
+            // New services can take a few seconds to appear in the account list.
+            // Poll with GET only; never repeat the purchasing POST.
+            for ($attempt = 1; $attempt <= 6 && $providerId === null; $attempt++) {
+                if ($attempt > 1) sleep(2);
+                $reconciled = $this->findProviderServiceByHostname((string) $model->hostname);
+                $providerId = $reconciled['id'] ?? null;
+            }
         }
         if ($providerId === null) {
             $model->status = 'manual_review';
@@ -233,6 +242,28 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             $this->di['db']->store($model);
         }
         return ['cloud_service_id' => (string) $providerId];
+    }
+
+    public function reconcileExisting($order, $model): bool
+    {
+        if (!is_object($model)) throw new InformationException('Cloud service record was not found.');
+        if ($model->provider_vps_id) return true;
+        $existing = $this->findProviderServiceByHostname((string) $model->hostname);
+        if ($existing === null) throw new InformationException('The existing cloud server is not visible in the provider account yet. Wait briefly and try reconciliation again.');
+        $model->provider_vps_id = (string) $existing['id'];
+        $model->status = 'provisioned';
+        $model->last_error = null;
+        $model->provider_response = json_encode($this->redact($existing), JSON_UNESCAPED_SLASHES);
+        $this->applyProviderDetails($model, $existing);
+        $model->updated_at = date('Y-m-d H:i:s');
+        $this->di['db']->store($model);
+        $order->status = \Model_ClientOrder::STATUS_ACTIVE;
+        $order->activated_at = $order->activated_at ?: date('Y-m-d H:i:s');
+        $order->updated_at = date('Y-m-d H:i:s');
+        $this->di['db']->store($order);
+        $this->di['mod_service']('Order')->saveStatusChange($order, 'Existing cloud server reconciled successfully.');
+        try { $this->syncService($model); } catch (\Throwable) {}
+        return true;
     }
 
     public function syncService($model): bool
@@ -377,16 +408,19 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         try {
             [$status, $response] = $this->providerRequest('GET', '/vps');
             if ($status < 200 || $status >= 300) return null;
-            return $this->findRecord($response, fn (array $row) => strtolower((string) ($row['hostname'] ?? $row['name'] ?? '')) === strtolower($hostname));
+            return $this->findRecord($response, fn (array $row) => strtolower(trim((string) ($row['vps_hostname'] ?? $row['hostname'] ?? $row['name'] ?? ''))) === strtolower(trim($hostname)));
         } catch (\Throwable) {
             return null;
         }
     }
 
-    private function findRecord(array $value, callable $matches): ?array
+    private function findRecord(array $value, callable $matches, string|int|null $recordKey = null): ?array
     {
-        if ($matches($value) && isset($value['id'])) return $value;
-        foreach ($value as $child) if (is_array($child)) { $found = $this->findRecord($child, $matches); if ($found !== null) return $found; }
+        if ($matches($value)) {
+            $id = $value['id'] ?? $value['vps_id'] ?? $value['service_id'] ?? $value['order_id'] ?? (is_numeric($recordKey) ? $recordKey : null);
+            if ($id !== null && $id !== '') return ['id' => $id] + $value;
+        }
+        foreach ($value as $key => $child) if (is_array($child)) { $found = $this->findRecord($child, $matches, $key); if ($found !== null) return $found; }
         return null;
     }
 
@@ -400,7 +434,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     private function applyProviderDetails($model, array $details): void
     {
         $model->primary_ip = (string) ($this->firstScalar($details, ['ip', 'ip_address', 'main_ip', 'vps_ip']) ?? $model->primary_ip ?? '');
-        $model->power_status = (string) ($this->firstScalar($details, ['power_status', 'state', 'status']) ?? $model->power_status ?? 'unknown');
+        $model->power_status = (string) ($this->firstScalar($details, ['vps_server_status', 'power_status', 'state', 'vps_status', 'status']) ?? $model->power_status ?? 'unknown');
         $disk = $this->firstNumeric($details, ['disk_used_gb', 'disk_used', 'hd_used']);
         if ($disk !== null) $model->disk_used_gb = $disk;
         $model->provider_response = json_encode($this->redact($details), JSON_UNESCAPED_SLASHES);

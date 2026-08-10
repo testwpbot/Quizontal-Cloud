@@ -35,8 +35,11 @@ class Admin extends \Api_Abstract
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');
         if (empty($data['order_id'])) throw new InformationException('Order ID is required.');
         $order = $this->di['db']->getExistingModelById('ClientOrder', (int) $data['order_id'], 'Order not found.');
-        if ($order->service_type !== 'interserver') throw new InformationException('This is not an InterServer order.');
+        if ($order->service_type !== 'interserver') throw new InformationException('This is not a cloud VPS order.');
         $service = $this->di['db']->load('service_interserver', (int) $order->service_id);
+        if ($service && in_array($service->status, ['submitting', 'manual_review'], true)) {
+            return $this->getService()->reconcileExisting($order, $service);
+        }
         $this->getService()->activate($order, $service);
         return true;
     }
