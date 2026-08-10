@@ -57,7 +57,7 @@
       </div>
     </div>
     <div class="subheading"><div><span>Recommended</span><h3>Popular configurations</h3></div><button class="text-button" id="seeAllPlans">See all plans <span>↓</span></button></div>
-    <div class="plans-grid" id="featuredPlans" aria-live="polite"><div class="plan-skeleton"></div><div class="plan-skeleton"></div><div class="plan-skeleton"></div></div>
+    <div class="plans-grid" id="featuredPlans" aria-live="polite"><div class="plan-skeleton"></div><div class="plan-skeleton"></div><div class="plan-skeleton"></div><div class="plan-skeleton"></div><div class="plan-skeleton"></div><div class="plan-skeleton"></div></div>
     <div class="all-plans-wrapper" id="allPlansWrapper"><div class="table-scroll"><table class="plans-table"><thead><tr><th>Plan</th><th>vCPU</th><th>Memory</th><th>Storage</th><th>Transfer</th><th>Monthly price</th><th></th></tr></thead><tbody id="plansTableBody"></tbody></table></div></div>
   </section>
 

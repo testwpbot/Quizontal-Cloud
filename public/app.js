@@ -4,8 +4,9 @@ const money = value => `Rs. ${new Intl.NumberFormat('en-LK', { maximumFractionDi
 const storage = gb => Number(gb) >= 1000 ? `${(Number(gb) / 1000).toFixed(Number(gb) % 1000 ? 1 : 0)} TB` : `${Number(gb)} GB`;
 const categoryName = category => ({ general: 'KVM Linux', storage: 'KVM Storage', windows: 'Hyper-V Windows' }[category] || category);
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
-const plans = () => state.catalog.filter(plan => plan.category === state.category && plan.available);
-const uniqueSorted = values => [...new Set(values.map(Number))].sort((a, b) => a - b);
+const plans = () => state.catalog
+  .filter(plan => plan.category === state.category && plan.available)
+  .sort((a, b) => Number(a.priceLkr) - Number(b.priceLkr) || Number(a.slices ?? a.cpu) - Number(b.slices ?? b.cpu));
 
 function checkoutUrl(plan) {
   const base = state.config.orderUrl || '#plans';
@@ -35,7 +36,7 @@ function updatePrice() {
   $('#dynamicSpecs').textContent = plan ? planSpecs(plan) : `No ${categoryName(state.category)} products are currently available.`;
 }
 function card(plan, displayIndex) {
-  const featured = displayIndex === 1;
+  const featured = displayIndex === 2;
   return `<article class="plan ${featured ? 'featured' : ''}" data-id="${escapeHtml(plan.id)}">
     ${featured ? '<div class="plan-badge">Most popular</div>' : ''}
     <div class="plan-name">${escapeHtml(plan.name)}</div>
@@ -47,8 +48,8 @@ function card(plan, displayIndex) {
 }
 function renderPlans() {
   const current = plans();
-  const indexes = uniqueSorted([0, Math.floor((current.length - 1) / 2), current.length - 1]).filter(index => index >= 0);
-  $('#featuredPlans').innerHTML = indexes.length ? indexes.map((index, displayIndex) => card(current[index], displayIndex)).join('') : empty(`We are refreshing the ${categoryName(state.category)} catalog.`);
+  const featured = current.slice(0, 6);
+  $('#featuredPlans').innerHTML = featured.length ? featured.map((plan, displayIndex) => card(plan, displayIndex)).join('') : empty(`We are refreshing the ${categoryName(state.category)} catalog.`);
   $('#plansTableBody').innerHTML = current.map(plan => `<tr data-row-id="${escapeHtml(plan.id)}"><td><strong>${escapeHtml(plan.name)}</strong></td><td>${escapeHtml(plan.cpu)}</td><td>${escapeHtml(plan.ramGb)} GB</td><td>${escapeHtml(storage(plan.storageGb))} ${escapeHtml(plan.storageType)}</td><td>${escapeHtml(storage(plan.bandwidthGb))}</td><td class="price-cell">${money(plan.priceLkr)}/mo</td><td><a class="button button-ghost button-small" href="${escapeHtml(checkoutUrl(plan))}">Configure</a></td></tr>`).join('') || '<tr><td colspan="7">No plans available in this category.</td></tr>';
 }
 function renderAll() { updatePlanSelector(); updatePrice(); renderPlans(); }
