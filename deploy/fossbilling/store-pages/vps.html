@@ -7,7 +7,11 @@
 
   <div id="qcVpsError" class="alert alert-warning" hidden></div>
 
-  <div id="qcVpsCats" class="row row-cols-1 row-cols-md-2 g-3"></div>
+  <div id="qcVpsCats" class="row row-cols-1 row-cols-md-2 g-3">
+    <div class="col-12">
+      <div class="border rounded p-4 text-center text-muted" id="qcVpsLoading">Loading plans&hellip;</div>
+    </div>
+  </div>
 
   <div id="qcVpsPlans" hidden>
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -33,21 +37,33 @@
   .qc-vps-page .qc-cat-card { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
   .qc-vps-page .qc-cat-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.12); border-color: var(--bs-primary); }
   .qc-vps-page .qc-cat-card:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
-  .qc-vps-page .qc-cat-card.active { border-color: var(--bs-primary); }
 </style>
 <script>
 (function () {
   var catsEl = document.getElementById('qcVpsCats');
   var plansEl = document.getElementById('qcVpsPlans');
-  if (!catsEl || typeof API === 'undefined' || !API.guest) return;
+  if (!catsEl) return;
 
-  var currency = { code: 'LKR', rate: 1 };
+  var api = (typeof API !== 'undefined' && API.guest) ? API.guest
+      : (typeof bb !== 'undefined' ? { get: bb.get.bind(bb), post: bb.post.bind(bb), prefix: 'guest/' } : null);
+  if (!api) { console.warn('Quizontal VPS page: FOSSBilling API client not available'); return; }
+  function apiGet(endpoint, params, success, failure) {
+    try {
+      if (api.prefix) { api.get(api.prefix + endpoint, params, success, failure, false); }
+      else { api.get(endpoint, params, success, failure, false); }
+    } catch (error) {
+      console.error('Quizontal VPS page: API call failed', endpoint, error);
+      (failure || function () {})(error);
+    }
+  }
+
+  var currency = { code: 'LKR', rate: 1, loaded: false };
   var activeCategoryId = null;
   var categories = [];
 
   function money(raw) {
     var value = Number(raw) * Number(currency.rate || 1);
-    if (!isFinite(value)) return '';
+    if (!isFinite(value) || value <= 0) return '';
     return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   function esc(value) {
@@ -55,7 +71,13 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
     });
   }
+  function clearLoading() {
+    var loading = document.getElementById('qcVpsLoading');
+    if (loading) loading.parentElement.remove();
+  }
   function fail(message) {
+    console.warn('Quizontal VPS page:', message);
+    clearLoading();
     var box = document.getElementById('qcVpsError');
     box.textContent = message;
     box.hidden = false;
@@ -124,20 +146,32 @@
   document.getElementById('qcVpsBack').addEventListener('click', function () {
     plansEl.hidden = true;
     catsEl.hidden = false;
-    catsEl.querySelectorAll('.qc-cat-card').forEach(function (card) { card.classList.remove('active'); });
   });
   document.getElementById('qcVpsFilter').addEventListener('input', renderPlans);
 
-  API.guest.get('cart_get_currency', {}, function (result) {
-    currency = { code: result.code || 'LKR', rate: Number(result.conversion_rate) || 1 };
-    API.guest.get('product_category/get_list', { per_page: 100 }, function (response) {
-      var list = (response && response.list) ? response.list : [];
+  // Loading icon is only cosmetic — fetch each dataset independently so one
+  // failure can never silently blank the whole page.
+  apiGet('cart_get_currency', {}, function (result) {
+    try {
+      currency = { code: result && result.code ? result.code : 'LKR', rate: Number(result && result.conversion_rate) || 1, loaded: true };
+    } catch (error) { console.warn('Quizontal VPS page: currency parse failed', error); }
+  }, function () { console.warn('Quizontal VPS page: currency fetch failed, showing default-currency prices'); });
+
+  apiGet('product_category/get_list', { per_page: 100 }, function (response) {
+    try {
+      var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
       categories = list.filter(function (category) {
-        return category.type !== 'domain' && Array.isArray(category.products) && category.products.length > 0;
+        return category && category.type !== 'domain' && Array.isArray(category.products) && category.products.length > 0;
       });
+      clearLoading();
       if (!categories.length) { fail('Plans could not be loaded right now. Please try again in a moment.'); return; }
       renderCategories();
-    }, function () { fail('Plans could not be loaded right now. Please try again in a moment.'); }, false);
-  }, function () {}, false);
+    } catch (error) {
+      console.error('Quizontal VPS page:', error);
+      fail('Plans could not be displayed. Please refresh the page.');
+    }
+  }, function () {
+    fail('Plans could not be loaded right now. Please try again in a moment.');
+  });
 })();
 </script>

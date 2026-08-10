@@ -25,7 +25,11 @@
     <h5 class="mb-0">Domain pricing</h5>
     <small class="text-muted">Per year &middot; free WHOIS privacy on supported extensions</small>
   </div>
-  <div id="qcTldGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2"></div>
+  <div id="qcTldGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2">
+    <div class="col-12">
+      <div class="border rounded p-4 text-center text-muted" id="qcTldLoading">Loading prices&hellip;</div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -35,7 +39,19 @@
 </style>
 <script>
 (function () {
-  if (typeof API === 'undefined' || !API.guest) return;
+  var api = (typeof API !== 'undefined' && API.guest) ? API.guest
+      : (typeof bb !== 'undefined' ? { get: bb.get.bind(bb), post: bb.post.bind(bb), prefix: 'guest/' } : null);
+  if (!api) { console.warn('Quizontal domains page: FOSSBilling API client not available'); return; }
+  function apiGet(endpoint, params, success, failure) {
+    try {
+      if (api.prefix) { api.get(api.prefix + endpoint, params, success, failure, false); }
+      else { api.get(endpoint, params, success, failure, false); }
+    } catch (error) {
+      console.error('Quizontal domains page: API call failed', endpoint, error);
+      (failure || function () {})(error);
+    }
+  }
+
   var STOREFRONT = '__STOREFRONT_URL__';
   var POPULAR = ['.com', '.lk', '.net', '.org', '.io', '.co', '.ai', '.dev', '.app', '.xyz', '.me', '.shop'];
   var currency = { code: 'LKR', rate: 1 };
@@ -51,6 +67,14 @@
     return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
     });
+  }
+  function fail(message) {
+    console.warn('Quizontal domains page:', message);
+    var loading = document.getElementById('qcTldLoading');
+    if (loading) loading.parentElement.remove();
+    var box = document.getElementById('qcDomError');
+    box.textContent = message;
+    box.hidden = false;
   }
 
   function renderGrid() {
@@ -73,37 +97,9 @@
   }
 
   function goFallback(sld, tld) {
-    // No storefront configured: prefill the built-in domain order form and auto-verify + add.
     var url = '/order' + (domainProductId ? '?product=' + encodeURIComponent(domainProductId) : '') +
       '&register_sld=' + encodeURIComponent(sld) + '&register_tld=' + encodeURIComponent(tld || '') + '&auto=1';
     window.location.href = url;
-  }
-
-  function load() {
-    API.guest.get('cart_get_currency', {}, function (result) {
-      currency = { code: result.code || 'LKR', rate: Number(result.conversion_rate) || 1 };
-      renderGrid();
-    }, function () {}, false);
-
-    API.guest.get('servicedomain/tlds', { allow_register: 1 }, function (list) {
-      tlds = Array.isArray(list) ? list : [];
-      var select = document.getElementById('qcDomTld');
-      select.innerHTML = tlds.map(function (row) { return '<option value="' + esc(row.tld) + '">' + esc(row.tld) + '</option>'; }).join('');
-      if (STOREFRONT === '') select.hidden = tlds.length === 0;
-      renderGrid();
-    }, function () {
-      var box = document.getElementById('qcDomError');
-      box.textContent = 'Domain pricing could not be loaded right now. Please try again in a moment.';
-      box.hidden = false;
-    }, false);
-
-    if (STOREFRONT === '') {
-      API.guest.get('product_category/get_list', { per_page: 100 }, function (response) {
-        var list = (response && response.list) ? response.list : [];
-        var domainCategory = list.filter(function (c) { return c.type === 'domain' && Array.isArray(c.products) && c.products.length; })[0];
-        if (domainCategory) domainProductId = domainCategory.products[0].id;
-      }, function () {}, false);
-    }
   }
 
   document.getElementById('qcDomSearch').addEventListener('submit', function (event) {
@@ -128,6 +124,36 @@
     goFallback(sld, tld);
   });
 
-  load();
+  apiGet('cart_get_currency', {}, function (result) {
+    try {
+      currency = { code: result && result.code ? result.code : 'LKR', rate: Number(result && result.conversion_rate) || 1 };
+      renderGrid();
+    } catch (error) { console.warn(error); }
+  }, function () { console.warn('Quizontal domains page: currency fetch failed, showing default-currency prices'); });
+
+  apiGet('servicedomain/tlds', { allow_register: 1 }, function (list) {
+    try {
+      tlds = Array.isArray(list) ? list : [];
+      var loading = document.getElementById('qcTldLoading');
+      if (loading) loading.parentElement.remove();
+      var select = document.getElementById('qcDomTld');
+      select.innerHTML = tlds.map(function (row) { return '<option value="' + esc(row.tld) + '">' + esc(row.tld) + '</option>'; }).join('');
+      if (STOREFRONT === '') select.hidden = tlds.length === 0;
+      renderGrid();
+    } catch (error) {
+      console.error('Quizontal domains page:', error);
+      fail('Domain pricing could not be displayed. Please refresh the page.');
+    }
+  }, function () {
+    fail('Domain pricing could not be loaded right now. Please try again in a moment.');
+  });
+
+  if (STOREFRONT === '') {
+    apiGet('product_category/get_list', { per_page: 100 }, function (response) {
+      var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
+      var domainCategory = list.filter(function (c) { return c && c.type === 'domain' && Array.isArray(c.products) && c.products.length; })[0];
+      if (domainCategory) domainProductId = domainCategory.products[0].id;
+    }, function () {});
+  }
 })();
 </script>

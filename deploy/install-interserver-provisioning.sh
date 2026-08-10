@@ -86,5 +86,60 @@ if [[ -d "$REGISTRAR_ADAPTERS_DIR" ]]; then
   fi
 fi
 [[ -d "$APP_ROOT/data/cache" ]] && find "$APP_ROOT/data/cache" -type f ! -name '.gitignore' -delete
+
+# --- Quizontal site settings ------------------------------------------------
+# 1) FOSSBilling's "strict" security mode sets session cookies SameSite=Strict,
+#    which silently DROPS the customer's session every time they arrive at the
+#    billing site by clicking a link on the marketing storefront. Relax it to
+#    "lax" (top-level navigation keeps working) and give sessions a 24h
+#    lifespan instead of the 2h default. One-time backup: config.php.quizontal-backup
+CONFIG_FILE="$APP_ROOT/config.php"
+if [[ -f "$CONFIG_FILE" ]] && command -v python3 >/dev/null 2>&1; then
+  cp -n "$CONFIG_FILE" "$CONFIG_FILE.quizontal-backup" || true
+  python3 - "$CONFIG_FILE" <<'PYEOF'
+import re, sys
+path = sys.argv[1]
+src = open(path).read()
+orig = src
+if "'security'" in src:
+    src = re.sub(r"('mode'\s*=>\s*)'strict'", r"\1'lax'", src)
+    def lifespan(match):
+        return match.group(1) + str(max(int(match.group(2)), 86400)) + ","
+    src = re.sub(r"('session_lifespan'\s*=>\s*)(\d+)\s*,", lifespan, src, count=1)
+else:
+    block = "    'security' => ['mode' => 'lax', 'session_lifespan' => 86400],\n"
+    src = re.sub(r"return\s*\[", "return [\n" + block, src, count=1)
+if src != orig:
+    open(path, 'w').write(src)
+    print("config.php: security.mode=lax, session_lifespan>=86400")
+else:
+    print("config.php: security settings already fine")
+PYEOF
+else
+  echo "NOTE: could not adjust $CONFIG_FILE automatically - set 'security.mode' to 'lax' there manually."
+fi
+
+# 2) Professional store URLs: /hosting/vps and /hosting/domains (aliases for
+#    the Custom Pages routes). Uses a managed block and only touches the
+#    stock .htaccess layout (checks for its anchor comment first).
+HTACCESS_FILE="$APP_ROOT/.htaccess"
+if [[ -f "$HTACCESS_FILE" ]] && command -v python3 >/dev/null 2>&1 && ! grep -q 'BEGIN Quizontal routes' "$HTACCESS_FILE"; then
+  python3 - "$HTACCESS_FILE" <<'PYEOF'
+import sys
+path = sys.argv[1]
+src = open(path).read()
+anchor = "# Rewrite non-existent file/directory names to index.php."
+block = ("# BEGIN Quizontal routes\n"
+         "    # Pretty store URLs served by the Custom Pages module.\n"
+         "    RewriteRule ^hosting/(vps|domains)/?$ /custompages/$1 [L]\n"
+         "    # END Quizontal routes\n\n    ")
+if anchor in src:
+    open(path, 'w').write(src.replace(anchor, block + anchor, 1))
+    print(".htaccess: /hosting/... store URL aliases installed")
+else:
+    print(".htaccess: layout anchor not found - add the /hosting/ rewrite manually")
+PYEOF
+fi
+
 echo "Quizontal Cloud provisioning modules installed successfully."
 echo 'Next: run bash deploy/activate-interserver-provisioning.sh from the repository.'
