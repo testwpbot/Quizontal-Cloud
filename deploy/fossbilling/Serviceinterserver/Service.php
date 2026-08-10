@@ -128,7 +128,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if (!is_object($model)) throw new InformationException('Cloud service record was not created.');
         if ($model->status === 'provisioned' && $model->provider_vps_id) return ['cloud_service_id' => $model->provider_vps_id];
         if (in_array($model->status, ['submitting', 'manual_review'], true)) {
-            throw new InformationException('This order requires administrator reconciliation before another live submission can be attempted.');
+            return ['provisioning_state' => $model->status, 'duplicate_submission_blocked' => true];
         }
         $provisioningMode = $this->mode();
 
@@ -184,8 +184,20 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     private function placeLiveOrder($order, $model, array $payload, string $rootPassword): array
     {
         $this->assertOrderPaid((int) $order->id);
+        if (!$this->claimLiveSubmission((int) $model->id)) {
+            $current = $this->di['db']->load('service_interserver', (int) $model->id);
+            if ($current && $current->provider_vps_id) return ['cloud_service_id' => (string) $current->provider_vps_id, 'duplicate_submission_blocked' => true];
+            return ['provisioning_state' => (string) ($current->status ?? 'submitting'), 'duplicate_submission_blocked' => true];
+        }
+        $model->status = 'submitting';
         $existing = $this->findProviderServiceByHostname((string) $model->hostname);
         if ($existing !== null) {
+            if (empty($model->provider_response)) {
+                $model->status = 'manual_review';
+                $model->last_error = 'A cloud server already uses this hostname. Administrator reconciliation is required.';
+                $this->di['db']->store($model);
+                throw new InformationException($model->last_error);
+            }
             $model->provider_vps_id = (string) $existing['id'];
             $model->status = 'provisioned';
             $model->encrypted_root_password = null;
@@ -355,11 +367,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $order = $di['db']->load('ClientOrder', (int) ($params['id'] ?? 0));
         if (!$order instanceof \Model_ClientOrder || $order->service_type !== 'interserver') return;
         $service = $di['db']->load('service_interserver', (int) $order->service_id);
-        if ($service && $service->status === 'validated' && !$service->provider_vps_id) {
+        if ($service && !$service->provider_vps_id && in_array($service->status, ['validated', 'submitting', 'manual_review'], true)) {
             $order->status = \Model_ClientOrder::STATUS_PENDING_SETUP;
             $order->updated_at = date('Y-m-d H:i:s');
             $di['db']->store($order);
-            $di['mod_service']('Order')->saveStatusChange($order, 'Cloud configuration validated in test mode. No server was purchased.');
+            $message = $service->status === 'validated'
+                ? 'Cloud configuration validated in test mode. No server was purchased.'
+                : 'Cloud provisioning is already processing or awaiting reconciliation. Duplicate submission was blocked.';
+            $di['mod_service']('Order')->saveStatusChange($order, $message);
         }
     }
 
@@ -450,13 +465,23 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     private function findProviderServiceByHostname(string $hostname): ?array
     {
-        try {
-            [$status, $response] = $this->providerRequest('GET', '/vps');
-            if ($status < 200 || $status >= 300) return null;
-            return $this->findRecord($response, fn (array $row) => strtolower(trim((string) ($row['vps_hostname'] ?? $row['hostname'] ?? $row['name'] ?? ''))) === strtolower(trim($hostname)));
-        } catch (\Throwable) {
-            return null;
+        [$status, $response] = $this->providerRequest('GET', '/vps');
+        if ($status < 200 || $status >= 300) return null;
+        $matches = [];
+        $this->collectProviderServices($response, strtolower(trim($hostname)), null, $matches);
+        $matches = array_values($matches);
+        if (count($matches) > 1) throw new InformationException('Multiple cloud servers use this hostname. Cancel the duplicate in the infrastructure account before reconciliation.');
+        return $matches[0] ?? null;
+    }
+
+    private function collectProviderServices(array $value, string $hostname, string|int|null $recordKey, array &$matches): void
+    {
+        $rowHostname = strtolower(trim((string) ($value['vps_hostname'] ?? $value['hostname'] ?? $value['name'] ?? '')));
+        if ($rowHostname !== '' && $rowHostname === $hostname) {
+            $id = $value['id'] ?? $value['vps_id'] ?? $value['service_id'] ?? (is_numeric($recordKey) ? $recordKey : null);
+            if ($id !== null && $id !== '') $matches[(string) $id] = ['id' => $id] + $value;
         }
+        foreach ($value as $key => $child) if (is_array($child)) $this->collectProviderServices($child, $hostname, $key, $matches);
     }
 
     private function findRecord(array $value, callable $matches, string|int|null $recordKey = null): ?array
@@ -497,6 +522,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         foreach ($keys as $key) if (isset($data[$key]) && is_numeric($data[$key])) return (float) $data[$key];
         foreach ($data as $child) if (is_array($child)) { $found = $this->firstNumeric($child, $keys); if ($found !== null) return $found; }
         return null;
+    }
+
+    private function claimLiveSubmission(int $serviceId): bool
+    {
+        // Atomic compare-and-set: only one PHP request may transition a validated
+        // service to submitting. Concurrent invoice hooks, browser retries, cron,
+        // and administrator actions therefore cannot issue a second provider POST.
+        $statement = $this->di['pdo']->prepare("UPDATE service_interserver SET status='submitting', updated_at=NOW() WHERE id=? AND provider_vps_id IS NULL AND status='validated'");
+        $statement->execute([$serviceId]);
+        return $statement->rowCount() === 1;
     }
 
     private function assertOrderPaid(int $orderId): void
