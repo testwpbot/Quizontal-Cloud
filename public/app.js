@@ -81,7 +81,20 @@ $('#planSelectTrigger').addEventListener('click', () => { const select = $('#cus
 document.addEventListener('click', event => { if (!event.target.closest('#customPlanSelect')) { $('#customPlanSelect').classList.remove('open'); $('#planSelectTrigger').setAttribute('aria-expanded', 'false'); } });
 $('#seeAllPlans').addEventListener('click', () => { const panel = $('#allPlansWrapper'); panel.classList.toggle('show'); $('#seeAllPlans').innerHTML = panel.classList.contains('show') ? 'Hide all plans <span>↑</span>' : 'See all plans <span>↓</span>'; });
 $('#findPlanBtn').addEventListener('click', () => { const plan = selectedPlan(); if (!plan) return; const planCard = document.querySelector(`.plan[data-id="${CSS.escape(String(plan.id))}"]`); if (planCard) { document.querySelectorAll('.plan').forEach(item => item.classList.remove('highlight')); planCard.classList.add('highlight'); planCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } $('#allPlansWrapper').classList.add('show'); const row = document.querySelector(`[data-row-id="${CSS.escape(String(plan.id))}"]`); if (row) { row.style.background = 'rgba(227,28,100,.1)'; row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } });
-$('#mobileMenuBtn').addEventListener('click', () => { const menu = $('#navLinks'); menu.classList.toggle('open'); $('#mobileMenuBtn').setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false'); });
-document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => $('#navLinks').classList.remove('open')));
+function setMenu(open) {
+  const menu = $('#navLinks');
+  const button = $('#mobileMenuBtn');
+  const backdrop = $('#menuBackdrop');
+  menu.classList.toggle('open', open);
+  if (backdrop) backdrop.classList.toggle('show', open);
+  document.body.classList.toggle('menu-open', open);
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
+  button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+}
+$('#mobileMenuBtn').addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
+if ($('#menuBackdrop')) $('#menuBackdrop').addEventListener('click', () => setMenu(false));
+window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
+window.addEventListener('resize', () => { if (window.innerWidth > 1000) setMenu(false); });
+document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
 $('#year').textContent = new Date().getFullYear();
 initialize();

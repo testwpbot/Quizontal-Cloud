@@ -23,6 +23,7 @@
     <div class="nav-ctas"><a id="clientArea" class="button button-ghost" href="/client-area">Client area</a><a class="button button-primary desktop-cta" href="#plans">Choose a plan</a></div>
   </nav>
 </header>
+<div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
 <main id="top">
   <section class="hero container">
     <div class="hero-copy">

@@ -1,7 +1,7 @@
-/* Quizontal Cloud — domains page: keyword search, name ideas, paced live availability, price filters */
+/* Quizontal Cloud — domains page: keyword search, name ideas, parallel live availability, price filters */
 const $ = selector => document.querySelector(selector);
 const POPULAR = ['.com', '.lk', '.net', '.org', '.io', '.co', '.ai', '.dev', '.app', '.xyz', '.me', '.shop', '.store', '.cloud', '.tech'];
-const MAX_AUTO_CHECKS = 6;
+const MAX_BULK_CHECKS = 24;
 const GRID_LIMIT = 24;
 const PLACEHOLDERS = ['myshop.com', 'myshop', 'kadeonline.store', 'devteam.io', 'nextbigthing.xyz', 'salonhq.shop'];
 
@@ -13,7 +13,6 @@ const state = {
   rows: [],
   checks: new Map(),
   timers: [],
-  autoTotal: 0,
   resultSort: 'best',
   resultFilter: 'all',
   gridQuery: '',
@@ -29,6 +28,19 @@ const registerUrl = (sld, tld) => state.orderUrl ? withParams(state.orderUrl, `r
 const transferUrl = (sld, tld) => state.orderUrl ? withParams(state.orderUrl, `transfer_sld=${encodeURIComponent(sld)}&transfer_tld=${encodeURIComponent(tld)}`) : '/client-area';
 const popularRank = tld => { const index = POPULAR.indexOf(tld); return index === -1 ? 999 : index; };
 const statusOf = tld => state.checks.get(tld) || { status: 'unknown' };
+
+/* ---------- Mobile navigation ---------- */
+
+function setMenu(open) {
+  const menu = $('#navLinks');
+  const button = $('#mobileMenuBtn');
+  const backdrop = $('#menuBackdrop');
+  menu.classList.toggle('open', open);
+  if (backdrop) backdrop.classList.toggle('show', open);
+  document.body.classList.toggle('menu-open', open);
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
+  button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+}
 
 /* ---------- Hero ---------- */
 
@@ -77,12 +89,25 @@ function clearTimers() {
   state.timers = [];
 }
 
+function showProgress(text) {
+  const bar = $('#checkProgress');
+  $('#checkProgressLabel').textContent = text;
+  $('#checkProgressBar').style.width = '';
+  bar.querySelector('.check-progress-track').classList.add('is-indeterminate');
+  bar.hidden = false;
+}
+
+function hideProgress() {
+  const bar = $('#checkProgress');
+  bar.querySelector('.check-progress-track').classList.remove('is-indeterminate');
+  bar.hidden = true;
+}
+
 async function search(name) {
   const section = $('#results');
   section.hidden = false;
   clearTimers();
   state.checks = new Map();
-  state.autoTotal = 0;
   state.resultSort = 'best';
   state.resultFilter = 'all';
   $('#resultSort').value = 'best';
@@ -90,7 +115,7 @@ async function search(name) {
   $('#domainSpotlight').innerHTML = '';
   $('#resultsIdeas').hidden = true;
   $('#resultsNotice').hidden = true;
-  $('#checkProgress').hidden = true;
+  hideProgress();
   $('#resultsTitle').textContent = `Searching “${name}”…`;
   $('#resultsSub').textContent = 'Comparing prices across every extension we sell…';
   $('#resultsList').innerHTML = skeletonRows(8);
@@ -108,7 +133,7 @@ async function search(name) {
     if (data.orderUrl) state.orderUrl = data.orderUrl;
     if (data.checkInterval) state.checkInterval = data.checkInterval * 1000;
     renderResults();
-    autoQueue();
+    bulkLookup();
   } catch (error) {
     console.error(error);
     renderSearchError('Search is unreachable right now. Please try again in a moment.');
@@ -118,7 +143,7 @@ async function search(name) {
 function renderSearchError(message) {
   $('#resultsTitle').textContent = 'Hmm, one sec';
   $('#resultsSub').textContent = '';
-  $('#checkProgress').hidden = true;
+  hideProgress();
   $('#domainSpotlight').innerHTML = `<div class="domain-result-card is-info"><div class="result-note">${escapeHtml(message)}</div></div>`;
   $('#resultsList').innerHTML = '';
   $('#resultsIdeas').hidden = true;
@@ -142,7 +167,7 @@ function renderResults() {
   $('#resultsTitle').textContent = data.type === 'exact'
     ? `“${data.sld}${data.tld}” plus ${Math.max(state.rows.length - 1, 0)} more ways to own it`
     : `Results for “${data.sld}”`;
-  $('#resultsSub').textContent = `${state.rows.length} extensions · prices are instant and per year · live availability checks run about every ${Math.round(state.checkInterval / 1000)}s (registry speed limit) — click “Check live” on any row to jump the queue.`;
+  $('#resultsSub').textContent = `${state.rows.length} extensions · prices are instant and per year · availability lights up in one batch and is confirmed again securely at checkout.`;
   const notice = $('#resultsNotice');
   if (data.notice) {
     notice.hidden = false;
@@ -211,7 +236,7 @@ function renderList() {
   const rows = visibleRows();
   if (!rows.length) {
     list.innerHTML = `<div class="results-empty">${state.resultFilter === 'available'
-      ? 'No confirmed-available names yet — live checks are still running. Give it a few seconds.'
+      ? 'No confirmed-available names yet — checks are still running or every option is taken.'
       : 'Nothing matches this filter.'}</div>`;
     return;
   }
@@ -263,17 +288,6 @@ function renderIdeas() {
   }));
 }
 
-function updateProgress() {
-  const bar = $('#checkProgress');
-  if (!state.search || state.autoTotal === 0) { bar.hidden = true; return; }
-  let done = 0;
-  state.checks.forEach(check => { if (['available', 'taken', 'error'].includes(check.status)) done += 1; });
-  if (done >= state.autoTotal) { bar.hidden = true; return; }
-  bar.hidden = false;
-  $('#checkProgressLabel').textContent = `Checking live availability on the top ${state.autoTotal} extensions — ${done}/${state.autoTotal} done`;
-  $('#checkProgressBar').style.width = `${Math.round((done / state.autoTotal) * 100)}%`;
-}
-
 function bindRowButtons(scope) {
   scope.querySelectorAll('[data-check]').forEach(button => button.addEventListener('click', () => doCheck(button.dataset.check)));
 }
@@ -290,28 +304,43 @@ function refreshRow(tld) {
     renderList(); // row is currently filtered out of view — rebuild to be safe
   }
   renderSpotlight();
-  updateProgress();
 }
 
-/* ---------- Paced live availability ---------- */
+/* ---------- Parallel live availability (RDAP) with registrar fallback ---------- */
 
-function autoQueue() {
+async function bulkLookup() {
   if (!state.search) return;
   const exactFirst = (a, b) => (a.tld === state.search.tld ? -1 : 0) - (b.tld === state.search.tld ? -1 : 0);
-  const queue = sortedRows()
+  const targets = sortedRows()
     .filter(row => row.allowRegister && statusOf(row.tld).status === 'unknown')
     .sort(exactFirst)
-    .slice(0, MAX_AUTO_CHECKS);
-  state.autoTotal = queue.length;
-  queue.forEach((row, index) => {
-    state.checks.set(row.tld, { status: 'queued' });
-    state.timers.push(setTimeout(() => doCheck(row.tld), index === 0 ? 350 : index * state.checkInterval));
-  });
+    .slice(0, MAX_BULK_CHECKS);
+  if (!targets.length) return;
+
+  targets.forEach(row => state.checks.set(row.tld, { status: 'checking' }));
   renderList();
   renderSpotlight();
-  updateProgress();
+  showProgress(`Checking live availability across ${targets.length} extension${targets.length === 1 ? '' : 's'}…`);
+
+  try {
+    const query = targets.map(row => row.tld).join(',');
+    const response = await fetch(`/api/domains/lookup?sld=${encodeURIComponent(state.search.sld)}&tlds=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    const map = (response.ok && data && data.ok && data.results) || {};
+    targets.forEach(row => {
+      const status = map[row.tld];
+      state.checks.set(row.tld, status === 'available' ? { status: 'available' } : status === 'taken' ? { status: 'taken' } : { status: 'unknown' });
+    });
+  } catch (error) {
+    console.error(error);
+    targets.forEach(row => state.checks.set(row.tld, { status: 'unknown' }));
+  }
+  hideProgress();
+  renderList();
+  renderSpotlight();
 }
 
+/* Authoritative single check (registrar) — paced, used for rows RDAP can't answer and manual re-checks. */
 async function doCheck(tld) {
   if (!state.search) return;
   const current = statusOf(tld);
@@ -466,8 +495,11 @@ $('#domainSearchForm').addEventListener('submit', event => {
   const name = $('#domainSearchInput').value.trim();
   if (name) search(name);
 });
-$('#mobileMenuBtn').addEventListener('click', () => { const menu = $('#navLinks'); menu.classList.toggle('open'); $('#mobileMenuBtn').setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false'); });
-document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => $('#navLinks').classList.remove('open')));
+$('#mobileMenuBtn').addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
+if ($('#menuBackdrop')) $('#menuBackdrop').addEventListener('click', () => setMenu(false));
+window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
+window.addEventListener('resize', () => { if (window.innerWidth > 1000) setMenu(false); });
+document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
 $('#year').textContent = new Date().getFullYear();
 bindTools();
 initialize();

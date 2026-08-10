@@ -24,6 +24,7 @@
     <div class="nav-ctas"><a id="clientArea" class="button button-ghost" href="/client-area">Client area</a><a class="button button-primary desktop-cta" href="#find">Find a domain</a></div>
   </nav>
 </header>
+<div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
 <main id="top">
   <section class="hero container domain-hero" id="find">
     <div class="domain-hero-copy">
@@ -122,7 +123,7 @@
 
   <section class="section container" id="domain-faq"><div class="faq-layout"><div><span class="section-kicker">Frequently asked</span><h2>Domain questions, answered</h2><p>Everything about registering, renewing and moving domains with Quorizontal Cloud.</p><a id="faqClientArea" href="/client-area" class="button button-ghost">Contact support</a></div><div class="faq-list">
     <details open><summary>How fast is my domain registered?<span>+</span></summary><p>As soon as your wallet payment is confirmed, our billing system registers the domain with our upstream registrar automatically. Most domains are active within minutes.</p></details>
-    <details><summary>Why do live checks run one at a time?<span>+</span></summary><p>Our registrar paces registry lookups to roughly one every 10 seconds per account — a rule every reseller lives with. We queue checks automatically and you can click “Check live” on any row to jump the queue. Prices, on the other hand, are instant.</p></details>
+    <details><summary>How can availability checks be this fast?<span>+</span></summary><p>We query the public registry (RDAP) feeds for up to 24 extensions in one parallel batch — usually about a second. Extensions without a public feed offer a “Check live” button that asks our registrar directly, and availability is always confirmed once more before you pay.</p></details>
     <details><summary>Is WHOIS privacy really free?<span>+</span></summary><p>Yes. Our registrar includes WHOIS privacy at no cost on supported extensions, and we enable it by default on every registration.</p></details>
     <details><summary>What does a renewal cost?<span>+</span></summary><p>The renewal price for every extension is listed right next to the registration price — in search results and in the pricing table — before you buy. No inflated second-year surprises.</p></details>
     <details><summary>Can I transfer my existing domain to Quizontal Cloud?<span>+</span></summary><p>Yes. Search for your domain above and use the transfer option with the EPP/authorization code from your current registrar. Transfers typically complete in 5–7 days and add a year of registration.</p></details>
