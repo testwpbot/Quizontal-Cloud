@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/styles.css?v={{ filemtime(public_path('styles.css')) }}">
 </head>
 <body>
 <div class="site-glow glow-one"></div><div class="site-glow glow-two"></div>
@@ -79,6 +79,6 @@
   <section class="container final-cta"><div><span class="section-kicker">Ready when you are</span><h2>Launch your next project on Quizontal Cloud.</h2><p>Choose a transparent monthly plan and manage everything from one simple account.</p></div><div><a href="#plans" class="button button-primary button-large">Explore plans</a><a id="ctaClientArea" href="/client-area" class="button button-ghost button-large">Client area</a></div></section>
 </main>
 <footer class="site-footer"><div class="container footer-grid"><div><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"><p>Simple cloud infrastructure with transparent LKR pricing.</p></div><div><strong>Platform</strong><a href="#plans">VPS plans</a><a href="/domains">Domains</a><a href="#features">Features</a><a href="#locations">Locations</a></div><div><strong>Account</strong><a id="footerClient" href="/client-area">Client area</a><a href="#faq">FAQ</a><a href="#how-it-works">How it works</a></div><div class="footer-meta"><span>© <b id="year"></b> Quizontal Cloud</span><span class="footer-status"><i></i> Systems operational</span></div></div></footer>
-<script src="/app.js?v=5" defer></script>
+<script src="/app.js?v={{ filemtime(public_path('app.js')) }}" defer></script>
 </body>
 </html>
