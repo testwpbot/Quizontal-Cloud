@@ -47,6 +47,5 @@ body.menu-open{overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){.nav-menu,.menu-backdrop{transition:none}}
 @media(max-width:700px){
-.glow-one{width:340px;height:340px;right:-130px;top:60px}
-.glow-two{width:280px;height:280px;left:-130px;top:520px}
+.site-glow{display:none}
 }

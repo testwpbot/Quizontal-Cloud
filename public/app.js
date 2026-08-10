@@ -117,4 +117,5 @@ window.addEventListener('keydown', event => { if (event.key === 'Escape') setMen
 window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); });
 document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
 $('#year').textContent = new Date().getFullYear();
+document.scrollingElement.scrollLeft = 0; // drop any restored horizontal offset
 initialize();
