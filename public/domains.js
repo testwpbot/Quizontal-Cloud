@@ -43,10 +43,20 @@ function menuBackdropElement() {
   }
   return backdrop;
 }
+let menuCloseTimer = null;
 function setMenu(open) {
   const menu = $('#navLinks');
   const button = $('#mobileMenuBtn');
-  menu.classList.toggle('open', open);
+  clearTimeout(menuCloseTimer);
+  if (open) {
+    if (getComputedStyle(menu).display === 'none') menu.style.display = 'flex';
+    void menu.offsetWidth; // reflow so the slide-in transition runs
+    menu.classList.add('open');
+  } else {
+    menu.classList.remove('open');
+    menu.style.display = 'flex'; // stay painted while sliding out
+    menuCloseTimer = setTimeout(() => { if (!menu.classList.contains('open')) menu.style.display = ''; }, 360);
+  }
   menuBackdropElement().classList.toggle('show', open);
   document.body.classList.toggle('menu-open', open);
   button.setAttribute('aria-expanded', open ? 'true' : 'false');
