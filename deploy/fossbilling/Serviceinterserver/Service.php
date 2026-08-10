@@ -301,7 +301,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'cloud_service_id' => $model->provider_vps_id,
             'primary_ip' => $model->primary_ip,
             'power_status' => $model->power_status,
-            'cpu_cores' => (int) $model->slices,
+            'cpu_cores' => (int) ceil((int) $model->slices / 2),
             'ram_gb' => (int) $model->slices * 2,
             'storage_gb' => (int) $model->slices * ($model->platform === 'kvmstorage' ? 1000 : 40),
             'storage_type' => $model->platform === 'kvmstorage' ? 'SATA' : 'NVMe',

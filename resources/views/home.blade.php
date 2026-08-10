@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,7 +52,7 @@
       <div class="category-tabs" role="tablist"><button class="category-tab active" data-category="general">KVM Linux</button><button class="category-tab" data-category="storage">KVM Storage</button><button class="category-tab" data-category="windows">Hyper-V Windows</button></div>
       <div class="plan-builder">
         <div class="builder-copy"><span>Your configuration</span><h3>Build a plan around your workload</h3><p>Choose the CPU and RAM combination you need. We’ll match it to the current available plan.</p></div>
-        <div class="selector-group plan-select-group"><label for="planSelector">Available plan</label><select id="planSelector" class="plan-select" aria-label="Select a VPS plan"><option>Loading plans…</option></select><small id="planSource">Synced with the billing catalog</small></div>
+        <div class="selector-group plan-select-group"><label>Available plan</label><div class="custom-plan-select" id="customPlanSelect"><button type="button" class="plan-select-trigger" id="planSelectTrigger" aria-haspopup="listbox" aria-expanded="false"><span><strong id="planSelectTitle">Loading plans…</strong><small id="planSelectMeta">Please wait</small></span><i>⌄</i></button><div class="plan-select-menu" id="planSelectMenu" role="listbox"></div></div><select id="planSelector" class="plan-select-native" aria-label="Select a VPS plan" tabindex="-1"><option>Loading plans…</option></select><small id="planSource">Current available configurations</small></div>
         <div class="builder-price"><small>Monthly total</small><div id="dynamicPrice">Loading…</div><p id="dynamicSpecs">Fetching the latest billing products</p><button class="button button-primary" id="findPlanBtn">View selected plan</button></div>
       </div>
     </div>

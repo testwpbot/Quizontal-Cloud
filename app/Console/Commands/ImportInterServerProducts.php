@@ -94,7 +94,8 @@ class ImportInterServerProducts extends Command
 
     /**
      * Build plans from InterServer's current VPS order-form fields.
-     * One slice is one vCPU plus the RAM, storage and transfer allocations returned by the API.
+     * Each plan unit adds 2 GB RAM, storage and transfer. CPU allocation scales
+     * at one vCPU per two units, rounded up (1, 1, 2, 2, 3, 3, ...).
      * The one USD profit is applied once to each monthly VPS plan, not to every slice.
      *
      * @return array<int, array<string, mixed>>
@@ -128,7 +129,7 @@ class ImportInterServerProducts extends Command
                     'category' => $definition['category'],
                     'platform' => $platform,
                     'slices' => $slices,
-                    'cpu' => $slices,
+                    'cpu' => (int) ceil($slices / 2),
                     'ramGb' => round($ramGbPerSlice * $slices, 2),
                     'storageGb' => round($definition['storageGb'] * $slices, 2),
                     'storageType' => $definition['storage'],
@@ -170,14 +171,43 @@ class ImportInterServerProducts extends Command
     private function normalize(array $raw, int $index, float $rate, float $profit): array
     {
         $text = strtolower(implode(' ', Arr::only($raw, ['platform', 'type', 'name', 'os'])));
-        $category = str_contains($text, 'hyperv') || str_contains($text, 'windows') ? 'windows' : ((str_contains($text, 'storage') || str_contains($text, 'hdd') || str_contains($text, 'sata')) ? 'storage' : 'general');
+        $category = str_contains($text, 'hyperv') || str_contains($text, 'windows')
+            ? 'windows'
+            : ((str_contains($text, 'storage') || str_contains($text, 'hdd') || str_contains($text, 'sata')) ? 'storage' : 'general');
+        $platform = (string) ($raw['platform'] ?? match ($category) {
+            'storage' => 'kvmstorage',
+            'windows' => 'hyperv',
+            default => 'kvm',
+        });
         $base = $this->number($this->firstValue($raw, ['monthly_price', 'monthlyPrice', 'price', 'cost', 'price_usd'], 0));
         $ramMb = $this->number($this->firstValue($raw, ['ram_mb', 'memory_mb'], 0));
         $ram = $this->number($this->firstValue($raw, ['ram_gb', 'ram', 'memory'], $ramMb ? $ramMb / 1024 : 1));
         $id = (string) $this->firstValue($raw, ['id', 'product_id', 'plan_id', 'sku', 'name'], 'interserver-'.($index + 1));
         $name = (string) $this->firstValue($raw, ['name', 'title', 'description', 'plan_name'], 'Cloud VPS Plan '.($index + 1));
+        $slices = (int) $this->number($this->firstValue($raw, ['slices', 'slice', 'quantity'], 0));
+        if ($slices < 1 && preg_match('/\b(\d+)\s+Slices?\b/i', $name, $matches)) $slices = (int) $matches[1];
+        if ($slices < 1 && preg_match('/\bPlan\s+(\d+)\b/i', $name, $matches)) $slices = (int) $matches[1];
+        $reportedCpu = $this->number($this->firstValue($raw, ['cpu', 'cores', 'vcpu', 'cpu_cores'], 1));
+        $cpu = $slices > 0 ? (int) ceil($slices / 2) : $reportedCpu;
         $retail = round(($base + $profit) * 100) / 100;
-        return ['id' => 'interserver-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $id), 'providerProductId' => $id, 'name' => $name, 'category' => $category, 'cpu' => $this->number($this->firstValue($raw, ['cpu', 'cores', 'vcpu', 'cpu_cores'], 1)), 'ramGb' => $ram, 'storageGb' => $this->number($this->firstValue($raw, ['storage_gb', 'disk_gb', 'disk', 'storage'], 0)), 'storageType' => $category === 'storage' ? 'SATA' : 'NVMe', 'bandwidthGb' => $this->number($this->firstValue($raw, ['bandwidth_gb', 'transfer_gb', 'bandwidth', 'transfer'], 0)), 'basePriceUsd' => $base, 'retailPriceUsd' => $retail, 'priceLkr' => round($retail * $rate), 'available' => $this->firstValue($raw, ['available', 'active'], true) !== false];
+
+        return [
+            'id' => 'interserver-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $id),
+            'providerProductId' => $id,
+            'name' => $name,
+            'category' => $category,
+            'platform' => $platform,
+            'slices' => $slices ?: null,
+            'cpu' => $cpu,
+            'ramGb' => $ram,
+            'storageGb' => $this->number($this->firstValue($raw, ['storage_gb', 'disk_gb', 'disk', 'storage'], 0)),
+            'storageType' => $category === 'storage' ? 'SATA' : 'NVMe',
+            'bandwidthGb' => $this->number($this->firstValue($raw, ['bandwidth_gb', 'transfer_gb', 'bandwidth', 'transfer'], 0)),
+            'basePriceUsd' => $base,
+            'retailPriceUsd' => $retail,
+            'priceLkr' => round($retail * $rate),
+            'available' => $this->firstValue($raw, ['available', 'active'], true) !== false,
+        ];
     }
 
     private function customerFacingName(string $name): string

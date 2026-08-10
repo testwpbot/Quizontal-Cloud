@@ -20,8 +20,13 @@ function updatePlanSelector() {
   const available = plans();
   if (!available.some(plan => String(plan.id) === String(state.planId))) state.planId = available[0]?.id ?? null;
   $('#planSelector').innerHTML = available.length
-    ? available.map(plan => `<option value="${escapeHtml(plan.id)}" ${String(plan.id) === String(state.planId) ? 'selected' : ''}>${escapeHtml(plan.name)} — ${plan.cpu} vCPU / ${plan.ramGb} GB RAM</option>`).join('')
+    ? available.map(plan => `<option value="${escapeHtml(plan.id)}" ${String(plan.id) === String(state.planId) ? 'selected' : ''}>${escapeHtml(plan.name)}</option>`).join('')
     : '<option value="">No plans currently available</option>';
+  $('#planSelectMenu').innerHTML = available.length ? available.map(plan => `<button type="button" class="plan-select-option ${String(plan.id) === String(state.planId) ? 'active' : ''}" role="option" aria-selected="${String(plan.id) === String(state.planId)}" data-plan-id="${escapeHtml(plan.id)}"><span><strong>${escapeHtml(plan.name)}</strong><small>${escapeHtml(plan.cpu)} vCPU · ${escapeHtml(plan.ramGb)} GB RAM · ${escapeHtml(storage(plan.storageGb))} ${escapeHtml(plan.storageType)}</small></span><b>${money(plan.priceLkr)}<small>/mo</small></b></button>`).join('') : '<div class="plan-select-empty">No plans currently available</div>';
+  const selected = selectedPlan();
+  $('#planSelectTitle').textContent = selected?.name || 'No plan available';
+  $('#planSelectMeta').textContent = selected ? `${selected.cpu} vCPU · ${selected.ramGb} GB RAM · ${storage(selected.storageGb)} ${selected.storageType}` : 'Try another category';
+  document.querySelectorAll('.plan-select-option').forEach(option => option.addEventListener('click', () => { state.planId = option.dataset.planId; $('#planSelector').value = state.planId; $('#customPlanSelect').classList.remove('open'); $('#planSelectTrigger').setAttribute('aria-expanded', 'false'); updatePlanSelector(); updatePrice(); }));
 }
 function selectedPlan() { return plans().find(plan => String(plan.id) === String(state.planId)) || plans()[0]; }
 function updatePrice() {
@@ -56,7 +61,7 @@ async function initialize() {
     if (!catalogResponse.ok) throw new Error('Catalog unavailable');
     const catalog = await catalogResponse.json();
     state.catalog = Array.isArray(catalog.products) ? catalog.products : [];
-    $('#planSource').textContent = catalog.source === 'billing_database' ? 'Live products and prices from the billing database' : 'Latest imported product catalog';
+    $('#planSource').textContent = catalog.source === 'billing_database' ? 'Current available plans and monthly prices' : 'Latest available configurations';
     state.config = configResponse.ok ? await configResponse.json() : state.config;
     setClientLinks(state.config);
     const lowest = state.catalog.filter(plan => plan.available).sort((a, b) => Number(a.priceLkr) - Number(b.priceLkr))[0];
@@ -70,7 +75,9 @@ async function initialize() {
 }
 
 document.querySelectorAll('.category-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.category-tab').forEach(item => item.classList.remove('active')); button.classList.add('active'); state.category = button.dataset.category; state.planId = null; renderAll(); }));
-$('#planSelector').addEventListener('change', event => { state.planId = event.target.value; updatePrice(); });
+$('#planSelector').addEventListener('change', event => { state.planId = event.target.value; updatePlanSelector(); updatePrice(); });
+$('#planSelectTrigger').addEventListener('click', () => { const select = $('#customPlanSelect'); select.classList.toggle('open'); $('#planSelectTrigger').setAttribute('aria-expanded', select.classList.contains('open') ? 'true' : 'false'); });
+document.addEventListener('click', event => { if (!event.target.closest('#customPlanSelect')) { $('#customPlanSelect').classList.remove('open'); $('#planSelectTrigger').setAttribute('aria-expanded', 'false'); } });
 $('#seeAllPlans').addEventListener('click', () => { const panel = $('#allPlansWrapper'); panel.classList.toggle('show'); $('#seeAllPlans').innerHTML = panel.classList.contains('show') ? 'Hide all plans <span>↑</span>' : 'See all plans <span>↓</span>'; });
 $('#findPlanBtn').addEventListener('click', () => { const plan = selectedPlan(); if (!plan) return; const planCard = document.querySelector(`.plan[data-id="${CSS.escape(String(plan.id))}"]`); if (planCard) { document.querySelectorAll('.plan').forEach(item => item.classList.remove('highlight')); planCard.classList.add('highlight'); planCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } $('#allPlansWrapper').classList.add('show'); const row = document.querySelector(`[data-row-id="${CSS.escape(String(plan.id))}"]`); if (row) { row.style.background = 'rgba(227,28,100,.1)'; row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } });
 $('#mobileMenuBtn').addEventListener('click', () => { const menu = $('#navLinks'); menu.classList.toggle('open'); $('#mobileMenuBtn').setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false'); });
