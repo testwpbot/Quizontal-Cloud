@@ -21,7 +21,7 @@ img{max-width:100%}
 html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}
 body.menu-open{overflow:hidden}
 .drawer-head,.drawer-label{display:none}
-.menu-backdrop{position:fixed;inset:0;z-index:55;background:rgba(15,17,23,.46);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease}
+.menu-backdrop{position:fixed;inset:0;z-index:71;background:rgba(15,17,23,.46);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease}
 .menu-backdrop.show{opacity:1;visibility:visible}
 @media(min-width:701px){.menu-backdrop{display:none}}
 @media(min-width:701px) and (max-width:1000px){
@@ -37,7 +37,6 @@ body.menu-open{overflow:hidden}
 .mobile-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .mobile-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
 .mobile-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.menu-backdrop{z-index:71}
 .nav-menu{display:none;position:fixed;top:0;right:0;width:min(340px,88vw);height:100vh;height:100dvh;background:#fff;padding:0;flex-direction:column;align-items:stretch;z-index:72;border-left:1px solid var(--border);box-shadow:-24px 0 60px rgba(31,37,48,.18);transform:translateX(105%);transition:transform .38s cubic-bezier(.32,.72,.28,1);will-change:transform;overflow-y:auto}
 .nav-menu.open{transform:none}
 .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}

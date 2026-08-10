@@ -96,6 +96,18 @@ function menuBackdropElement() {
   }
   return backdrop;
 }
+function placeMenuForViewport() {
+  const menu = $('#navLinks');
+  const shell = document.querySelector('.nav-shell');
+  if (!menu || !shell) return;
+  if (window.innerWidth <= 700) {
+    // Phones: the drawer must live at page level — inside the blurred,
+    // stacking-context-creating header it gets dimmed and mis-anchored.
+    if (menu.parentElement !== document.body) document.body.appendChild(menu);
+  } else if (menu.parentElement === document.body) {
+    shell.insertBefore(menu, shell.querySelector('.nav-ctas'));
+  }
+}
 let menuCloseTimer = null;
 function setMenu(open) {
   const menu = $('#navLinks');
@@ -118,8 +130,9 @@ function setMenu(open) {
 $('#mobileMenuBtn').addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
 document.querySelectorAll('.drawer-close').forEach(button => button.addEventListener('click', () => setMenu(false)));
 window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
-window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); });
+window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); placeMenuForViewport(); });
 document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
 $('#year').textContent = new Date().getFullYear();
 document.scrollingElement.scrollLeft = 0; // drop any restored horizontal offset
+placeMenuForViewport();
 initialize();
