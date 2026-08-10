@@ -15,7 +15,7 @@
 .domain-search-box input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:19px;font-weight:600;color:var(--text);padding:10px 0}
 .domain-search-box input::placeholder{color:#aab0bd;font-weight:500;transition:opacity .25s ease}
 .domain-search-box .button{padding:13px 26px;border-radius:14px;flex:none}
-.domain-chips{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.domain-chips{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:16px auto 0;max-width:520px}
 .domain-chips small{color:var(--muted);font-weight:600;margin-right:2px}
 .domain-chips button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s ease}
 .domain-chips button:hover{border-color:var(--pink);color:var(--pink);background:var(--pink-soft)}
@@ -146,7 +146,9 @@
   .domain-search-box .button{width:100%;justify-content:center}
   .domain-result-card{flex-direction:column;align-items:flex-start}
   .domain-result-card .result-actions{align-items:flex-start;flex-direction:row;width:100%;justify-content:space-between}
-  .domain-hero-proof{gap:22px}
+  .domain-hero-proof{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:center}
+  .domain-hero-proof strong{font-size:15px}
+  .domain-hero-proof span{font-size:10.5px;max-width:none}
   .rrow{grid-template-columns:1fr;row-gap:10px;padding:16px}
   .rrow-status{order:2}
   .rrow-price{order:3}

@@ -31,12 +31,23 @@ const statusOf = tld => state.checks.get(tld) || { status: 'unknown' };
 
 /* ---------- Mobile navigation ---------- */
 
+function menuBackdropElement() {
+  let backdrop = $('#menuBackdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'menuBackdrop';
+    backdrop.className = 'menu-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', () => setMenu(false));
+  }
+  return backdrop;
+}
 function setMenu(open) {
   const menu = $('#navLinks');
   const button = $('#mobileMenuBtn');
-  const backdrop = $('#menuBackdrop');
   menu.classList.toggle('open', open);
-  if (backdrop) backdrop.classList.toggle('show', open);
+  menuBackdropElement().classList.toggle('show', open);
   document.body.classList.toggle('menu-open', open);
   button.setAttribute('aria-expanded', open ? 'true' : 'false');
   button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
@@ -496,9 +507,8 @@ $('#domainSearchForm').addEventListener('submit', event => {
   if (name) search(name);
 });
 $('#mobileMenuBtn').addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
-if ($('#menuBackdrop')) $('#menuBackdrop').addEventListener('click', () => setMenu(false));
 window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
-window.addEventListener('resize', () => { if (window.innerWidth > 1000) setMenu(false); });
+window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); });
 document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
 $('#year').textContent = new Date().getFullYear();
 bindTools();
