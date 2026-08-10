@@ -65,7 +65,20 @@ class SyncStorePages extends Command
             }
 
             $content = str_replace('__STOREFRONT_URL__', $storefront, (string) file_get_contents($file));
-            $page = $existing[$slug] ?? null;
+
+            // FOSSBilling derives the slug from the TITLE on create (and
+            // custompages/create ignores a slug param entirely), so "VPS
+            // Hosting" would become /custompages/vps-hosting. Accept that
+            // variant as the same page, and always run an update afterwards
+            // to pin the canonical slug we link to from the sidebar.
+            $variants = $slug === 'vps' ? ['vps', 'vps-hosting'] : [$slug];
+            $page = null;
+            foreach ($variants as $variant) {
+                if (isset($existing[$variant])) {
+                    $page = $existing[$variant];
+                    break;
+                }
+            }
 
             if ($dryRun) {
                 $this->line(sprintf('[dry-run] %s page "%s" (slug: %s, %d bytes)', $page ? 'would update' : 'would create', $title, $slug, strlen($content)));
@@ -85,13 +98,24 @@ class SyncStorePages extends Command
                     $updated++;
                     $this->line("Updated: {$title} ({$slug})");
                 } else {
-                    $this->adminCall($billing, $apiKey, 'custompages/create', [
+                    $result = $this->adminCall($billing, $apiKey, 'custompages/create', [
                         'title' => $title,
-                        'slug' => $slug,
                         'content' => $content,
                         'description' => $description,
                         'keywords' => '',
                     ]);
+                    $newId = is_numeric($result) ? (int) $result : (int) data_get((array) $result, 'id', 0);
+                    if ($newId > 0) {
+                        // Pin the canonical slug (create used the title).
+                        $this->adminCall($billing, $apiKey, 'custompages/update', [
+                            'id' => $newId,
+                            'title' => $title,
+                            'slug' => $slug,
+                            'content' => $content,
+                            'description' => $description,
+                            'keywords' => '',
+                        ]);
+                    }
                     $created++;
                     $this->line("Created: {$title} ({$slug})");
                 }

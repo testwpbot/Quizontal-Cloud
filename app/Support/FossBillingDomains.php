@@ -30,7 +30,58 @@ class FossBillingDomains
             return null;
         }
 
-        return rtrim((string) config('services.fossbilling.url'), '/').'/order/domain';
+        // Pretty /order/<slug> URLs only work when the shop owner knows the
+        // product slug — discover the real domain product through the API
+        // instead of guessing a fixed slug.
+        try {
+            $productId = Cache::remember('storefront.domain-product-id', 300, fn () => self::discoverDomainProductId());
+        } catch (\Throwable) {
+            $productId = null;
+        }
+
+        if ($productId) {
+            return rtrim((string) config('services.fossbilling.url'), '/').'/order?product='.(int) $productId;
+        }
+
+        return null;
+    }
+
+    /**
+     * Locate the FOSSBilling product used to sell domain registrations:
+     * first the "domain" category's embedded products, then a raw catalogue
+     * scan for a domain-type product.
+     */
+    private static function discoverDomainProductId(): ?int
+    {
+        try {
+            $categories = self::guest('product_category/get_list', ['per_page' => 100]);
+            foreach (($categories['list'] ?? []) as $category) {
+                if (($category['type'] ?? null) === 'domain' && ! empty($category['products'])) {
+                    $id = (int) ($category['products'][0]['id'] ?? 0);
+                    if ($id > 0) {
+                        return $id;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // fall through to the catalogue scan
+        }
+
+        try {
+            $products = self::guest('product/get_list', ['per_page' => 100]);
+            foreach (($products['list'] ?? []) as $product) {
+                if (($product['type'] ?? null) === 'domain') {
+                    $id = (int) ($product['id'] ?? 0);
+                    if ($id > 0) {
+                        return $id;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // give up — callers fall back to the generic client-area link
+        }
+
+        return null;
     }
 
     /**
