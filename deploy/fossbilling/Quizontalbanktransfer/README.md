@@ -66,7 +66,7 @@ mod_quizontalbanktransfer_receipt_status
 
 Each receipt submission sends an immediate confirmation to the customer, pauses briefly for local SMTP throttling, and then sends an administrator notification to `QUIZONTAL_ADMIN_EMAIL`. The admin version avoids attachments and external/action links; the administrator signs in normally and opens **Invoices → Bank Transfer Receipts**. Inbox placement still depends primarily on the sender domain's SPF, DKIM, DMARC, and reverse-DNS configuration.
 
-Core FOSSBilling lifecycle emails are queued. Install `deploy/install-xampp-fossbilling-cron.sh` so invoice-created, invoice-paid, ticket-opened, staff-replied, renewal, and other queued notifications are delivered every five minutes.
+Core FOSSBilling lifecycle emails are queued. Install `deploy/install-xampp-fossbilling-cron.sh` so invoice-created, invoice-paid, ticket-opened, staff-replied, renewal, and other queued notifications are delivered every five minutes. Activation also enables FOSSBilling email logging, which populates each customer's **Email** page for newly sent messages. Emails sent before logging was enabled are not reconstructed retroactively.
 
 ## Important controls
 

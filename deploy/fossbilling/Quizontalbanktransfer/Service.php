@@ -112,6 +112,13 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 ->attach($pdf, 'Invoice-'.$invoice['serie_nr'].'.pdf', 'application/pdf');
             $transport = \Symfony\Component\Mailer\Transport::fromDsn($this->mailerDsn($emailConfig));
             (new \Symfony\Component\Mailer\Mailer($transport))->send($message);
+            $this->di['mod_service']('activity')->logEmail(
+                $subject,
+                (int) $client->id,
+                (string) $company['email'],
+                (string) $client->email,
+                $content
+            );
         } catch (\Throwable $exception) {
             // Preserve delivery through the normal queue if immediate attachment
             // transport fails. The fallback keeps the official invoice links.
@@ -218,6 +225,15 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     {
         $this->di['pdo']->exec("UPDATE email_template SET subject = REPLACE(REPLACE(subject, '[Quizontal Cloud] ', ''), '[{{ guest.system_company.name }}] ', '')");
         return true;
+    }
+
+    public function enableClientEmailHistory(): bool
+    {
+        $extension = $this->di['mod_service']('extension');
+        $config = (array) $extension->getConfig('mod_email');
+        $config['ext'] = 'mod_email';
+        $config['log_enabled'] = 1;
+        return $extension->setConfig($config);
     }
 
     public function setAdminNotificationEmail(string $email): bool
