@@ -17,6 +17,8 @@
     <a href="#top" class="brand" aria-label="Quizontal Cloud home"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"></a>
     <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="nav-menu" id="navLinks">
+      <div class="drawer-head"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"><button type="button" class="drawer-close" aria-label="Close menu">✕</button></div>
+      <span class="drawer-label">Menu</span>
       <a href="#plans"><span class="nav-icon">▦</span>VPS plans</a><a href="/domains"><span class="nav-icon">◎</span>Domains</a><a href="#features"><span class="nav-icon">✦</span>Features</a><a href="#locations"><span class="nav-icon">⌖</span>Locations</a><a href="#how-it-works"><span class="nav-icon">↗</span>How it works</a><a href="#faq"><span class="nav-icon">?</span>FAQ</a>
       <div class="mobile-account"><small>Already have an account?</small><a id="mobileClientArea" href="/client-area" class="button button-primary">Open client area</a></div>
     </div>
