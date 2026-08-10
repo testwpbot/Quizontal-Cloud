@@ -101,19 +101,22 @@ import re, sys
 path = sys.argv[1]
 src = open(path).read()
 orig = src
-if "'security'" in src:
-    src = re.sub(r"('mode'\s*=>\s*)'strict'", r"\1'lax'", src)
+if "'security'" in src or '"security"' in src:
+    src = re.sub(r"(['\"]mode['\"]\s*=>\s*)['\"]strict['\"]", r"\1'lax'", src)
     def lifespan(match):
-        return match.group(1) + str(max(int(match.group(2)), 86400)) + ","
-    src = re.sub(r"('session_lifespan'\s*=>\s*)(\d+)\s*,", lifespan, src, count=1)
+        return match.group(1) + str(max(int(match.group(2)), 86400))
+    src = re.sub(r"(['\"]session_lifespan['\"]\s*=>\s*)(\d+)", lifespan, src, count=1)
 else:
     block = "    'security' => ['mode' => 'lax', 'session_lifespan' => 86400],\n"
     src = re.sub(r"return\s*\[", "return [\n" + block, src, count=1)
 if src != orig:
     open(path, 'w').write(src)
-    print("config.php: security.mode=lax, session_lifespan>=86400")
-else:
-    print("config.php: security settings already fine")
+mode = re.search(r"['\"]mode['\"]\s*=>\s*['\"]([^'\"]+)['\"]", src)
+span = re.search(r"['\"]session_lifespan['\"]\s*=>\s*(\d+)", src)
+print("config.php: security.mode=%s, session_lifespan=%s%s" % (
+    mode.group(1) if mode else "MISSING",
+    span.group(1) if span else "MISSING",
+    "" if src == orig else " (updated)"))
 PYEOF
 else
   echo "NOTE: could not adjust $CONFIG_FILE automatically - set 'security.mode' to 'lax' there manually."
@@ -156,9 +159,14 @@ if [[ -f "$PHPINI_FILE" ]]; then
     cur=$(sed -n 's/^session.gc_maxlifetime *= *//p' "$PHPINI_FILE" | head -n1 | tr -d ' ')
     if [[ "$cur" =~ ^[0-9]+$ ]] && (( cur < 86400 )); then
       sed -i 's/^session.gc_maxlifetime *=.*/session.gc_maxlifetime = 86400/' "$PHPINI_FILE"
-      echo "php.ini: session.gc_maxlifetime raised to 86400 (restart Apache once: sudo /opt/lampp/lampp restart)"
     fi
   fi
+  if grep -q '^session.cookie_samesite' "$PHPINI_FILE"; then
+    sed -i 's/^session.cookie_samesite *=.*/session.cookie_samesite = Lax/' "$PHPINI_FILE"
+  else
+    printf '\nsession.cookie_samesite = Lax\n' >> "$PHPINI_FILE"
+  fi
+  echo "php.ini: gc_maxlifetime>=86400, cookie_samesite=Lax (restart Apache once: sudo /opt/lampp/lampp restart)"
 fi
 
 
