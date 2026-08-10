@@ -68,15 +68,28 @@ class FossBillingDomains
         }
     }
 
-    /** @return array{available:bool, message:?string} */
+    /**
+     * Live availability at the registry. Distinguishes a genuinely taken
+     * domain from operational failures (rate limits, registrar outages) so
+     * the UI never mislabels an unchecked domain as "taken".
+     *
+     * @return array{available:bool, message:?string, error:bool}
+     */
     public static function checkAvailability(string $sld, string $tld): array
     {
         try {
             self::guest('servicedomain/check', ['sld' => $sld, 'tld' => $tld]);
 
-            return ['available' => true, 'message' => null];
+            return ['available' => true, 'message' => null, 'error' => false];
         } catch (DomainApiException $exception) {
-            return ['available' => false, 'message' => $exception->getMessage()];
+            $message = $exception->getMessage();
+            $unavailable = preg_match('/not\s+available/i', $message) === 1;
+
+            return [
+                'available' => false,
+                'message' => $unavailable ? null : $message,
+                'error' => ! $unavailable,
+            ];
         }
     }
 

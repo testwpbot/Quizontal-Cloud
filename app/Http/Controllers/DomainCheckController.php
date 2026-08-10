@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Support\FossBillingDomains;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DomainCheckController extends Controller
 {
+    /** Cache key of the last live check timestamp (site-wide throttle). */
+    private const THROTTLE_KEY = 'storefront.domain-check.last';
+
     public function __invoke(Request $request): JsonResponse
     {
         $input = strtolower(trim((string) $request->query('name', '')));
@@ -46,7 +50,39 @@ class DomainCheckController extends Controller
             ], 422);
         }
 
+        // The registrar paces live lookups (Porkbun: ~1 check per 10s per API
+        // key). Turn bursts into a polite "retry in Ns" instead of an error.
+        $lastCheck = (int) Cache::get(self::THROTTLE_KEY, 0);
+        $retryAfter = DomainSearchController::CHECK_INTERVAL - (time() - $lastCheck);
+        if ($lastCheck > 0 && $retryAfter > 0) {
+            return response()->json([
+                'ok' => false,
+                'code' => 'throttled',
+                'retryAfter' => $retryAfter,
+                'message' => 'The registry paces live checks — retrying shortly.',
+            ]);
+        }
+        Cache::put(self::THROTTLE_KEY, time(), 3600);
+
         $availability = FossBillingDomains::checkAvailability($sld, $tld);
+
+        if ($availability['error']) {
+            $message = (string) ($availability['message'] ?? '');
+            if (preg_match('/rate.?limit|too many|throttl|limit reached|try again/i', $message) === 1) {
+                return response()->json([
+                    'ok' => false,
+                    'code' => 'throttled',
+                    'retryAfter' => DomainSearchController::CHECK_INTERVAL,
+                    'message' => 'The registry is pacing live checks — retrying shortly.',
+                ]);
+            }
+
+            return response()->json([
+                'ok' => false,
+                'code' => 'error',
+                'message' => $message !== '' ? $message : 'Availability could not be checked right now.',
+            ]);
+        }
 
         $payload = [
             'ok' => true,
@@ -55,13 +91,17 @@ class DomainCheckController extends Controller
             'tld' => $tld,
             'available' => $availability['available'],
             'price' => $tldInfo['register'] ?? null,
+            'renew' => $tldInfo['renew'] ?? null,
             'transferable' => false,
+            'transferOffered' => (bool) ($tldInfo['allow_transfer'] ?? false),
             'transferPrice' => $tldInfo['transfer'] ?? null,
             'message' => $availability['message'],
             'orderUrl' => FossBillingDomains::orderUrl(),
         ];
 
-        if (! $availability['available'] && ($tldInfo['allow_transfer'] ?? false)) {
+        // Transfer probing costs an extra registrar call, so it only runs when
+        // explicitly requested (?withTransfer=1). The order form re-validates.
+        if (! $availability['available'] && $payload['transferOffered'] && $request->boolean('withTransfer')) {
             $payload['transferable'] = FossBillingDomains::canBeTransferred($sld, $tld);
         }
 
