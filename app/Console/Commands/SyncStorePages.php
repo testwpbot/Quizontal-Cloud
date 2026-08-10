@@ -80,6 +80,7 @@ class SyncStorePages extends Command
                         'slug' => $slug,
                         'content' => $content,
                         'description' => $description,
+                        'keywords' => '',
                     ]);
                     $updated++;
                     $this->line("Updated: {$title} ({$slug})");
@@ -89,6 +90,7 @@ class SyncStorePages extends Command
                         'slug' => $slug,
                         'content' => $content,
                         'description' => $description,
+                        'keywords' => '',
                     ]);
                     $created++;
                     $this->line("Created: {$title} ({$slug})");
