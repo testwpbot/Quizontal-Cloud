@@ -1,5 +1,5 @@
 const $ = selector => document.querySelector(selector);
-const state = { catalog: [], category: 'general', cpu: null, ram: null, config: { orderUrl: '#plans' } };
+const state = { catalog: [], category: 'general', planId: null, config: { orderUrl: '#plans' } };
 const money = value => `Rs. ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(Number(value) || 0)}`;
 const storage = gb => Number(gb) >= 1000 ? `${(Number(gb) / 1000).toFixed(Number(gb) % 1000 ? 1 : 0)} TB` : `${Number(gb)} GB`;
 const categoryName = category => ({ general: 'KVM Linux', storage: 'KVM Storage', windows: 'Hyper-V Windows' }[category] || category);
@@ -16,18 +16,14 @@ function checkoutUrl(plan) {
 function planSpecs(plan) { return `${plan.cpu} vCPU · ${plan.ramGb} GB RAM · ${storage(plan.storageGb)} ${plan.storageType} · ${storage(plan.bandwidthGb)} transfer`; }
 function empty(message) { return `<div class="empty-state"><h3>No plans available</h3><p>${escapeHtml(message)}</p></div>`; }
 
-function updateSelectors() {
+function updatePlanSelector() {
   const available = plans();
-  const cpus = uniqueSorted(available.map(plan => plan.cpu));
-  if (!cpus.includes(Number(state.cpu))) state.cpu = cpus[0] ?? null;
-  $('#cpuSelector').innerHTML = cpus.map(cpu => `<button class="toggle-btn ${cpu === Number(state.cpu) ? 'active' : ''}" data-cpu="${cpu}">${cpu}</button>`).join('') || '<span class="loading-line"></span>';
-  const ramOptions = uniqueSorted(available.filter(plan => Number(plan.cpu) === Number(state.cpu)).map(plan => plan.ramGb));
-  if (!ramOptions.includes(Number(state.ram))) state.ram = ramOptions[0] ?? null;
-  $('#ramSelector').innerHTML = ramOptions.map(ram => `<button class="toggle-btn ${ram === Number(state.ram) ? 'active' : ''}" data-ram="${ram}">${ram} GB</button>`).join('') || '<span class="loading-line"></span>';
-  document.querySelectorAll('[data-cpu]').forEach(button => button.addEventListener('click', () => { state.cpu = Number(button.dataset.cpu); state.ram = null; updateSelectors(); updatePrice(); }));
-  document.querySelectorAll('[data-ram]').forEach(button => button.addEventListener('click', () => { state.ram = Number(button.dataset.ram); updateSelectors(); updatePrice(); }));
+  if (!available.some(plan => String(plan.id) === String(state.planId))) state.planId = available[0]?.id ?? null;
+  $('#planSelector').innerHTML = available.length
+    ? available.map(plan => `<option value="${escapeHtml(plan.id)}" ${String(plan.id) === String(state.planId) ? 'selected' : ''}>${escapeHtml(plan.name)} — ${plan.cpu} vCPU / ${plan.ramGb} GB RAM</option>`).join('')
+    : '<option value="">No plans currently available</option>';
 }
-function selectedPlan() { return plans().find(plan => Number(plan.cpu) === Number(state.cpu) && Number(plan.ramGb) === Number(state.ram)) || plans()[0]; }
+function selectedPlan() { return plans().find(plan => String(plan.id) === String(state.planId)) || plans()[0]; }
 function updatePrice() {
   const plan = selectedPlan();
   $('#dynamicPrice').innerHTML = plan ? `${money(plan.priceLkr)}<span>/mo</span>` : 'Unavailable';
@@ -50,9 +46,9 @@ function renderPlans() {
   $('#featuredPlans').innerHTML = indexes.length ? indexes.map((index, displayIndex) => card(current[index], displayIndex)).join('') : empty(`We are refreshing the ${categoryName(state.category)} catalog.`);
   $('#plansTableBody').innerHTML = current.map(plan => `<tr data-row-id="${escapeHtml(plan.id)}"><td><strong>${escapeHtml(plan.name)}</strong></td><td>${escapeHtml(plan.cpu)}</td><td>${escapeHtml(plan.ramGb)} GB</td><td>${escapeHtml(storage(plan.storageGb))} ${escapeHtml(plan.storageType)}</td><td>${escapeHtml(storage(plan.bandwidthGb))}</td><td class="price-cell">${money(plan.priceLkr)}/mo</td><td><a class="button button-ghost button-small" href="${escapeHtml(checkoutUrl(plan))}">Configure</a></td></tr>`).join('') || '<tr><td colspan="7">No plans available in this category.</td></tr>';
 }
-function renderAll() { updateSelectors(); updatePrice(); renderPlans(); }
+function renderAll() { updatePlanSelector(); updatePrice(); renderPlans(); }
 function setClientLinks(config) {
-  ['#clientArea', '#heroClientArea', '#featureClientArea', '#faqClientArea', '#ctaClientArea', '#footerClient'].forEach(selector => { const element = $(selector); if (element) element.href = config.clientAreaUrl || '/client-area'; });
+  ['#clientArea', '#mobileClientArea', '#heroClientArea', '#featureClientArea', '#faqClientArea', '#ctaClientArea', '#footerClient'].forEach(selector => { const element = $(selector); if (element) element.href = config.clientAreaUrl || '/client-area'; });
 }
 async function initialize() {
   try {
@@ -60,6 +56,7 @@ async function initialize() {
     if (!catalogResponse.ok) throw new Error('Catalog unavailable');
     const catalog = await catalogResponse.json();
     state.catalog = Array.isArray(catalog.products) ? catalog.products : [];
+    $('#planSource').textContent = catalog.source === 'billing_database' ? 'Live products and prices from the billing database' : 'Latest imported product catalog';
     state.config = configResponse.ok ? await configResponse.json() : state.config;
     setClientLinks(state.config);
     const lowest = state.catalog.filter(plan => plan.available).sort((a, b) => Number(a.priceLkr) - Number(b.priceLkr))[0];
@@ -72,7 +69,8 @@ async function initialize() {
   }
 }
 
-document.querySelectorAll('.category-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.category-tab').forEach(item => item.classList.remove('active')); button.classList.add('active'); state.category = button.dataset.category; state.cpu = null; state.ram = null; renderAll(); }));
+document.querySelectorAll('.category-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.category-tab').forEach(item => item.classList.remove('active')); button.classList.add('active'); state.category = button.dataset.category; state.planId = null; renderAll(); }));
+$('#planSelector').addEventListener('change', event => { state.planId = event.target.value; updatePrice(); });
 $('#seeAllPlans').addEventListener('click', () => { const panel = $('#allPlansWrapper'); panel.classList.toggle('show'); $('#seeAllPlans').innerHTML = panel.classList.contains('show') ? 'Hide all plans <span>↑</span>' : 'See all plans <span>↓</span>'; });
 $('#findPlanBtn').addEventListener('click', () => { const plan = selectedPlan(); if (!plan) return; const planCard = document.querySelector(`.plan[data-id="${CSS.escape(String(plan.id))}"]`); if (planCard) { document.querySelectorAll('.plan').forEach(item => item.classList.remove('highlight')); planCard.classList.add('highlight'); planCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; } $('#allPlansWrapper').classList.add('show'); const row = document.querySelector(`[data-row-id="${CSS.escape(String(plan.id))}"]`); if (row) { row.style.background = 'rgba(227,28,100,.1)'; row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } });
 $('#mobileMenuBtn').addEventListener('click', () => { const menu = $('#navLinks'); menu.classList.toggle('open'); $('#mobileMenuBtn').setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false'); });

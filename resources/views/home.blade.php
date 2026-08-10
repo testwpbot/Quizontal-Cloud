@@ -17,7 +17,8 @@
     <a href="#top" class="brand" aria-label="Quizontal Cloud home"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"></a>
     <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="nav-menu" id="navLinks">
-      <a href="#plans">VPS plans</a><a href="#features">Features</a><a href="#locations">Locations</a><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a>
+      <a href="#plans"><span class="nav-icon">▦</span>VPS plans</a><a href="#features"><span class="nav-icon">✦</span>Features</a><a href="#locations"><span class="nav-icon">⌖</span>Locations</a><a href="#how-it-works"><span class="nav-icon">↗</span>How it works</a><a href="#faq"><span class="nav-icon">?</span>FAQ</a>
+      <div class="mobile-account"><small>Already have an account?</small><a id="mobileClientArea" href="/client-area" class="button button-primary">Open client area</a></div>
     </div>
     <div class="nav-ctas"><a id="clientArea" class="button button-ghost" href="/client-area">Client area</a><a class="button button-primary desktop-cta" href="#plans">Choose a plan</a></div>
   </nav>
@@ -51,9 +52,8 @@
       <div class="category-tabs" role="tablist"><button class="category-tab active" data-category="general">KVM Linux</button><button class="category-tab" data-category="storage">KVM Storage</button><button class="category-tab" data-category="windows">Hyper-V Windows</button></div>
       <div class="plan-builder">
         <div class="builder-copy"><span>Your configuration</span><h3>Build a plan around your workload</h3><p>Choose the CPU and RAM combination you need. We’ll match it to the current available plan.</p></div>
-        <div class="selector-group"><label>vCPU cores</label><div class="toggle-group" id="cpuSelector"><span class="loading-line"></span></div></div>
-        <div class="selector-group"><label>Memory</label><div class="toggle-group" id="ramSelector"><span class="loading-line"></span></div></div>
-        <div class="builder-price"><small>Monthly total</small><div id="dynamicPrice">Loading…</div><p id="dynamicSpecs">Fetching the latest catalog</p><button class="button button-primary" id="findPlanBtn">View matching plan</button></div>
+        <div class="selector-group plan-select-group"><label for="planSelector">Available plan</label><select id="planSelector" class="plan-select" aria-label="Select a VPS plan"><option>Loading plans…</option></select><small id="planSource">Synced with the billing catalog</small></div>
+        <div class="builder-price"><small>Monthly total</small><div id="dynamicPrice">Loading…</div><p id="dynamicSpecs">Fetching the latest billing products</p><button class="button button-primary" id="findPlanBtn">View selected plan</button></div>
       </div>
     </div>
     <div class="subheading"><div><span>Recommended</span><h3>Popular configurations</h3></div><button class="text-button" id="seeAllPlans">See all plans <span>↓</span></button></div>
