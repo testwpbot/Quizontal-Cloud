@@ -8,6 +8,13 @@ use FOSSBilling\InformationException;
 
 class Admin extends \Api_Abstract
 {
+    public function set_credentials($data): bool
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');
+        if (empty($data['api_url']) || empty($data['api_key'])) throw new InformationException('API URL and key are required.');
+        return $this->getService()->setCredentials((string) $data['api_url'], (string) $data['api_key']);
+    }
+
     public function configure_product($data): bool
     {
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');

@@ -363,6 +363,21 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
     }
 
+    public function setCredentials(string $url, string $key): bool
+    {
+        $url = rtrim(trim($url), '/');
+        $key = trim($key);
+        if (!filter_var($url, FILTER_VALIDATE_URL) || $key === '') throw new InformationException('Valid infrastructure API credentials are required.');
+        $extension = $this->di['mod_service']('extension');
+        $config = (array) $extension->getConfig('mod_serviceinterserver');
+        $config['ext'] = 'mod_serviceinterserver';
+        $config['api_url'] = $url;
+        $config['api_key'] = $key;
+        $config['mode'] = ($config['mode'] ?? 'test') === 'live' ? 'live' : 'test';
+        $config['cost_tolerance_usd'] = $config['cost_tolerance_usd'] ?? '0.01';
+        return $extension->setConfig($config);
+    }
+
     public function getConfig(): array
     {
         return array_merge(['api_url' => 'https://my.interserver.net/apiv2', 'api_key' => '', 'mode' => 'test', 'live_confirmation' => '', 'cost_tolerance_usd' => 0.01], (array) $this->di['mod_config']('serviceinterserver'));

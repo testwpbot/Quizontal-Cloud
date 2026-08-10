@@ -12,8 +12,9 @@ INTERSERVER_URL=${INTERSERVER_API_URL:-$(read_env INTERSERVER_API_URL)}
 BILLING_URL=${BILLING_URL%/}; INTERSERVER_URL=${INTERSERVER_URL:-https://my.interserver.net/apiv2}
 api() { local endpoint=$1 data=$2 response; response=$(curl -sS -u "admin:$ADMIN_KEY" -H 'Content-Type: application/json' -X POST "$BILLING_URL/api/admin/$endpoint" -d "$data"); if [[ $(jq -r '.error // empty' <<<"$response") != '' ]]; then jq -r '.error.message' <<<"$response" >&2; exit 1; fi; jq . <<<"$response"; }
 api extension/activate '{"id":"serviceinterserver","type":"mod"}'
+api extension/activate '{"id":"cloudvps","type":"mod"}'
 api hook/batch_connect '{"mod":"serviceinterserver"}'
-CONFIG=$(jq -n --arg url "$INTERSERVER_URL" --arg key "$INTERSERVER_KEY" '{ext:"mod_serviceinterserver",api_url:$url,api_key:$key,mode:"test",live_confirmation:"",cost_tolerance_usd:"0.01"}')
-api extension/config_save "$CONFIG"
-echo 'Cloud provisioning is active in TEST mode. Switch to live only from the administrator settings after testing.'
+CREDENTIALS=$(jq -n --arg url "$INTERSERVER_URL" --arg key "$INTERSERVER_KEY" '{api_url:$url,api_key:$key}')
+api serviceinterserver/set_credentials "$CREDENTIALS"
+echo 'Cloud provisioning is active. Existing Test/Live mode settings were preserved.'
 echo "Settings: $BILLING_URL/admin/extension/settings/serviceinterserver"

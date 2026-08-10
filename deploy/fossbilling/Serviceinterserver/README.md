@@ -11,7 +11,7 @@ FOSSBILLING_URL=http://billing.localhost bash deploy/activate-interserver-provis
 php artisan fossbilling:sync-products --force
 ```
 
-Activation defaults to **Test mode**. Test mode sends validation requests only and never purchases a server.
+The first activation defaults to **Test mode**. Later activation/helper runs update credentials without overwriting the administrator's existing Test/Live selection. Test mode sends validation requests only and never purchases a server.
 
 ## Test mode
 

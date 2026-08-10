@@ -33,7 +33,7 @@
       <div class="col-12 col-md-4">
         <input class="btn-check qc-location" type="radio" name="location" id="qc-location-{{ id }}" value="{{ id }}" {% if id == 1 %}checked{% endif %}>
         <label class="btn qc-location-card w-100 d-flex align-items-center gap-2 p-3 text-start" for="qc-location-{{ id }}">
-          <img src="{{ 'us-flag.svg'|mod_asset_url('serviceinterserver') }}" width="34" height="22" alt="United States flag" style="object-fit:cover;border-radius:3px">
+          <img src="{{ 'us-flag.svg'|mod_asset_url('cloudvps') }}" width="34" height="22" alt="United States flag" style="object-fit:cover;border-radius:3px">
           <span><strong class="d-block">{{ name }}</strong><small class="text-muted">United States</small></span>
         </label>
       </div>
@@ -43,7 +43,7 @@
     <label class="form-label fw-bold">Operating system</label>
     <div class="dropdown mb-4">
       <button class="btn qc-os-trigger w-100 d-flex align-items-center justify-content-between p-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="qc-os-button">
-        <span class="d-flex align-items-center gap-3"><img id="qc-os-icon" src="{{ (is_windows ? 'windows.svg' : 'ubuntu.svg')|mod_asset_url('serviceinterserver') }}" width="34" height="34" alt=""><span class="text-start"><strong id="qc-os-title">{{ is_windows ? 'Windows Server 2022' : 'Ubuntu 24.04 LTS' }}</strong><small class="text-muted d-block">64-bit server image</small></span></span>
+        <span class="d-flex align-items-center gap-3"><img id="qc-os-icon" src="{{ (is_windows ? 'windows.svg' : 'ubuntu.svg')|mod_asset_url('cloudvps') }}" width="34" height="34" alt=""><span class="text-start"><strong id="qc-os-title">{{ is_windows ? 'Windows Server 2022' : 'Ubuntu 24.04 LTS' }}</strong><small class="text-muted d-block">64-bit server image</small></span></span>
         <span>▾</span>
       </button>
       <ul class="dropdown-menu qc-os-menu w-100 shadow p-2">
@@ -65,7 +65,7 @@
         {% endif %}
         {% for value, description in systems %}
           {% set parts = value|split('|') %}
-          <li><button class="dropdown-item rounded d-flex align-items-center gap-3 p-2 qc-os-option" type="button" data-distro="{{ parts[0] }}" data-version="{{ parts[1] }}" data-title="{{ parts[2] }}" data-icon="{{ parts[3]|mod_asset_url('serviceinterserver') }}"><img src="{{ parts[3]|mod_asset_url('serviceinterserver') }}" width="30" height="30" alt=""><span><strong class="d-block">{{ parts[2] }}</strong><small class="text-muted">{{ description }}</small></span></button></li>
+          <li><button class="dropdown-item rounded d-flex align-items-center gap-3 p-2 qc-os-option" type="button" data-distro="{{ parts[0] }}" data-version="{{ parts[1] }}" data-title="{{ parts[2] }}" data-icon="{{ parts[3]|mod_asset_url('cloudvps') }}"><img src="{{ parts[3]|mod_asset_url('cloudvps') }}" width="30" height="30" alt=""><span><strong class="d-block">{{ parts[2] }}</strong><small class="text-muted">{{ description }}</small></span></button></li>
         {% endfor %}
       </ul>
     </div>

@@ -1,0 +1,9 @@
+{
+  "id": "cloudvps",
+  "type": "mod",
+  "name": "Quizontal Cloud VPS Controls",
+  "description": "Customer-facing VPS action API for Quizontal Cloud.",
+  "author": "Quizontal Cloud",
+  "license": "Proprietary",
+  "version": "1.0.0"
+}
