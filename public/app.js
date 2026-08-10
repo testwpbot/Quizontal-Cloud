@@ -124,6 +124,7 @@ function setMenu(open) {
   }
   menuBackdropElement().classList.toggle('show', open);
   document.body.classList.toggle('menu-open', open);
+  document.documentElement.classList.toggle('menu-open', open); // page scrolls on the html layer — lock it too
   button.setAttribute('aria-expanded', open ? 'true' : 'false');
   button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
 }
@@ -132,6 +133,9 @@ document.querySelectorAll('.drawer-close').forEach(button => button.addEventList
 window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
 window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); placeMenuForViewport(); });
 document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+document.addEventListener('touchmove', event => {
+  if (document.body.classList.contains('menu-open') && !event.target.closest('.nav-menu')) event.preventDefault();
+}, { passive: false });
 $('#year').textContent = new Date().getFullYear();
 document.scrollingElement.scrollLeft = 0; // drop any restored horizontal offset
 placeMenuForViewport();
