@@ -192,6 +192,13 @@
                     }
                     $('#config-next').show();
                     $( "#config-next" ).prop( "disabled", false );
+                    {% if request.auto and request.register_sld %}
+                    // Quizontal: storefront "Add to cart" deep-link — availability passed, add straight to the cart.
+                    setTimeout(function () {
+                        var next = $('#config-next');
+                        if (next.length && !next.prop('disabled')) next.trigger('click');
+                    }, 350);
+                    {% endif %}
                 }
             );
         }

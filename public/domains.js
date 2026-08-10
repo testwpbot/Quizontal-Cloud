@@ -24,7 +24,8 @@ const state = {
 const money = value => `Rs. ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(Number(value) || 0)}`;
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 const withParams = (base, params) => base + (base.includes('?') ? '&' : '?') + params;
-const registerUrl = (sld, tld) => state.orderUrl ? withParams(state.orderUrl, `register_sld=${encodeURIComponent(sld)}&register_tld=${encodeURIComponent(tld)}`) : '/client-area';
+// auto=1: the billing order form verifies availability and adds the domain straight to the cart, landing on checkout.
+const registerUrl = (sld, tld) => state.orderUrl ? withParams(state.orderUrl, `register_sld=${encodeURIComponent(sld)}&register_tld=${encodeURIComponent(tld)}&auto=1`) : '/client-area';
 const transferUrl = (sld, tld) => state.orderUrl ? withParams(state.orderUrl, `transfer_sld=${encodeURIComponent(sld)}&transfer_tld=${encodeURIComponent(tld)}`) : '/client-area';
 const popularRank = tld => { const index = POPULAR.indexOf(tld); return index === -1 ? 999 : index; };
 const statusOf = tld => state.checks.get(tld) || { status: 'unknown' };
@@ -143,6 +144,8 @@ function hideProgress() {
 async function search(name) {
   const section = $('#results');
   section.hidden = false;
+  // Keep the URL shareable — ?q= is auto-applied on load (storefront/billing deep-links land here).
+  try { history.replaceState(null, '', withParams(location.pathname, `q=${encodeURIComponent(name)}`)); } catch (error) { /* non-fatal */ }
   clearTimers();
   state.checks = new Map();
   state.resultSort = 'best';
@@ -232,7 +235,7 @@ function badgeHtml(tld) {
 function ctaHtml(row) {
   const check = statusOf(row.tld);
   if (check.status === 'available' && row.allowRegister) {
-    return `<a class="button button-primary rrow-btn" href="${escapeHtml(registerUrl(state.search.sld, row.tld))}">Register <span>→</span></a>`;
+    return `<a class="button button-primary rrow-btn" href="${escapeHtml(registerUrl(state.search.sld, row.tld))}">Add to cart <span>→</span></a>`;
   }
   if (check.status === 'taken') {
     return row.allowTransfer
@@ -240,7 +243,7 @@ function ctaHtml(row) {
       : '';
   }
   if (row.allowRegister) {
-    return `<a class="button button-ghost rrow-btn" href="${escapeHtml(registerUrl(state.search.sld, row.tld))}">Register <span>→</span></a>`;
+    return `<a class="button button-ghost rrow-btn" href="${escapeHtml(registerUrl(state.search.sld, row.tld))}">Add to cart <span>→</span></a>`;
   }
   return '';
 }
@@ -545,3 +548,10 @@ document.scrollingElement.scrollLeft = 0; // drop any restored horizontal offset
 placeMenuForViewport();
 bindTools();
 initialize();
+
+// Deep-links (homepage hero, billing order page "Find your domain" card): /domains?q=keyword auto-runs the search.
+const initialQuery = (new URLSearchParams(location.search).get('q') || '').trim();
+if (initialQuery) {
+  $('#domainSearchInput').value = initialQuery;
+  search(initialQuery);
+}
