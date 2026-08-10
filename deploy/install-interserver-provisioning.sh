@@ -120,26 +120,47 @@ else
 fi
 
 # 2) Professional store URLs: /hosting/vps and /hosting/domains (aliases for
-#    the Custom Pages routes). Uses a managed block and only touches the
-#    stock .htaccess layout (checks for its anchor comment first).
+#    the Custom Pages routes). The rewrite passes the target via ?_url= because
+#    FOSSBilling's front controller prioritises $_GET['_url'] over REQUEST_URI
+#    (per-directory rewrites do not always update REQUEST_URI reliably).
 HTACCESS_FILE="$APP_ROOT/.htaccess"
-if [[ -f "$HTACCESS_FILE" ]] && command -v python3 >/dev/null 2>&1 && ! grep -q 'BEGIN Quizontal routes' "$HTACCESS_FILE"; then
+if [[ -f "$HTACCESS_FILE" ]] && command -v python3 >/dev/null 2>&1; then
   python3 - "$HTACCESS_FILE" <<'PYEOF'
-import sys
+import re, sys
 path = sys.argv[1]
 src = open(path).read()
-anchor = "# Rewrite non-existent file/directory names to index.php."
-block = ("# BEGIN Quizontal routes\n"
+block = ("    # BEGIN Quizontal routes\n"
          "    # Pretty store URLs served by the Custom Pages module.\n"
-         "    RewriteRule ^hosting/(vps|domains)/?$ /custompages/$1 [L]\n"
-         "    # END Quizontal routes\n\n    ")
-if anchor in src:
-    open(path, 'w').write(src.replace(anchor, block + anchor, 1))
-    print(".htaccess: /hosting/... store URL aliases installed")
+         "    RewriteRule ^hosting/(vps|domains)/?$ index.php?_url=/custompages/$1 [L,QSA]\n"
+         "    # END Quizontal routes\n")
+existing = re.compile(r"\n? *# BEGIN Quizontal routes.*?# END Quizontal routes\n", re.S)
+if re.search(existing, src):
+    src = re.sub(existing, "\n" + block, src, count=1)
+    open(path, 'w').write(src)
+    print(".htaccess: store URL aliases updated")
 else:
-    print(".htaccess: layout anchor not found - add the /hosting/ rewrite manually")
+    anchor = "# Rewrite non-existent file/directory names to index.php."
+    if anchor in src:
+        open(path, 'w').write(src.replace(anchor, block + "\n    " + anchor.lstrip(), 1))
+        print(".htaccess: /hosting/... store URL aliases installed")
+    else:
+        print(".htaccess: layout anchor not found - add the /hosting/ rewrite manually")
 PYEOF
 fi
+
+# 3) XAMPP's php.ini garbage-collects PHP sessions after 24 idle minutes by
+#    default, which logs customers out mid-shopping. Raise it to 24h.
+PHPINI_FILE="${FOSSBILLING_PHP_INI:-$(dirname "$FOSSBILLING_DIR")/etc/php.ini}"
+if [[ -f "$PHPINI_FILE" ]]; then
+  if grep -q '^session.gc_maxlifetime' "$PHPINI_FILE"; then
+    cur=$(sed -n 's/^session.gc_maxlifetime *= *//p' "$PHPINI_FILE" | head -n1 | tr -d ' ')
+    if [[ "$cur" =~ ^[0-9]+$ ]] && (( cur < 86400 )); then
+      sed -i 's/^session.gc_maxlifetime *=.*/session.gc_maxlifetime = 86400/' "$PHPINI_FILE"
+      echo "php.ini: session.gc_maxlifetime raised to 86400 (restart Apache once: sudo /opt/lampp/lampp restart)"
+    fi
+  fi
+fi
+
 
 echo "Quizontal Cloud provisioning modules installed successfully."
 echo 'Next: run bash deploy/activate-interserver-provisioning.sh from the repository.'
