@@ -18,7 +18,7 @@
 .footer-grid a:hover{color:var(--pink)}
 .catalog-note{border:1px solid var(--border);background:var(--surface-2);color:var(--muted)}
 img{max-width:100%}
-body{overflow-x:hidden;overflow-x:clip}
+html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}
 body.menu-open{overflow:hidden}
 .menu-backdrop{position:fixed;inset:0;z-index:55;background:rgba(15,17,23,.46);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease}
 .menu-backdrop.show{opacity:1;visibility:visible}
@@ -46,3 +46,7 @@ body.menu-open{overflow:hidden}
 .mobile-account .button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.nav-menu,.menu-backdrop{transition:none}}
+@media(max-width:700px){
+.glow-one{width:340px;height:340px;right:-130px;top:60px}
+.glow-two{width:280px;height:280px;left:-130px;top:520px}
+}
