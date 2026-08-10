@@ -17,4 +17,5 @@ api hook/batch_connect '{"mod":"serviceinterserver"}'
 CREDENTIALS=$(jq -n --arg url "$INTERSERVER_URL" --arg key "$INTERSERVER_KEY" '{api_url:$url,api_key:$key}')
 api serviceinterserver/set_credentials "$CREDENTIALS"
 echo 'Cloud provisioning is active. Existing Test/Live mode settings were preserved.'
+echo 'Registered listeners: onAfterAdminOrderActivate, onBeforeProductAddedToCart, onBeforeClientCheckout, onAfterAdminCronRun'
 echo "Settings: $BILLING_URL/admin/extension/settings/serviceinterserver"

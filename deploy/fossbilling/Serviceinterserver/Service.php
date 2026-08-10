@@ -9,6 +9,13 @@ use FOSSBilling\InformationException;
 
 class Service implements \FOSSBilling\InjectionAwareInterface
 {
+    private const HOSTNAME_TAKEN_MESSAGE = 'This hostname is already in use. Please enter a different hostname.';
+    private const HOSTNAME_BLOCKING_ORDER_STATUSES = ['pending_setup', 'active', 'suspended'];
+    private const HOSTNAME_PRECHECK_TIMEOUT = 12;
+
+    /** Per-request memoization so the cart and validation gates share one provider lookup. */
+    private array $providerHostnameCache = [];
+
     protected ?\Pimple\Container $di = null;
 
     public function setDi(\Pimple\Container $di): void { $this->di = $di; }
@@ -60,6 +67,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $this->ensureColumn('encrypted_root_password', 'TEXT NULL');
         $this->ensureColumn('password_viewed_at', 'DATETIME NULL');
         $this->ensureColumn('provider_response', 'MEDIUMTEXT NULL');
+        $this->ensureColumn('ready_at', 'DATETIME NULL');
         return true;
     }
 
@@ -79,7 +87,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $data;
     }
 
-    public function validateOrderData(array &$data): void
+    public function validateOrderData(array &$data, bool $verifyAvailability = true): void
     {
         foreach (['platform', 'slices', 'expected_cost_usd', 'location', 'osDistro', 'osVersion', 'hostname'] as $field) {
             if (!isset($data[$field]) || $data[$field] === '') throw new InformationException("Missing VPS configuration field: {$field}.");
@@ -94,14 +102,82 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if (!$this->isAllowedOs($data['platform'], (string) $data['osDistro'], (string) $data['osVersion'])) throw new InformationException('The selected operating system is not valid for this plan.');
         $data['hostname'] = strtolower(trim((string) $data['hostname']));
         if (!filter_var($data['hostname'], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($data['hostname'], '.')) throw new InformationException('Enter a valid fully-qualified hostname.');
+        // A duplicate hostname must fail before any order, invoice, or wallet charge exists.
+        // The activation path calls this with $verifyAvailability=false because it performs
+        // its own provider-aware reconciliation instead (safe against retry races).
+        if ($verifyAvailability) $this->assertHostnameAvailable($data['hostname']);
         $data['controlPanel'] = 'none';
+    }
+
+    /**
+     * Rejects a hostname that is already taken by another order or by any cloud
+     * server in the infrastructure account. The provider lookup is fail-open:
+     * when the infrastructure API is unreachable the local check still applies
+     * and the guarded activation flow remains the final line of protection.
+     */
+    public function assertHostnameAvailable(string $hostname, ?int $excludeOrderId = null, bool $includeProvider = true): void
+    {
+        $hostname = strtolower(trim($hostname));
+        if ($hostname === '') return;
+        if ($this->hostnameTakenLocally($hostname, $excludeOrderId)) {
+            throw new InformationException(self::HOSTNAME_TAKEN_MESSAGE);
+        }
+        if ($includeProvider && $this->providerHostnameTaken($hostname) === true) {
+            throw new InformationException(self::HOSTNAME_TAKEN_MESSAGE);
+        }
+    }
+
+    private function hostnameTakenLocally(string $hostname, ?int $excludeOrderId = null): bool
+    {
+        $blocking = implode(',', array_map(fn (string $status) => $this->di['pdo']->quote($status), self::HOSTNAME_BLOCKING_ORDER_STATUSES));
+        $sql = 'SELECT si.id FROM service_interserver si'
+            .' INNER JOIN client_order co ON co.id = si.order_id'
+            .' WHERE si.hostname = :hostname'
+            ." AND (si.provider_vps_id IS NOT NULL OR co.status IN ({$blocking}))";
+        $bindings = ['hostname' => $hostname];
+        if ($excludeOrderId !== null) {
+            $sql .= ' AND co.id != :exclude_order';
+            $bindings['exclude_order'] = $excludeOrderId;
+        }
+        $sql .= ' LIMIT 1';
+        $statement = $this->di['pdo']->prepare($sql);
+        $statement->execute($bindings);
+        return $statement->fetchColumn() !== false;
+    }
+
+    private function hostnameInCart(int $cartId, string $hostname): bool
+    {
+        foreach ($this->di['db']->find('CartProduct', 'cart_id = ?', [$cartId]) as $item) {
+            $config = json_decode((string) ($item->config ?? ''), true);
+            if (is_array($config) && strtolower(trim((string) ($config['hostname'] ?? ''))) === $hostname) return true;
+        }
+        return false;
+    }
+
+    /** Returns true when the hostname exists in the infrastructure account, or null when that could not be determined. */
+    private function providerHostnameTaken(string $hostname): ?bool
+    {
+        $hostname = strtolower(trim($hostname));
+        if (array_key_exists($hostname, $this->providerHostnameCache)) return $this->providerHostnameCache[$hostname];
+        try {
+            [$status, $response] = $this->providerRequest('GET', '/vps', null, self::HOSTNAME_PRECHECK_TIMEOUT);
+        } catch (\Throwable) {
+            return $this->providerHostnameCache[$hostname] = null;
+        }
+        if ($status < 200 || $status >= 300) return $this->providerHostnameCache[$hostname] = null;
+        $matches = [];
+        $this->collectProviderServices($response, $hostname, null, $matches);
+        return $this->providerHostnameCache[$hostname] = count($matches) > 0;
     }
 
     public function create($order, $existing = null)
     {
         if (is_object($existing)) return $existing;
         $config = json_decode($order->config ?? '', true) ?? [];
-        $this->validateOrderData($config);
+        $this->validateOrderData($config, false);
+        // Local duplicates are still impossible at activation time; the provider-side
+        // duplicate path is intentionally left to placeLiveOrder() so retries can reconcile.
+        $this->assertHostnameAvailable((string) $config['hostname'], (int) $order->id, false);
         $duplicate = $this->di['db']->findOne('service_interserver', 'order_id = ?', [(int) $order->id]);
         if ($duplicate) return $duplicate;
 
@@ -281,6 +357,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function syncService($model): bool
     {
         if (!is_object($model) || !$model->provider_vps_id) throw new InformationException('Cloud service has not been provisioned.');
+        $hadIp = trim((string) ($model->primary_ip ?? '')) !== '';
         [$status, $details] = $this->providerRequest('GET', '/vps/'.rawurlencode((string) $model->provider_vps_id));
         if ($status < 200 || $status >= 300) throw new InformationException('Could not synchronize cloud service details.');
         $this->applyProviderDetails($model, $details);
@@ -292,6 +369,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
         $model->updated_at = date('Y-m-d H:i:s');
         $this->di['db']->store($model);
+        $this->markReadyIfSynced($model, $hadIp);
         return true;
     }
 
@@ -328,6 +406,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     public function toApiArray($model): array
     {
+        $provisioningState = $this->provisioningState($model);
         return [
             'id' => (int) $model->id,
             'order_id' => (int) $model->order_id,
@@ -339,6 +418,12 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'os_version' => (string) $model->os_version,
             'hostname' => (string) $model->hostname,
             'status' => (string) $model->status,
+            // Customer-facing lifecycle derived from real infrastructure signals:
+            // a server is only "active" once the provider has assigned its IP.
+            'server_ready' => $provisioningState === 'active',
+            'provisioning_state' => $provisioningState,
+            'provisioning_message' => $this->provisioningMessage($provisioningState),
+            'ready_at' => $model->ready_at ?? null,
             'provider_cost_usd' => $model->provider_cost_usd,
             'expected_cost_usd' => $model->expected_cost_usd,
             'cloud_service_id' => $model->provider_vps_id,
@@ -375,6 +460,166 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 ? 'Cloud configuration validated in test mode. No server was purchased.'
                 : 'Cloud provisioning is already processing or awaiting reconciliation. Duplicate submission was blocked.';
             $di['mod_service']('Order')->saveStatusChange($order, $message);
+        }
+    }
+
+    /**
+     * Pre-order hostname guard. Fires before a product is added to the cart, so a
+     * duplicate hostname is rejected immediately with a friendly message instead of
+     * surfacing as a reconciliation task after the customer has paid.
+     */
+    public static function onBeforeProductAddedToCart(\Box_Event $event): void
+    {
+        $di = $event->getDi();
+        $params = $event->getParameters();
+        try {
+            $product = $di['db']->load('Product', (int) ($params['product_id'] ?? 0));
+            if (!$product || (string) $product->type !== 'interserver') return;
+            $service = $di['mod_service']('serviceinterserver');
+            $service->assertCartHostnameUsable((string) ($params['hostname'] ?? ''), (int) ($params['cart_id'] ?? 0));
+        } catch (InformationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            $di['logger']->error('Quizontal Cloud add-to-cart hostname check failed: %s', $exception->getMessage());
+        }
+    }
+
+    /**
+     * Checkout-time hostname guard. Fires before orders, invoices, and wallet charges
+     * are created for the cart, so nothing is billed when a hostname is unavailable.
+     */
+    public static function onBeforeClientCheckout(\Box_Event $event): void
+    {
+        $di = $event->getDi();
+        $params = $event->getParameters();
+        $cartId = (int) ($params['cart_id'] ?? 0);
+        if ($cartId < 1) return;
+        try {
+            $di['mod_service']('serviceinterserver')->assertCartCheckoutable($cartId);
+        } catch (InformationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            $di['logger']->error('Quizontal Cloud checkout hostname check failed: %s', $exception->getMessage());
+        }
+    }
+
+    /**
+     * Cron housekeeping: refresh paid services that are still awaiting their IP
+     * address, mark them ready once the provider assigns one, and email the customer
+     * at the exact moment the server becomes usable.
+     */
+    public static function onAfterAdminCronRun(\Box_Event $event): void
+    {
+        $di = $event->getDi();
+        try {
+            $di['mod_service']('serviceinterserver')->syncPendingProvisioning();
+        } catch (\Throwable $exception) {
+            $di['logger']->error('Quizontal Cloud cron synchronization failed: %s', $exception->getMessage());
+        }
+    }
+
+    /**
+     * Validates the hostname sent with an add-to-cart request: format first, then
+     * uniqueness against the rest of the cart, existing orders, and the provider.
+     */
+    public function assertCartHostnameUsable(string $rawHostname, int $cartId = 0): void
+    {
+        $hostname = strtolower(trim($rawHostname));
+        if (!filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($hostname, '.')) {
+            throw new InformationException('Enter a valid fully-qualified hostname.');
+        }
+        if ($cartId > 0 && $this->hostnameInCart($cartId, $hostname)) {
+            throw new InformationException('Another server in your cart already uses this hostname. Please enter a different hostname.');
+        }
+        $this->assertHostnameAvailable($hostname);
+    }
+
+    /**
+     * Validates every cloud product in the cart before checkout charges the wallet.
+     */
+    public function assertCartCheckoutable(int $cartId): void
+    {
+        $seen = [];
+        foreach ($this->di['db']->find('CartProduct', 'cart_id = ? ORDER BY id ASC', [$cartId]) as $item) {
+            $product = $this->di['db']->load('Product', (int) ($item->product_id ?? 0));
+            if (!$product || (string) $product->type !== 'interserver') continue;
+            $config = json_decode((string) ($item->config ?? ''), true);
+            if (!is_array($config)) continue;
+            $hostname = strtolower(trim((string) ($config['hostname'] ?? '')));
+            if ($hostname === '') continue;
+            if (isset($seen[$hostname])) {
+                throw new InformationException('Your cart contains two servers with the same hostname. Please remove one of them or enter a different hostname.');
+            }
+            $seen[$hostname] = true;
+            $this->assertHostnameAvailable($hostname);
+        }
+    }
+
+    /**
+     * Synchronizes provisioned services that do not have an IP address yet. The
+     * first sync that returns an IP marks the service as ready and notifies the
+     * customer, so the portal never claims a server is available before it is.
+     */
+    public function syncPendingProvisioning(): int
+    {
+        if (trim((string) ($this->getConfig()['api_key'] ?? '')) === '') return 0;
+        $services = $this->di['db']->find(
+            'service_interserver',
+            "provider_vps_id IS NOT NULL AND (primary_ip IS NULL OR primary_ip = '') ORDER BY id ASC LIMIT 15"
+        );
+        $synced = 0;
+        foreach ($services as $service) {
+            try {
+                // syncService() records readiness and notifies the customer on the
+                // first sync that observes an IP address.
+                $this->syncService($service);
+                ++$synced;
+            } catch (\Throwable $exception) {
+                $this->di['logger']->error('Quizontal Cloud sync failed for service #%s: %s', $service->id, $exception->getMessage());
+            }
+        }
+        return $synced;
+    }
+
+    /**
+     * Marks a service ready the first time the provider reports an IP address.
+     * Services that already had an IP before this feature was deployed are stamped
+     * silently so existing customers never receive a surprise notification.
+     */
+    private function markReadyIfSynced($service, bool $hadIp): void
+    {
+        if (trim((string) ($service->primary_ip ?? '')) === '') return;
+        if (!empty($service->ready_at)) return;
+        try {
+            $this->ensureReadyColumn();
+            $service->ready_at = date('Y-m-d H:i:s');
+            $this->di['db']->store($service);
+        } catch (\Throwable $exception) {
+            $this->di['logger']->error('Quizontal Cloud readiness timestamp failed for service #%s: %s', $service->id ?? 0, $exception->getMessage());
+            return;
+        }
+        if ($hadIp) return;
+        $this->notifyServerReady($service);
+    }
+
+    private function notifyServerReady($service): void
+    {
+        $order = $this->di['db']->load('ClientOrder', (int) $service->order_id);
+        if (!$order instanceof \Model_ClientOrder || $order->status === \Model_ClientOrder::STATUS_CANCELED) return;
+        try {
+            $this->di['mod_service']('Order')->saveStatusChange($order, 'Cloud server is ready: an IP address was assigned.');
+        } catch (\Throwable $exception) {
+            $this->di['logger']->error('Quizontal Cloud readiness note failed for service #%s: %s', $service->id ?? 0, $exception->getMessage());
+        }
+        try {
+            $this->di['mod_service']('email')->sendTemplate([
+                'to_client' => (int) $order->client_id,
+                'code' => 'mod_serviceinterserver_ready',
+                'service' => $this->toApiArray($service),
+                'order' => $this->di['mod_service']('Order')->toApiArray($order),
+            ]);
+        } catch (\Throwable $exception) {
+            $this->di['logger']->error('Quizontal Cloud ready notification failed for service #%s: %s', $service->id ?? 0, $exception->getMessage());
         }
     }
 
@@ -443,13 +688,13 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $this->providerRequest('PUT', '/vps/order', $payload);
     }
 
-    private function providerRequest(string $method, string $path, ?array $payload = null): array
+    private function providerRequest(string $method, string $path, ?array $payload = null, int $timeout = 35): array
     {
         $config = $this->getConfig();
         if (trim((string) $config['api_key']) === '') throw new InformationException('Configure the infrastructure API key in administrator settings.');
         $ch = curl_init(rtrim((string) $config['api_url'], '/').'/'.ltrim($path, '/'));
         $options = [
-            CURLOPT_CUSTOMREQUEST => strtoupper($method), CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 35,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method), CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => ['Accept: application/json', 'Content-Type: application/json', 'X-API-KEY: '.$config['api_key']],
         ];
         if ($payload !== null) $options[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_THROW_ON_ERROR);
@@ -546,6 +791,37 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $statement = $this->di['pdo']->prepare('SHOW COLUMNS FROM service_interserver LIKE ?');
         $statement->execute([$name]);
         if (!$statement->fetchColumn()) $this->di['db']->exec("ALTER TABLE service_interserver ADD COLUMN `{$name}` {$definition}");
+    }
+
+    private static bool $readyColumnEnsured = false;
+
+    /** Applies the ready_at migration lazily so already-installed deployments upgrade safely. */
+    private function ensureReadyColumn(): void
+    {
+        if (self::$readyColumnEnsured) return;
+        $this->ensureColumn('ready_at', 'DATETIME NULL');
+        self::$readyColumnEnsured = true;
+    }
+
+    /**
+     * Customer-facing lifecycle. The internal status remains available to admins,
+     * but customers only see a calm three-state model that never claims a server
+     * is active before the infrastructure account actually shows it with an IP.
+     */
+    private function provisioningState($model): string
+    {
+        if ($model->status === 'provisioned' && trim((string) ($model->primary_ip ?? '')) !== '') return 'active';
+        if (in_array($model->status, ['validation_failed', 'provisioning_failed', 'price_review'], true)) return 'attention';
+        return 'setting_up';
+    }
+
+    private function provisioningMessage(string $state): string
+    {
+        return match ($state) {
+            'active' => 'Your server is live. Connect to it using the IP address and credentials below.',
+            'attention' => 'Your payment is confirmed and our team is completing the final setup step for your server. No action is needed from your side — we will email you the moment it is ready.',
+            default => 'Payment confirmed. Your cloud server is now being created — most servers are ready within 30 minutes of payment. Your IP address and login details will appear here automatically, and we will email you as soon as it is ready.',
+        };
     }
 
     private function isAllowedOs(string $platform, string $distro, string $version): bool

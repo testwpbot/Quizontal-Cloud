@@ -13,6 +13,26 @@ php artisan fossbilling:sync-products --force
 
 The first activation defaults to **Test mode**. Later activation/helper runs update credentials without overwriting the administrator's existing Test/Live selection. Test mode sends validation requests only and never purchases a server.
 
+**Upgrading an existing deployment:** copy the module and theme overrides again with `install-interserver-provisioning.sh`, then re-run `activate-interserver-provisioning.sh`. The activation step re-runs `hook/batch_connect`, which registers the new event listeners (`onBeforeProductAddedToCart`, `onBeforeClientCheckout`, `onAfterAdminCronRun`). The `ready_at` database column is created lazily and never requires manual migration.
+
+## Hostname uniqueness guard
+
+Hostnames must be unique across the cloud account. The module enforces this **before** money moves:
+
+1. **Add to cart** (`onBeforeProductAddedToCart`) — the customer immediately sees “This hostname is already in use. Please enter a different hostname.” if the name exists in another live order, elsewhere in the same cart, or in the infrastructure account. The item is never added to the cart.
+2. **Checkout** (`onBeforeClientCheckout`) — a second gate runs before FOSSBilling creates orders, invoices, or wallet charges, so a race between two tabs or sessions cannot result in a paid duplicate.
+3. **Activation** — existing behavior keeps guarding the provider POST and reconciles retry races safely.
+
+The infrastructure account lookup is fail-open: if the API is temporarily unreachable the local checks still apply and activation-time validation remains the final protection.
+
+## Customer-facing lifecycle
+
+A server is only shown as **Active** to the customer once the infrastructure account reports an IP address for it. Between payment and IP assignment the client portal shows a calm **“Setting up”** state with an honest expectation (“most servers are ready within 30 minutes of payment”), a progress tracker, and an auto-refreshing manage page. Power controls and password reveal unlock only when the server is actually ready.
+
+Internally the module keeps its detailed statuses (`pending_validation`, `validated`, `submitting`, `provisioned`, `manual_review`, …) for administrators; customers see `provisioning_state` (`setting_up` / `attention` / `active`) which is exposed through `toApiArray`.
+
+Each FOSSBilling cron run also synchronizes provisioned services that still have no IP (`onAfterAdminCronRun`, up to 15 services per run). The first sync that sees an IP sets `ready_at` and emails the customer with `mod_serviceinterserver_ready.html.twig`, so the portal state and the customer notification happen at the exact moment the server becomes usable.
+
 ## Test mode
 
 After a wallet-paid invoice, the module validates the selected platform, plan size, location, OS, hostname, and current provider cost. It stores a redacted response and leaves the order pending setup without purchasing infrastructure.

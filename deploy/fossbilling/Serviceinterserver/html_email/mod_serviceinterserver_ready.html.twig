@@ -1,0 +1,11 @@
+{% block subject %}[{{ guest.system_company.name }}] Your cloud server is ready{% endblock %}
+{% block content %}<p>Hello {{ c.first_name }},</p>
+<p>Great news &mdash; your <strong>{{ order.title }}</strong> cloud server is now live and ready to use.</p>
+<ul>
+    <li><strong>Hostname:</strong> {{ service.hostname }}</li>
+    <li><strong>IP address:</strong> {{ service.primary_ip }}</li>
+    <li><strong>Location:</strong> {{ service.location_name }}</li>
+</ul>
+<p>Sign in to your Quizontal Cloud account to reveal the one-time administrator password and manage your server.</p>
+<p>Thank you for choosing Quizontal Cloud.</p>
+{% endblock %}

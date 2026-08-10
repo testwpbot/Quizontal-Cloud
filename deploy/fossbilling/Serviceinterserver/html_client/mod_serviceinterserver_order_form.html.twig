@@ -19,6 +19,10 @@
 #quizontal-vps-config.qc-submitting .qc-order-loading{display:block}
 #quizontal-vps-config .qc-skeleton{height:18px;border-radius:7px;margin-bottom:14px;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-order-shimmer 1.15s infinite}
 @keyframes qc-order-shimmer{to{background-position:-200% 0}}
+/* The FOSSBilling API client also appends a centered spinner (and the order
+   layer toggles a full-screen GIF) on every request. While a Quizontal overlay
+   is active it is the only loader shown. */
+body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:none!important}
 </style>
 <div class="card border-0 bg-light mb-3" id="quizontal-vps-config">
   <div class="card-body p-3 p-md-4">
@@ -76,7 +80,7 @@
 
     <label class="form-label fw-bold" for="qc-hostname">Server hostname</label>
     <input class="form-control form-control-lg" id="qc-hostname" type="text" name="hostname" required pattern="(?=.{4,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}" placeholder="server1.yourdomain.com">
-    <div class="form-text">Use a full hostname such as <strong>server1.example.com</strong>.</div>
+    <div class="form-text">Use a full hostname such as <strong>server1.example.com</strong>. Each server needs its own unique hostname.</div>
     <div class="qc-order-loading" aria-live="polite"><div class="d-flex align-items-center gap-2 mb-4"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong>Preparing your cloud order…</strong></div><div class="qc-skeleton" style="width:48%"></div><div class="qc-skeleton" style="width:100%;height:72px"></div><div class="qc-skeleton" style="width:100%;height:72px"></div><div class="qc-skeleton" style="width:68%"></div></div>
   </div>
 </div>
@@ -91,10 +95,19 @@ document.querySelectorAll('.qc-os-option').forEach(function(option) {
 });
 var qcOrderPanel = document.getElementById('quizontal-vps-config');
 var qcOrderForm = qcOrderPanel ? qcOrderPanel.closest('form') : null;
+function qcOrderBusy(on) {
+  qcOrderPanel.classList.toggle('qc-submitting', on);
+  document.body.classList.toggle('qc-busy', on);
+}
 if (qcOrderForm) qcOrderForm.addEventListener('submit', function() {
-  if (this.checkValidity()) {
-    qcOrderPanel.classList.add('qc-submitting');
-    setTimeout(function(){ qcOrderPanel.classList.remove('qc-submitting'); }, 20000);
-  }
+  if (this.checkValidity()) qcOrderBusy(true);
 });
+/* When the API request ends, FOSSBilling removes its injected body-level
+   spinner. Use that as the completion signal: on success the page redirects,
+   on failure (for example a hostname that is already in use) the form becomes
+   usable again immediately next to the error message. */
+new MutationObserver(function() {
+  if (!document.body.querySelector(':scope > .spinner-border')) qcOrderBusy(false);
+}).observe(document.body, { childList: true });
+setTimeout(function() { qcOrderBusy(false); }, 45000);
 </script>

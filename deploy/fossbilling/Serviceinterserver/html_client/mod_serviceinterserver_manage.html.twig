@@ -1,14 +1,64 @@
+{% set qc_state = service ? service.provisioning_state|default('setting_up') : 'setting_up' %}
 <style>
-.qc-service{--qc:#e31c64;--qc-soft:#fff1f6;--qc-text:#20242b;--qc-muted:#6b7280;position:relative}.qc-service .qc-status{background:var(--qc-soft);color:#b51550;border:1px solid rgba(227,28,100,.25)}.qc-service .qc-card{border:1px solid #e1e4e8;border-radius:12px;padding:16px;background:#fff;height:100%}.qc-service .qc-icon{width:42px;height:42px;border-radius:10px;background:var(--qc-soft);display:grid;place-items:center}.qc-service .qc-value{color:var(--qc-text);font-weight:700}.qc-service .qc-muted{color:var(--qc-muted)}.qc-service .qc-progress{height:8px;background:#eceff2;border-radius:99px;overflow:hidden}.qc-service .qc-progress span{display:block;height:100%;background:var(--qc);border-radius:99px}.qc-service .btn-primary{background:var(--qc);border-color:var(--qc)}.qc-service .qc-actions{display:grid;grid-template-columns:repeat(4,minmax(95px,1fr));gap:10px}.qc-service .qc-action{min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid #e1e4e8;border-radius:11px;background:#fff;color:var(--qc-text);text-decoration:none;font-weight:700}.qc-service .qc-action:hover{border-color:var(--qc);background:var(--qc-soft)}.qc-service .qc-action span{font-size:21px;color:var(--qc)}.qc-service.qc-loading>.card-body>*{opacity:.08}.qc-shimmer{display:none;position:absolute;inset:68px 12px 12px;z-index:3;background:rgba(255,255,255,.98);padding:18px;border-radius:12px}.qc-loading .qc-shimmer{display:block}.qc-skeleton-line,.qc-skeleton-card{border-radius:8px;background:linear-gradient(90deg,#eef0f3 25%,#fff 50%,#eef0f3 75%);background-size:200% 100%;animation:qc-shimmer 1.15s infinite}.qc-skeleton-line{height:17px;margin-bottom:14px}.qc-skeleton-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.qc-skeleton-card{height:86px}@keyframes qc-shimmer{to{background-position:-200% 0}}@media(max-width:600px){.qc-service .qc-actions{grid-template-columns:repeat(2,1fr)}.qc-skeleton-grid{grid-template-columns:1fr}}
+.qc-service{--qc:#e31c64;--qc-soft:#fff1f6;--qc-text:#20242b;--qc-muted:#6b7280;position:relative}.qc-service .qc-status{background:var(--qc-soft);color:#b51550;border:1px solid rgba(227,28,100,.25)}.qc-service .qc-status-active{background:#e9f8f0;color:#177245;border:1px solid rgba(23,114,69,.3)}.qc-service .qc-status-setting_up,.qc-service .qc-status-attention{background:#fff8e8;color:#92600a;border:1px solid rgba(230,167,0,.35)}.qc-service .qc-card{border:1px solid #e1e4e8;border-radius:12px;padding:16px;background:#fff;height:100%}.qc-service .qc-icon{width:42px;height:42px;border-radius:10px;background:var(--qc-soft);display:grid;place-items:center}.qc-service .qc-value{color:var(--qc-text);font-weight:700}.qc-service .qc-muted{color:var(--qc-muted)}.qc-service .qc-progress{height:8px;background:#eceff2;border-radius:99px;overflow:hidden}.qc-service .qc-progress span{display:block;height:100%;background:var(--qc);border-radius:99px}.qc-service .btn-primary{background:var(--qc);border-color:var(--qc)}.qc-service .qc-actions{display:grid;grid-template-columns:repeat(4,minmax(95px,1fr));gap:10px}.qc-service .qc-action{min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid #e1e4e8;border-radius:11px;background:#fff;color:var(--qc-text);text-decoration:none;font-weight:700}.qc-service .qc-action:hover{border-color:var(--qc);background:var(--qc-soft)}.qc-service .qc-action span{font-size:21px;color:var(--qc)}.qc-service.qc-loading>.card-body>*{opacity:.08}.qc-shimmer{display:none;position:absolute;inset:68px 12px 12px;z-index:3;background:rgba(255,255,255,.98);padding:18px;border-radius:12px}.qc-loading .qc-shimmer{display:block}.qc-skeleton-line,.qc-skeleton-card{border-radius:8px;background:linear-gradient(90deg,#eef0f3 25%,#fff 50%,#eef0f3 75%);background-size:200% 100%;animation:qc-shimmer 1.15s infinite}.qc-skeleton-line{height:17px;margin-bottom:14px}.qc-skeleton-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.qc-skeleton-card{height:86px}@keyframes qc-shimmer{to{background-position:-200% 0}}
+/* The FOSSBilling API client also appends a centered spinner (and the order
+   layer toggles a full-screen GIF) on every request. While a Quizontal overlay
+   is active it is the only loader shown. */
+body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait,body.qc-busy #loader-image{display:none!important}
+.qc-setup-panel{border:1px solid #f6d3a1;background:#fffdf7;border-radius:14px;padding:20px;margin-bottom:22px}
+.qc-setup-steps{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.qc-setup-step{display:flex;align-items:center;gap:8px;border:1px solid #e1e4e8;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--qc-muted);background:#fff}
+.qc-setup-step .qc-step-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:#eceff2;color:var(--qc-muted)}
+.qc-setup-step.qc-step-done{color:#177245;border-color:rgba(23,114,69,.35);background:#f4fcf7}
+.qc-setup-step.qc-step-done .qc-step-dot{background:#177245;color:#fff}
+.qc-setup-step.qc-step-current{color:#92600a;border-color:rgba(230,167,0,.45);background:#fffdf3}
+.qc-setup-step.qc-step-current .qc-step-dot{background:#e6a700;color:#fff;animation:qc-pulse 1.4s ease infinite}
+@keyframes qc-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@media(max-width:600px){.qc-service .qc-actions{grid-template-columns:repeat(2,1fr)}.qc-skeleton-grid{grid-template-columns:1fr}}
 </style>
-<div class="card mb-4 qc-service" id="qc-service-panel"><div class="card-header"><div><h2 class="card-title">{{ order.title }}</h2><p class="card-subtitle">Quizontal Cloud VPS</p></div><span class="badge qc-status fs-6">{{ service.status|replace({'_':' '})|title }}</span></div><div class="qc-shimmer"><div class="qc-skeleton-line" style="width:35%"></div><div class="qc-skeleton-grid"><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div></div><div class="qc-skeleton-line mt-3" style="width:55%"></div><div class="qc-skeleton-grid"><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div></div></div><div class="card-body">
-{% if service.status == 'validated' and not service.cloud_service_id %}<div class="alert mb-4" style="background:#fff1f6;border:1px solid rgba(227,28,100,.25);color:#84103d"><strong>Test completed.</strong> Configuration and pricing were validated. No server was purchased in test mode.</div>{% endif %}
+<div class="card mb-4 qc-service" id="qc-service-panel"><div class="card-header"><div><h2 class="card-title">{{ order.title }}</h2><p class="card-subtitle">Quizontal Cloud VPS</p></div>{% if order.status != 'active' and qc_state == 'active' %}<span class="badge qc-status fs-6">{{ order.status|replace({'_':' '})|title }}</span>{% else %}<span class="badge qc-status qc-status-{{ qc_state }} fs-6">{{ qc_state == 'setting_up' or qc_state == 'attention' ? 'Setting up' : 'Active' }}</span>{% endif %}</div><div class="qc-shimmer"><div class="qc-skeleton-line" style="width:35%"></div><div class="qc-skeleton-grid"><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div></div><div class="qc-skeleton-line mt-3" style="width:55%"></div><div class="qc-skeleton-grid"><div class="qc-skeleton-card"></div><div class="qc-skeleton-card"></div></div></div><div class="card-body">
+{% if service and service.status == 'validated' and not service.cloud_service_id %}<div class="alert mb-4" style="background:#fff1f6;border:1px solid rgba(227,28,100,.25);color:#84103d"><strong>Test completed.</strong> Configuration and pricing were validated. No server was purchased in test mode.</div>{% endif %}
+{% if qc_state != 'active' %}
+<div class="qc-setup-panel">
+  <div class="d-flex align-items-start gap-3">
+    <div class="qc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e6a700" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+    <div class="flex-grow-1">
+      <h3 class="fs-4 fw-bold mb-1">Your cloud server is being set up</h3>
+      <p class="mb-1 qc-muted">{{ service.provisioning_message }}</p>
+      <div class="qc-setup-steps">
+        <span class="qc-setup-step qc-step-done"><span class="qc-step-dot">✓</span> Order placed</span>
+        <span class="qc-setup-step qc-step-done"><span class="qc-step-dot">✓</span> Payment confirmed</span>
+        <span class="qc-setup-step qc-step-current"><span class="qc-step-dot">●</span> Creating your server</span>
+        <span class="qc-setup-step"><span class="qc-step-dot">4</span> Server ready</span>
+      </div>
+      <p class="small qc-muted mb-0">You can safely leave this page — it refreshes automatically, and we will email you the moment your server is ready.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% if service.cloud_service_id %}
-<div class="d-flex align-items-center justify-content-between mb-3"><div><div class="qc-muted small">Power status</div><strong class="qc-value fs-5">{{ service.power_status|default('Synchronizing')|title }}</strong></div><small class="qc-muted">Quick actions</small></div><div class="qc-actions mb-4"><a class="qc-action api-link" href="{{ 'api/client/cloudvps/sync'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>↻</span>Refresh details</a><a class="qc-action api-link" href="{{ 'api/client/cloudvps/start'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>▶</span>Start server</a><a class="qc-action api-link" href="{{ 'api/client/cloudvps/restart'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>↻</span>Restart server</a><a class="qc-action api-link" href="{{ 'api/client/cloudvps/stop'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-confirm="Stop this server?" data-api-reload="1"><span>■</span>Stop server</a></div>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    {% if qc_state == 'active' %}<div class="qc-muted small">Power status</div><strong class="qc-value fs-5">{{ service.power_status|default('Synchronizing')|title }}</strong>{% else %}<div class="qc-muted small">Server build</div><strong class="qc-value fs-5">In progress</strong>{% endif %}
+  </div>
+  <small class="qc-muted">{{ qc_state == 'active' ? 'Quick actions' : 'Check for updates' }}</small>
+</div>
+<div class="qc-actions mb-4">
+  <a class="qc-action api-link" href="{{ 'api/client/cloudvps/sync'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>↻</span>Refresh details</a>
+  {% if qc_state == 'active' %}
+  <a class="qc-action api-link" href="{{ 'api/client/cloudvps/start'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>▶</span>Start server</a>
+  <a class="qc-action api-link" href="{{ 'api/client/cloudvps/restart'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-reload="1"><span>↻</span>Restart server</a>
+  <a class="qc-action api-link" href="{{ 'api/client/cloudvps/stop'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-confirm="Stop this server?" data-api-reload="1"><span>■</span>Stop server</a>
+  {% else %}
+  <span class="qc-action" style="opacity:.45;cursor:default"><span>▶</span>Start (soon)</span>
+  <span class="qc-action" style="opacity:.45;cursor:default"><span>↻</span>Restart (soon)</span>
+  <span class="qc-action" style="opacity:.45;cursor:default"><span>■</span>Stop (soon)</span>
+  {% endif %}
+</div>
 {% endif %}
 <div class="row g-3 mb-3">
 <div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-1">Hostname</div><div class="qc-value">{{ service.hostname }}</div></div></div>
-<div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-1">Primary IP address</div><div class="qc-value">{{ service.primary_ip|default('Available after provisioning') }}</div></div></div>
+<div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-1">Primary IP address</div>{% if qc_state == 'active' %}<div class="qc-value">{{ service.primary_ip }}</div>{% else %}<div class="qc-muted">Assigning automatically — shown here as soon as your server is ready</div>{% endif %}</div></div>
 <div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-1">Location</div><div class="d-flex align-items-center gap-2"><img src="{{ 'us-flag.svg'|mod_asset_url('cloudvps') }}" width="30" alt="US flag"><span class="qc-value">{{ service.location_name }}</span></div></div></div>
 <div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-1">Operating system</div><div class="d-flex align-items-center gap-2"><img src="{{ ((service.os_distro == 'windows' ? 'windows' : service.os_distro) ~ '.svg')|mod_asset_url('cloudvps') }}" width="30" height="30" alt=""><span class="qc-value">{{ service.os_distro|title }} {{ service.os_version }}</span></div></div></div>
 </div>
@@ -18,10 +68,22 @@
 <div class="col-6 col-lg-3"><div class="qc-card"><div class="qc-muted small">Storage</div><div class="qc-value fs-4">{{ service.storage_gb }}</div><div class="qc-muted small">GB {{ service.storage_type }}</div></div></div>
 <div class="col-6 col-lg-3"><div class="qc-card"><div class="qc-muted small">Bandwidth</div><div class="qc-value fs-4">{{ service.bandwidth_total_gb >= 1000 ? (service.bandwidth_total_gb/1000) : service.bandwidth_total_gb }}</div><div class="qc-muted small">{{ service.bandwidth_total_gb >= 1000 ? 'TB' : 'GB' }} / month</div></div></div>
 </div>
-{% if service.cloud_service_id %}<div class="row g-3 mt-1"><div class="col-md-6"><div class="qc-card"><div class="d-flex justify-content-between mb-2"><span class="qc-muted">Bandwidth used</span><strong>{{ service.bandwidth_used_gb|default(0) }} GB</strong></div><div class="qc-progress"><span style="width:{{ service.bandwidth_percent }}%"></span></div></div></div><div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-2">Administrator password</div>{% if service.password_available %}<a class="btn btn-primary api-link" href="{{ 'api/client/cloudvps/reveal_password'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-jsonp="onQcPassword">Reveal once</a><div class="small qc-muted mt-2">For security, this password is permanently removed after one reveal.</div>{% else %}<span class="qc-muted">Password already viewed. Contact support if you need an administrator password reset.</span>{% endif %}</div></div></div>{% endif %}
-{% if service.last_error %}<div class="alert alert-danger mt-3 mb-0">{{ service.last_error }}</div>{% endif %}
+{% if qc_state == 'active' and service.cloud_service_id %}<div class="row g-3 mt-1"><div class="col-md-6"><div class="qc-card"><div class="d-flex justify-content-between mb-2"><span class="qc-muted">Bandwidth used</span><strong>{{ service.bandwidth_used_gb|default(0) }} GB</strong></div><div class="qc-progress"><span style="width:{{ service.bandwidth_percent }}%"></span></div></div></div><div class="col-md-6"><div class="qc-card"><div class="qc-muted small mb-2">Administrator password</div>{% if service.password_available %}<a class="btn btn-primary api-link" href="{{ 'api/client/cloudvps/reveal_password'|link({order_id:order.id,CSRFToken:CSRFToken}) }}" data-api-jsonp="onQcPassword">Reveal once</a><div class="small qc-muted mt-2">For security, this password is permanently removed after one reveal.</div>{% else %}<span class="qc-muted">Password already viewed. Contact support if you need an administrator password reset.</span>{% endif %}</div></div></div>{% endif %}
+{% if qc_state != 'active' and service.cloud_service_id %}<p class="small qc-muted mt-3 mb-0">Administrator credentials become available here once your server is ready.</p>{% endif %}
 </div></div>
 <script>
 function onQcPassword(password){var box=document.createElement('div');box.className='alert mt-3';box.style.cssText='background:#fff1f6;border:1px solid #e31c64;color:#20242b';box.innerHTML='<strong>One-time administrator password</strong><div class="d-flex gap-2 mt-2"><input class="form-control" readonly value="'+String(password).replace(/"/g,'&quot;')+'"><button class="btn btn-primary" type="button">Copy</button></div>';box.querySelector('button').onclick=function(){navigator.clipboard.writeText(password);this.textContent='Copied';};document.querySelector('#qc-service-panel .card-body').prepend(box);}
-document.querySelectorAll('.qc-action').forEach(function(el){el.addEventListener('click',function(){var panel=document.getElementById('qc-service-panel');panel.classList.add('qc-loading');setTimeout(function(){panel.classList.remove('qc-loading');},20000);});});
+var qcPanel=document.getElementById('qc-service-panel');
+function qcSetBusy(on){qcPanel.classList.toggle('qc-loading',on);document.body.classList.toggle('qc-busy',on);}
+document.querySelectorAll('.qc-action.api-link').forEach(function(el){el.addEventListener('click',function(){qcSetBusy(true);});});
+/* When the API request ends, FOSSBilling removes its injected body-level
+   spinner. On success data-api-reload reloads the page; on failure the panel
+   unlocks immediately next to the error message. */
+new MutationObserver(function(){if(!document.body.querySelector(':scope > .spinner-border'))qcSetBusy(false);}).observe(document.body,{childList:true});
+setTimeout(function(){qcSetBusy(false);},45000);
+{% if qc_state != 'active' and order.status == 'active' %}
+/* Keep the page honest while the server is being created: refresh periodically
+   so the IP address and credentials appear as soon as they exist. */
+setTimeout(function(){if(document.visibilityState==='visible'){window.location.reload();}},60000);
+{% endif %}
 </script>

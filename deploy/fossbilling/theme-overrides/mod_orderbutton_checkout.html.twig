@@ -13,6 +13,10 @@
 #qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
 #qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
 #qc-checkout-loading{display:none;position:absolute;inset:0;z-index:30;background:rgba(255,255,255,.97);place-items:center;padding:24px}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
+/* The FOSSBilling API client also appends a centered spinner (and the order
+   layer toggles a full-screen GIF) on every request. While this overlay is
+   active it is the only loader shown. */
+body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:none!important}
 @media(max-width:600px){ #qc-cart .qc-product-row{grid-template-columns:1fr auto}.qc-product-row .qc-remove{grid-column:2}.qc-promo{flex-direction:column}}
 </style>
 <div class="accordion-item" id="qc-cart">
@@ -70,10 +74,36 @@
     </div></div>
   </div>
   {% endif %}
-  <div id="qc-checkout-loading"><div class="qc-checkout-box text-center"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3>Placing your order securely…</h3><p class="text-muted">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
+  <div id="qc-checkout-loading"><div class="qc-checkout-box text-center" id="qc-checkout-box"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3 id="qc-checkout-title">Placing your order securely…</h3><p class="text-muted" id="qc-checkout-text">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
 </div>
 <script>
 $('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).attr('data-cart-item-id');if(confirm('Remove this item from your cart?')){bb.post('guest/cart/remove_item',{id:id,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});}});
-$('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim();var message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
-$('#qc-place-order').on('click',function(){var form=this.closest('form');if(!form || form.checkValidity()){var overlay=document.getElementById('qc-checkout-loading');overlay.classList.add('show');setTimeout(function(){overlay.classList.remove('show');},30000);}});
+$('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim(),message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
+var qcCheckoutDone=false;
+function qcCheckoutBusy(on){var overlay=document.getElementById('qc-checkout-loading');overlay.classList.toggle('show',on);document.body.classList.toggle('qc-busy',on);}
+$('#qc-place-order').on('click',function(){var form=this.closest('form');if(!form||form.checkValidity()){qcCheckoutBusy(true);}});
+/* When the request ends, FOSSBilling removes its injected body-level spinner.
+   On failure the checkout unlocks immediately next to the error message; the
+   success path is owned by onOrderCheckout and untouched here. */
+new MutationObserver(function(){if(!qcCheckoutDone&&!document.body.querySelector(':scope > .spinner-border'))qcCheckoutBusy(false);}).observe(document.body,{childList:true});
+setTimeout(function(){qcCheckoutBusy(false);},60000);
+function onOrderCheckout(result){
+  qcCheckoutDone=true;
+  var title=document.getElementById('qc-checkout-title'),text=document.getElementById('qc-checkout-text');
+  if(title)title.textContent='Order received — thank you!';
+  var target=null;
+  if(result&&result.invoice_hash){
+    /* Wallet could not cover everything: continue on the invoice page. */
+    if(text)text.textContent='Your order was created. Taking you to the invoice to complete payment…';
+    target="{{ 'invoice'|link }}/"+result.invoice_hash;
+  }else{
+    if(text)text.textContent='Payment confirmed. We are creating your cloud server now — most servers are ready within 30 minutes. Taking you to your server page…';
+    try{sessionStorage.setItem('flash-message','Order received. We are creating your cloud server now — it is usually ready within 30 minutes.');}catch(e){}
+    if(result&&result.order_id){target="{{ 'order/service/manage'|link }}/"+result.order_id;}
+  }
+  setTimeout(function(){
+    if(!target){window.location.reload();return;}
+    try{window.top.location.href=target;}catch(e){window.location.href=target;}
+  },1400);
+}
 </script>
