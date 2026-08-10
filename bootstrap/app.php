@@ -10,6 +10,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // Keep the domain TLD price table inside FOSSBilling in sync with the
+        // upstream Porkbun catalog (daily; harmless when domains are unused).
+        $schedule->command('fossbilling:sync-domains')->dailyAt('03:10')->withoutOverlapping();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })

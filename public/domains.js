@@ -1,5 +1,5 @@
 const $ = selector => document.querySelector(selector);
-const state = { tlds: [], orderUrl: null };
+const state = { tlds: [], orderUrl: null, showAllTlds: false };
 const money = value => `Rs. ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(Number(value) || 0)}`;
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 const withParams = (base, params) => base + (base.includes('?') ? '&' : '?') + params;
@@ -33,14 +33,20 @@ function renderGrid() {
     return;
   }
   const cheapest = [...state.tlds].sort((a, b) => (a.register ?? 9e9) - (b.register ?? 9e9))[0];
-  grid.innerHTML = state.tlds.map(tld => `
+  const LIMIT = 24;
+  const visible = state.showAllTlds ? state.tlds : state.tlds.slice(0, LIMIT);
+  const cardHtml = tld => `
     <article class="tld-card">
       ${tld.tld === '.com' ? '<span class="tld-tag">Most popular</span>' : (cheapest && tld.tld === cheapest.tld ? '<span class="tld-tag">Best value</span>' : '')}
       <span class="tld-name">${escapeHtml(tld.tld)}</span>
       <div><div class="tld-register">${tld.register ? money(tld.register) : '—'}<small>/first year</small></div>
       <div class="tld-renew">Renews at ${tld.renew ? money(tld.renew) : '—'}/year${tld.transfer ? ` · Transfer ${money(tld.transfer)}` : ''}</div></div>
       <button type="button" class="tld-go" data-tld="${escapeHtml(tld.tld)}">Search ${escapeHtml(tld.tld)} names →</button>
-    </article>`).join('');
+    </article>`;
+  const toggle = state.tlds.length > LIMIT
+    ? `<div class="tld-toggle-row"><button type="button" class="text-button" id="tldToggle">${state.showAllTlds ? 'Show less ↑' : `Show all ${state.tlds.length} extensions <span>↓</span>`}</button></div>`
+    : '';
+  grid.innerHTML = visible.map(cardHtml).join('') + toggle;
   grid.querySelectorAll('.tld-go').forEach(button => button.addEventListener('click', () => {
     const input = $('#domainSearchInput');
     const raw = input.value.trim().toLowerCase().replace(/\.\S*$/, '');
@@ -49,6 +55,8 @@ function renderGrid() {
     input.focus({ preventScroll: true });
     if (raw) search(raw + button.dataset.tld);
   }));
+  const toggleBtn = $('#tldToggle');
+  if (toggleBtn) toggleBtn.addEventListener('click', () => { state.showAllTlds = !state.showAllTlds; renderGrid(); });
   note.hidden = false;
   note.textContent = 'Prices sync automatically from our billing system in LKR, per year, including free WHOIS privacy on supported extensions.';
 }

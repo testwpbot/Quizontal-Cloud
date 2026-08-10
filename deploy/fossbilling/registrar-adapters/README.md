@@ -84,6 +84,32 @@ are requested instead of failing silently:
   `.us`, `.ca`, `.eu`, `.au` and similar are website-only) — the adapter checks
   `getRegistrationRequirements` and explains this instead of erroring
 
+### Automatic TLD + price sync (no manual TLD management)
+
+The Laravel app ships an artisan command that wires the whole TLD catalog up
+by itself: it downloads Porkbun's public price feed, converts to LKR with the
+same exchange-rate source as the VPS catalog, adds your margin, and creates
+or updates the TLD rows inside FOSSBilling (attached to the Porkbun
+registrar). Run it once after adding the registrar, then let the scheduler (or
+a cron line) keep prices fresh:
+
+```bash
+php artisan fossbilling:sync-domains --dry-run   # preview, nothing written
+php artisan fossbilling:sync-domains --force     # create/update TLD rows
+```
+
+Settings (all in `.env`):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DOMAIN_PROFIT_USD` | `1` | Flat USD margin per domain-year before LKR conversion |
+| `DOMAIN_SYNC_TLDS` | _(popular set)_ | Comma list to sync, or `*` for every Porkbun TLD |
+| `DOMAIN_SYNC_EXCLUDE` | _(registry-restricted TLDs)_ | Extra extensions to skip |
+
+Website-only TLDs (`.uk`, `.us`, `.ca`, `.eu`, `.au`, …) are excluded by
+default because Porkbun's API cannot register them. The storefront `/domains`
+page reads whatever was synced and renders the price grid automatically.
+
 ### Rate limits (defaults; configurable per key)
 
 | Operation | Default |

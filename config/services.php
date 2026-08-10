@@ -52,4 +52,13 @@ return [
         'domain_order_url' => env('FOSSBILLING_DOMAIN_ORDER_URL'),
         'admin_api_key' => env('FOSSBILLING_ADMIN_API_KEY'),
     ],
+
+    'porkbun' => [
+        'api_url' => env('PORKBUN_API_URL', 'https://api.porkbun.com/api/json/v3'),
+        // Flat USD margin added to each domain year price before LKR conversion.
+        'profit_usd' => env('DOMAIN_PROFIT_USD', 1),
+        // Comma-separated TLDs to sync (`com,net,org`), `*` for everything,
+        // empty for the built-in popular set.
+        'sync_tlds' => env('DOMAIN_SYNC_TLDS', ''),
+    ],
 ];

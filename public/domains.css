@@ -59,6 +59,7 @@
 @keyframes tld-shimmer{to{background-position:-200% 0}}
 .tld-empty{grid-column:1/-1;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:36px 24px;color:var(--muted)}
 .tld-empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:6px}
+.tld-toggle-row{grid-column:1/-1;text-align:center;padding-top:4px}
 
 @media (max-width:640px){
   .domain-hero{padding-top:56px}
