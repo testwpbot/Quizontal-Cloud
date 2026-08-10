@@ -17,7 +17,7 @@
     <a href="#top" class="brand" aria-label="Quizontal Cloud home"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"></a>
     <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="nav-menu" id="navLinks">
-      <a href="#plans"><span class="nav-icon">▦</span>VPS plans</a><a href="#features"><span class="nav-icon">✦</span>Features</a><a href="#locations"><span class="nav-icon">⌖</span>Locations</a><a href="#how-it-works"><span class="nav-icon">↗</span>How it works</a><a href="#faq"><span class="nav-icon">?</span>FAQ</a>
+      <a href="#plans"><span class="nav-icon">▦</span>VPS plans</a><a href="/domains"><span class="nav-icon">◎</span>Domains</a><a href="#features"><span class="nav-icon">✦</span>Features</a><a href="#locations"><span class="nav-icon">⌖</span>Locations</a><a href="#how-it-works"><span class="nav-icon">↗</span>How it works</a><a href="#faq"><span class="nav-icon">?</span>FAQ</a>
       <div class="mobile-account"><small>Already have an account?</small><a id="mobileClientArea" href="/client-area" class="button button-primary">Open client area</a></div>
     </div>
     <div class="nav-ctas"><a id="clientArea" class="button button-ghost" href="/client-area">Client area</a><a class="button button-primary desktop-cta" href="#plans">Choose a plan</a></div>
@@ -77,7 +77,7 @@
 
   <section class="container final-cta"><div><span class="section-kicker">Ready when you are</span><h2>Launch your next project on Quizontal Cloud.</h2><p>Choose a transparent monthly plan and manage everything from one simple account.</p></div><div><a href="#plans" class="button button-primary button-large">Explore plans</a><a id="ctaClientArea" href="/client-area" class="button button-ghost button-large">Client area</a></div></section>
 </main>
-<footer class="site-footer"><div class="container footer-grid"><div><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"><p>Simple cloud infrastructure with transparent LKR pricing.</p></div><div><strong>Platform</strong><a href="#plans">VPS plans</a><a href="#features">Features</a><a href="#locations">Locations</a></div><div><strong>Account</strong><a id="footerClient" href="/client-area">Client area</a><a href="#faq">FAQ</a><a href="#how-it-works">How it works</a></div><div class="footer-meta"><span>© <b id="year"></b> Quizontal Cloud</span><span class="footer-status"><i></i> Systems operational</span></div></div></footer>
+<footer class="site-footer"><div class="container footer-grid"><div><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png" alt="Quizontal Cloud"><p>Simple cloud infrastructure with transparent LKR pricing.</p></div><div><strong>Platform</strong><a href="#plans">VPS plans</a><a href="/domains">Domains</a><a href="#features">Features</a><a href="#locations">Locations</a></div><div><strong>Account</strong><a id="footerClient" href="/client-area">Client area</a><a href="#faq">FAQ</a><a href="#how-it-works">How it works</a></div><div class="footer-meta"><span>© <b id="year"></b> Quizontal Cloud</span><span class="footer-status"><i></i> Systems operational</span></div></div></footer>
 <script src="/app.js" defer></script>
 </body>
 </html>

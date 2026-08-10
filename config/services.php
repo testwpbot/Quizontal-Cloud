@@ -49,6 +49,7 @@ return [
         'url' => env('FOSSBILLING_URL'),
         'login_url' => env('FOSSBILLING_LOGIN_URL'),
         'order_url' => env('FOSSBILLING_ORDER_URL'),
+        'domain_order_url' => env('FOSSBILLING_DOMAIN_ORDER_URL'),
         'admin_api_key' => env('FOSSBILLING_ADMIN_API_KEY'),
     ],
 ];

@@ -1,0 +1,71 @@
+/* Quizontal Cloud — domains page styles (uses the tokens from styles.css) */
+
+.nav-active{color:var(--pink);font-weight:600}
+.nav-active .nav-icon{color:var(--pink)}
+
+.domain-hero{display:flex;justify-content:center;text-align:center;padding-top:84px}
+.domain-hero-copy{max-width:820px;width:100%}
+.domain-hero-copy h1{font-family:var(--display)}
+.domain-hero-copy>p{margin:18px auto 34px;max-width:640px}
+
+.domain-search{max-width:720px;margin:0 auto}
+.domain-search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:10px 10px 10px 20px;box-shadow:var(--shadow);transition:border-color .2s ease,box-shadow .2s ease}
+.domain-search-box:focus-within{border-color:var(--pink);box-shadow:0 24px 65px rgba(227,28,100,.14)}
+.domain-search-icon{color:var(--pink);font-size:22px;flex:none}
+.domain-search-box input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:19px;font-weight:600;color:var(--text);padding:10px 0}
+.domain-search-box input::placeholder{color:#aab0bd;font-weight:500}
+.domain-search-box .button{padding:13px 26px;border-radius:14px;flex:none}
+.domain-chips{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.domain-chips small{color:var(--muted);font-weight:600;margin-right:2px}
+.domain-chips button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s ease}
+.domain-chips button:hover{border-color:var(--pink);color:var(--pink);background:var(--pink-soft)}
+
+/* Search result states */
+.domain-result{max-width:720px;margin:22px auto 0;text-align:left}
+.domain-result-card{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:0 16px 45px rgba(31,37,48,.08);animation:result-in .35s ease}
+@keyframes result-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.domain-result-card .result-main{min-width:0}
+.domain-result-card .result-domain{display:block;font-family:var(--display);font-weight:700;font-size:21px;word-break:break-all}
+.domain-result-card .result-note{color:var(--muted);font-size:14px;margin-top:4px}
+.domain-result-card .result-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.domain-result-card .result-price{font-weight:700;font-size:18px}
+.domain-result-card .result-price small{color:var(--muted);font-weight:600;font-size:12px}
+.domain-result-card.is-available{border-color:rgba(23,155,98,.45);background:linear-gradient(0deg,rgba(23,155,98,.05),rgba(23,155,98,.05)),var(--surface)}
+.domain-result-card.is-available .result-domain::before{content:"✓ ";color:var(--green)}
+.domain-result-card.is-taken{border-color:rgba(227,28,100,.35);background:linear-gradient(0deg,rgba(227,28,100,.04),rgba(227,28,100,.04)),var(--surface)}
+.domain-result-card.is-taken .result-domain::before{content:"✕ ";color:var(--pink)}
+.domain-result-card.is-info{border-style:dashed;color:var(--muted);justify-content:center;text-align:center}
+.domain-result-loading{display:flex;align-items:center;gap:14px;color:var(--muted);font-weight:600}
+.domain-result-loading .spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--surface-3);border-top-color:var(--pink);animation:domain-spin .7s linear infinite;flex:none}
+@keyframes domain-spin{to{transform:rotate(360deg)}}
+
+.domain-hero-proof{display:flex;justify-content:center;gap:34px;margin-top:40px;flex-wrap:wrap}
+.domain-hero-proof>div{display:flex;flex-direction:column;gap:2px}
+.domain-hero-proof strong{font-family:var(--display);font-size:19px}
+.domain-hero-proof span{color:var(--muted);font-size:13px;max-width:210px}
+
+/* TLD price grid */
+.tld-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+.tld-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:10px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;position:relative;overflow:hidden}
+.tld-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(227,28,100,.35)}
+.tld-card .tld-name{font-family:var(--display);font-weight:700;font-size:26px;color:var(--text)}
+.tld-card .tld-tag{position:absolute;top:14px;right:14px;background:var(--pink-soft);color:var(--pink);font-size:11px;font-weight:700;border-radius:999px;padding:4px 10px}
+.tld-card .tld-register{font-size:19px;font-weight:700}
+.tld-card .tld-register small{color:var(--muted);font-weight:600;font-size:12px}
+.tld-card .tld-renew{color:var(--muted);font-size:13px}
+.tld-card .tld-go{margin-top:auto;font-weight:700;color:var(--pink);background:none;border:0;padding:0;text-align:left;cursor:pointer;font-size:14px}
+.tld-card .tld-go:hover{text-decoration:underline}
+.tld-skeleton{height:158px;border-radius:var(--radius);background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:tld-shimmer 1.15s infinite}
+@keyframes tld-shimmer{to{background-position:-200% 0}}
+.tld-empty{grid-column:1/-1;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:36px 24px;color:var(--muted)}
+.tld-empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:6px}
+
+@media (max-width:640px){
+  .domain-hero{padding-top:56px}
+  .domain-search-box{flex-wrap:wrap;padding:12px}
+  .domain-search-box input{font-size:16px;padding:8px 0}
+  .domain-search-box .button{width:100%;justify-content:center}
+  .domain-result-card{flex-direction:column;align-items:flex-start}
+  .domain-result-card .result-actions{align-items:flex-start;flex-direction:row;width:100%;justify-content:space-between}
+  .domain-hero-proof{gap:22px}
+}
