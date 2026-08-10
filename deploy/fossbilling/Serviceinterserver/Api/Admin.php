@@ -8,6 +8,20 @@ use FOSSBilling\InformationException;
 
 class Admin extends \Api_Abstract
 {
+    public function diagnose_order($data): array
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');
+        if (empty($data['order_id'])) throw new InformationException('Order ID is required.');
+        return $this->getService()->diagnoseOrder((int) $data['order_id']);
+    }
+
+    public function activate_paid_order($data): bool
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');
+        if (empty($data['order_id'])) throw new InformationException('Order ID is required.');
+        return $this->getService()->activatePaidOrder((int) $data['order_id']);
+    }
+
     public function set_credentials($data): bool
     {
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');

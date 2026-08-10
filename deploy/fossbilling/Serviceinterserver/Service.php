@@ -363,6 +363,36 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
     }
 
+    public function diagnoseOrder(int $orderId): array
+    {
+        $order = $this->di['db']->getExistingModelById('ClientOrder', $orderId, 'Order not found.');
+        $product = $this->di['db']->load('Product', (int) $order->product_id);
+        $service = $order->service_id ? $this->di['db']->load('service_interserver', (int) $order->service_id) : null;
+        $statement = $this->di['pdo']->prepare("SELECT i.id, i.status, i.approved, i.gateway_id, ii.status AS item_status, ii.task FROM invoice i JOIN invoice_item ii ON ii.invoice_id=i.id WHERE ii.type='order' AND ii.rel_id=? ORDER BY i.id DESC");
+        $statement->execute([$orderId]);
+        $invoices = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $hookStatement = $this->di['pdo']->prepare("SELECT COUNT(*) FROM extension_meta WHERE extension='mod_hook' AND rel_type='mod' AND rel_id='serviceinterserver' AND meta_key='listener'");
+        $hookStatement->execute();
+        $config = $this->getConfig();
+        return [
+            'order' => ['id' => (int) $order->id, 'status' => $order->status, 'service_type' => $order->service_type, 'service_id' => $order->service_id, 'product_id' => $order->product_id, 'unpaid_invoice_id' => $order->unpaid_invoice_id],
+            'product' => $product ? ['type' => $product->type, 'setup' => $product->setup, 'status' => $product->status, 'slug' => $product->slug] : null,
+            'invoices' => $invoices,
+            'service' => $service ? ['status' => $service->status, 'cloud_service_id' => $service->provider_vps_id, 'hostname' => $service->hostname, 'last_error' => $service->last_error] : null,
+            'provisioning' => ['mode' => $config['mode'] ?? 'test', 'live_confirmed' => ($config['live_confirmation'] ?? '') === 'ENABLE LIVE VPS ORDERS'],
+            'registered_hooks' => (int) $hookStatement->fetchColumn(),
+        ];
+    }
+
+    public function activatePaidOrder(int $orderId): bool
+    {
+        $order = $this->di['db']->getExistingModelById('ClientOrder', $orderId, 'Order not found.');
+        if ($order->service_type !== 'interserver') throw new InformationException('The order product is not configured for cloud provisioning. Run product synchronization first.');
+        $this->assertOrderPaid($orderId);
+        $this->di['mod_service']('Order')->activateOrder($order);
+        return true;
+    }
+
     public function setCredentials(string $url, string $key): bool
     {
         $url = rtrim(trim($url), '/');
