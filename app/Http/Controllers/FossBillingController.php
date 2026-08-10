@@ -9,9 +9,10 @@ class FossBillingController extends Controller
     /** Redirect customers to the separately deployed FossBilling client portal. */
     public function __invoke(): RedirectResponse
     {
-        $url = config('services.fossbilling.url');
-        abort_unless($url, 503, 'The client area is being configured.');
+        $baseUrl = config('services.fossbilling.url');
+        $loginUrl = config('services.fossbilling.login_url');
+        abort_unless($loginUrl || $baseUrl, 503, 'The client area is being configured.');
 
-        return redirect()->away(rtrim($url, '/').'/index.php?_url=/client/login');
+        return redirect()->away($loginUrl ?: rtrim((string) $baseUrl, '/').'/login');
     }
 }

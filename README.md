@@ -25,6 +25,7 @@ INTERSERVER_API_KEY=your_new_interserver_key
 EXCHANGERATE_API_KEY=your_new_exchangerate_api_key
 PROFIT_USD=1
 FOSSBILLING_URL=https://billing.example.com
+FOSSBILLING_LOGIN_URL=https://billing.example.com/login
 FOSSBILLING_ORDER_URL=https://billing.example.com/order
 ```
 
