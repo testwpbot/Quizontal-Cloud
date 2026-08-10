@@ -1,0 +1,133 @@
+<!-- Quizontal Cloud — Domains landing page. Managed by `php artisan fossbilling:sync-pages`.
+     __STOREFRONT_URL__ is replaced at sync time (empty = use the in-billing order form). -->
+<div class="qc-domains-page">
+  <div class="card border-0 shadow-sm mb-4 qc-hero">
+    <div class="card-body p-3 p-md-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-6">
+          <h3 class="mb-1">Find your perfect domain</h3>
+          <p class="text-muted small mb-0">Live availability and honest LKR pricing across every extension we sell.</p>
+        </div>
+        <div class="col-md-6">
+          <form id="qcDomSearch" class="d-flex flex-wrap gap-2" autocomplete="off">
+            <input id="qcDomInput" type="text" class="form-control flex-grow-1" style="min-width:180px" placeholder="myshop.com" aria-label="Domain name" spellcheck="false">
+            <select id="qcDomTld" class="form-select flex-grow-0" style="width:auto" aria-label="Extension" hidden></select>
+            <button type="submit" class="btn btn-dark px-4 py-2">Search</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="qcDomError" class="alert alert-warning" hidden></div>
+
+  <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
+    <h5 class="mb-0">Domain pricing</h5>
+    <small class="text-muted">Per year &middot; free WHOIS privacy on supported extensions</small>
+  </div>
+  <div id="qcTldGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2"></div>
+</div>
+
+<style>
+  .qc-domains-page .qc-hero { background: linear-gradient(135deg, #eef4ff 0%, #fff0f6 100%); }
+  .qc-domains-page .qc-tld { transition: transform .15s ease, border-color .15s ease; }
+  .qc-domains-page .qc-tld:hover { transform: translateY(-2px); border-color: var(--bs-primary); }
+</style>
+<script>
+(function () {
+  if (typeof API === 'undefined' || !API.guest) return;
+  var STOREFRONT = '__STOREFRONT_URL__';
+  var POPULAR = ['.com', '.lk', '.net', '.org', '.io', '.co', '.ai', '.dev', '.app', '.xyz', '.me', '.shop'];
+  var currency = { code: 'LKR', rate: 1 };
+  var tlds = [];
+  var domainProductId = null;
+
+  function money(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value) || value <= 0) return '';
+    return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+    });
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById('qcTldGrid');
+    var rows = tlds.slice().sort(function (a, b) {
+      var pa = POPULAR.indexOf(a.tld), pb = POPULAR.indexOf(b.tld);
+      return (pa === -1 ? 999 : pa) - (pb === -1 ? 999 : pb) || String(a.tld).localeCompare(String(b.tld));
+    });
+    grid.innerHTML = rows.map(function (row) {
+      var price = money(row.price_registration);
+      return '<div class="col"><div class="border rounded p-2 text-center qc-tld h-100">' +
+        '<strong>' + esc(row.tld) + '</strong><br>' +
+        (price ? '<small class="text-muted">' + esc(price) + '/yr</small>' : '<small class="text-muted">&mdash;</small>') +
+      '</div></div>';
+    }).join('');
+  }
+
+  function cleanInput(raw) {
+    return (raw || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].replace(/\.+$/, '');
+  }
+
+  function goFallback(sld, tld) {
+    // No storefront configured: prefill the built-in domain order form and auto-verify + add.
+    var url = '/order' + (domainProductId ? '?product=' + encodeURIComponent(domainProductId) : '') +
+      '&register_sld=' + encodeURIComponent(sld) + '&register_tld=' + encodeURIComponent(tld || '') + '&auto=1';
+    window.location.href = url;
+  }
+
+  function load() {
+    API.guest.get('cart_get_currency', {}, function (result) {
+      currency = { code: result.code || 'LKR', rate: Number(result.conversion_rate) || 1 };
+      renderGrid();
+    }, function () {}, false);
+
+    API.guest.get('servicedomain/tlds', { allow_register: 1 }, function (list) {
+      tlds = Array.isArray(list) ? list : [];
+      var select = document.getElementById('qcDomTld');
+      select.innerHTML = tlds.map(function (row) { return '<option value="' + esc(row.tld) + '">' + esc(row.tld) + '</option>'; }).join('');
+      if (STOREFRONT === '') select.hidden = tlds.length === 0;
+      renderGrid();
+    }, function () {
+      var box = document.getElementById('qcDomError');
+      box.textContent = 'Domain pricing could not be loaded right now. Please try again in a moment.';
+      box.hidden = false;
+    }, false);
+
+    if (STOREFRONT === '') {
+      API.guest.get('product_category/get_list', { per_page: 100 }, function (response) {
+        var list = (response && response.list) ? response.list : [];
+        var domainCategory = list.filter(function (c) { return c.type === 'domain' && Array.isArray(c.products) && c.products.length; })[0];
+        if (domainCategory) domainProductId = domainCategory.products[0].id;
+      }, function () {}, false);
+    }
+  }
+
+  document.getElementById('qcDomSearch').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var raw = cleanInput(document.getElementById('qcDomInput').value);
+    if (raw === '') { document.getElementById('qcDomInput').focus(); return; }
+    if (STOREFRONT !== '') {
+      window.location.href = STOREFRONT + '/domains?q=' + encodeURIComponent(raw);
+      return;
+    }
+    var options = tlds.map(function (row) { return row.tld; });
+    var select = document.getElementById('qcDomTld');
+    var sld = raw, tld = select && select.value ? select.value : '';
+    if (raw.indexOf('.') !== -1) {
+      var lastSuffix = raw.slice(raw.lastIndexOf('.'));
+      var firstSuffix = raw.slice(raw.indexOf('.'));
+      if (options.indexOf(lastSuffix) !== -1) { sld = raw.slice(0, raw.lastIndexOf('.')); tld = lastSuffix; }
+      else if (options.indexOf(firstSuffix) !== -1) { sld = raw.slice(0, raw.indexOf('.')); tld = firstSuffix; }
+    }
+    sld = sld.replace(/[^a-z0-9-]/g, '');
+    if (sld === '') { document.getElementById('qcDomInput').focus(); return; }
+    goFallback(sld, tld);
+  });
+
+  load();
+})();
+</script>

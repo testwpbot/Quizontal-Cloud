@@ -29,15 +29,15 @@
                             <small class="text-muted">{{ 'Type a name — we check live availability and prices across every extension.'|trans }}</small>
                         </div>
                         <div class="col-md-7">
-                            <form class="input-group" id="qcDomainSearch" autocomplete="off">
-                                <input id="qcDomainInput" type="text" class="form-control" spellcheck="false"
+                            <form class="d-flex flex-wrap gap-2" id="qcDomainSearch" autocomplete="off">
+                                <input id="qcDomainInput" type="text" class="form-control flex-grow-1" style="min-width:180px" spellcheck="false"
                                        placeholder="{{ 'myshop.com'|trans }}" aria-label="{{ 'Domain name'|trans }}">
                                 {% if storefront_url == '' and register_tlds is not empty %}
                                 <select id="qcDomainTld" class="form-select flex-grow-0" style="width:auto" aria-label="{{ 'Extension'|trans }}">
                                     {% for tld in register_tlds %}<option value="{{ tld.tld }}">{{ tld.tld }}</option>{% endfor %}
                                 </select>
                                 {% endif %}
-                                <button id="qcDomainGo" type="submit" class="btn btn-dark">{{ 'Search'|trans }}</button>
+                                <button id="qcDomainGo" type="submit" class="btn btn-dark px-4 py-2">{{ 'Search'|trans }}</button>
                             </form>
                         </div>
                     </div>

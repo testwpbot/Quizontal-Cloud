@@ -1,0 +1,143 @@
+<!-- Quizontal Cloud — VPS Hosting catalog page. Managed by `php artisan fossbilling:sync-pages`. -->
+<div class="qc-vps-page">
+  <div class="p-3 p-md-4 mb-4 rounded qc-hero">
+    <h3 class="mb-1">Cloud VPS Hosting</h3>
+    <p class="text-muted mb-0 small">Pick a line, choose a plan, check out — your server provisions itself in minutes. All prices in LKR.</p>
+  </div>
+
+  <div id="qcVpsError" class="alert alert-warning" hidden></div>
+
+  <div id="qcVpsCats" class="row row-cols-1 row-cols-md-2 g-3"></div>
+
+  <div id="qcVpsPlans" hidden>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="qcVpsBack">
+        <span aria-hidden="true">&larr;</span> All lines
+      </button>
+      <h4 class="mb-0 me-auto" id="qcVpsTitle"></h4>
+      <div class="d-flex align-items-center gap-2">
+        <input id="qcVpsFilter" type="search" class="form-control form-control-sm" style="min-width:200px" autocomplete="off" placeholder="Filter plans&hellip;">
+        <small class="text-muted text-nowrap" id="qcVpsCount"></small>
+      </div>
+    </div>
+    <div class="list-group" id="qcVpsList"></div>
+    <div id="qcVpsEmpty" class="text-center text-muted border rounded py-4" hidden>
+      <strong class="d-block mb-1">Nothing matches that filter.</strong>
+      <small>Try a different word, or go back to the lines.</small>
+    </div>
+  </div>
+</div>
+
+<style>
+  .qc-vps-page .qc-hero { background: linear-gradient(135deg, #eef4ff 0%, #fff0f6 100%); }
+  .qc-vps-page .qc-cat-card { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  .qc-vps-page .qc-cat-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.12); border-color: var(--bs-primary); }
+  .qc-vps-page .qc-cat-card:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+  .qc-vps-page .qc-cat-card.active { border-color: var(--bs-primary); }
+</style>
+<script>
+(function () {
+  var catsEl = document.getElementById('qcVpsCats');
+  var plansEl = document.getElementById('qcVpsPlans');
+  if (!catsEl || typeof API === 'undefined' || !API.guest) return;
+
+  var currency = { code: 'LKR', rate: 1 };
+  var activeCategoryId = null;
+  var categories = [];
+
+  function money(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value)) return '';
+    return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+    });
+  }
+  function fail(message) {
+    var box = document.getElementById('qcVpsError');
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function renderCategories() {
+    catsEl.innerHTML = categories.map(function (category) {
+      return '<div class="col">' +
+        '<button type="button" class="card w-100 h-100 text-start shadow-none qc-cat-card" data-id="' + esc(category.id) + '" data-title="' + esc(category.title) + '">' +
+          '<div class="card-body d-flex flex-column">' +
+            '<div class="d-flex justify-content-between align-items-start mb-1">' +
+              '<h5 class="card-title mb-0">' + esc(category.title) + '</h5>' +
+              '<span class="badge text-bg-light border">' + category.products.length + '</span>' +
+            '</div>' +
+            (category.description ? '<p class="card-text text-muted small mb-2">' + esc(String(category.description).replace(/<[^>]*>/g, '').slice(0, 110)) + '</p>' : '') +
+            '<div class="d-flex justify-content-between align-items-center mt-auto">' +
+              '<span class="small">From <strong>' + esc(money(category.price_starting_from)) + '</strong></span>' +
+              '<span class="small fw-semibold">View plans &rarr;</span>' +
+            '</div>' +
+          '</div>' +
+        '</button>' +
+      '</div>';
+    }).join('');
+    catsEl.querySelectorAll('.qc-cat-card').forEach(function (card) {
+      card.addEventListener('click', function () { openCategory(card.getAttribute('data-id'), card.getAttribute('data-title')); });
+    });
+  }
+
+  function renderPlans() {
+    var term = (document.getElementById('qcVpsFilter').value || '').trim().toLowerCase();
+    var category = categories.filter(function (c) { return String(c.id) === String(activeCategoryId); })[0];
+    if (!category) return;
+    var rows = category.products.slice().sort(function (a, b) {
+      return (Number(a.priority) || 0) - (Number(b.priority) || 0) || String(a.title).localeCompare(String(b.title));
+    });
+    var visible = 0;
+    document.getElementById('qcVpsList').innerHTML = rows.map(function (product) {
+      var text = (String(product.title) + ' ' + String(product.description || '')).toLowerCase();
+      var hide = term !== '' && text.indexOf(term) === -1;
+      if (!hide) visible++;
+      var desc = String(product.description || '').replace(/<[^>]*>/g, '');
+      return '<a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3' + (hide ? ' d-none' : '') + '"' +
+             ' href="/order?product=' + encodeURIComponent(product.id) + '">' +
+          '<span class="text-truncate">' +
+            '<span class="fw-semibold d-block text-truncate">' + esc(product.title) + '</span>' +
+            (desc ? '<small class="text-muted d-block text-truncate">' + esc(desc) + '</small>' : '') +
+          '</span>' +
+          '<span class="text-nowrap text-end">' +
+            (product.price_starting_from ? '<strong>' + esc(money(product.price_starting_from)) + '</strong><small class="text-muted d-block">starting from</small>' : '') +
+          '</span>' +
+        '</a>';
+    }).join('');
+    document.getElementById('qcVpsCount').textContent = visible + ' / ' + rows.length;
+    document.getElementById('qcVpsEmpty').hidden = !(visible === 0 && rows.length > 0 && term !== '');
+  }
+
+  function openCategory(id, titleText) {
+    activeCategoryId = id;
+    document.getElementById('qcVpsTitle').textContent = titleText;
+    document.getElementById('qcVpsFilter').value = '';
+    catsEl.hidden = true;
+    plansEl.hidden = false;
+    renderPlans();
+  }
+
+  document.getElementById('qcVpsBack').addEventListener('click', function () {
+    plansEl.hidden = true;
+    catsEl.hidden = false;
+    catsEl.querySelectorAll('.qc-cat-card').forEach(function (card) { card.classList.remove('active'); });
+  });
+  document.getElementById('qcVpsFilter').addEventListener('input', renderPlans);
+
+  API.guest.get('cart_get_currency', {}, function (result) {
+    currency = { code: result.code || 'LKR', rate: Number(result.conversion_rate) || 1 };
+    API.guest.get('product_category/get_list', { per_page: 100 }, function (response) {
+      var list = (response && response.list) ? response.list : [];
+      categories = list.filter(function (category) {
+        return category.type !== 'domain' && Array.isArray(category.products) && category.products.length > 0;
+      });
+      if (!categories.length) { fail('Plans could not be loaded right now. Please try again in a moment.'); return; }
+      renderCategories();
+    }, function () { fail('Plans could not be loaded right now. Please try again in a moment.'); }, false);
+  }, function () {}, false);
+})();
+</script>

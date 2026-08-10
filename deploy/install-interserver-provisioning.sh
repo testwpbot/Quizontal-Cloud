@@ -36,9 +36,31 @@ if [[ -z "$STOREFRONT_URL" && -f "$REPO_ROOT/.env" ]]; then
   STOREFRONT_URL=$(printf '%s' "$RAW_APP_URL" | tr -d "\"' \t\r")
 fi
 STOREFRONT_URL=${STOREFRONT_URL%/}
+# Theme overrides are CLIENT-area templates (huraga). The Twig override loader
+# checks <theme>/html_custom for EVERY theme — including admin themes whose
+# layout/templates share file names — so admin themes must never receive these.
+ADMIN_THEMES=${FOSSBILLING_ADMIN_THEMES:-admin_default}
+is_admin_theme() {
+  local name
+  name=$(basename "$1")
+  case " $ADMIN_THEMES " in *" $name "*) return 0 ;; esac
+  return 1
+}
 if [[ -d "$THEME_OVERRIDES_DIR" && -d "$APP_ROOT/themes" ]]; then
   for theme_dir in "$APP_ROOT/themes"/*; do
     [[ -d "$theme_dir/html" ]] || continue
+    if is_admin_theme "$theme_dir"; then
+      # Clean up overrides accidentally copied here by older installer versions.
+      if [[ -d "$theme_dir/html_custom" ]]; then
+        for override in "$THEME_OVERRIDES_DIR"/*.twig; do
+          [[ -f "$override" ]] || continue
+          rm -f "$theme_dir/html_custom/$(basename "$override")"
+        done
+        rmdir --ignore-fail-on-non-empty "$theme_dir/html_custom" 2>/dev/null || true
+        echo "Cleaned client overrides out of admin theme: $(basename "$theme_dir")"
+      fi
+      continue
+    fi
     install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$theme_dir/html_custom"
     for override in "$THEME_OVERRIDES_DIR"/*.twig; do
       [[ -f "$override" ]] || continue
