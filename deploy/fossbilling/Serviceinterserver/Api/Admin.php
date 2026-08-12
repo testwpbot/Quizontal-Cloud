@@ -15,6 +15,12 @@ class Admin extends \Api_Abstract
         return $this->getService()->diagnoseOrder((int) $data['order_id']);
     }
 
+    public function purge_retired_email_templates($data): int
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');
+        return $this->getService()->purgeRetiredEmailTemplates();
+    }
+
     public function activate_paid_order($data): bool
     {
         $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('serviceinterserver', 'manage');

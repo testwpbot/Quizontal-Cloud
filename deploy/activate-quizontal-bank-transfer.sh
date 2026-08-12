@@ -31,6 +31,18 @@ api_post() {
     jq . <<<"$response"
 }
 
+# Soft variant for steps that must never abort the activation run (e.g. a
+# module endpoint on an installation where that module is not active).
+api_post_soft() {
+    local endpoint=$1 data=$2 response
+    response=$(curl -sS -u "admin:$API_KEY" -H 'Content-Type: application/json' -X POST "$BILLING_URL/api/admin/$endpoint" -d "$data" || true)
+    if [[ $(jq -r '.error // empty' <<<"$response" 2>/dev/null) != "" ]]; then
+        jq -r '"Warning: " + (.error.message // "Unknown API error") + " (continuing)"' <<<"$response" >&2
+        return 0
+    fi
+    jq . <<<"$response" 2>/dev/null || true
+}
+
 api_post 'extension/activate' '{"id":"quizontalbanktransfer","type":"mod"}'
 # Reconnect every active module so core Invoice, Support, Order, and Client
 # lifecycle emails fire as well as the custom receipt notification.
@@ -42,6 +54,16 @@ api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_stat
 for template_code in mod_invoice_created mod_invoice_paid mod_invoice_payment_reminder mod_invoice_due_after mod_support_ticket_open mod_support_ticket_staff_reply mod_support_ticket_staff_close mod_client_signup mod_client_password_reset_request; do
     api_post 'email/template_reset' "{\"code\":\"$template_code\"}"
 done
+# Server-ready notification: bind its database template to the shipped file.
+# email_template rows persist forever once created — an early auto-generated
+# stub row kept overriding the file and mailed customers FOSSBilling-branded
+# placeholder content. The reset must run on every activation.
+api_post_soft 'email/template_reset' '{"code":"mod_serviceinterserver_ready"}'
+# Retired generic "Cloud service update" notifications (activated/renewed/
+# suspended/unsuspended/canceled) had database rows created by batch template
+# generation; deleting the module files never touches those rows, so purge
+# them through the module API. No-op when they are already gone.
+api_post_soft 'serviceinterserver/purge_retired_email_templates' '{}'
 api_post 'quizontalbanktransfer/normalize_email_subjects' '{}'
 api_post 'quizontalbanktransfer/enable_client_email_history' '{}'
 api_post 'quizontalbanktransfer/configure_invoice_attachment_delivery' '{}'

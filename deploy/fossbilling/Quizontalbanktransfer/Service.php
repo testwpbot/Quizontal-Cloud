@@ -414,7 +414,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             }
 
             $this->updateSubmission( ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
-            try { $this->sendReceiptStatusEmail($id); } catch (\Throwable $emailError) { error_log('Wallet approval email failed: '.$emailError->getMessage()); }
+            // Approvals deliberately stay silent here: marking the invoice paid makes
+            // FOSSBilling send the branded mod_invoice_paid confirmation, and a second
+            // "approved" email was doubling the customer's inbox (owner reported it).
+            // sendReceiptStatusEmail remains the rejection-only channel below.
             return true;
         } catch (\Throwable $e) {
             $this->updateSubmission( ['status' => 'pending', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);

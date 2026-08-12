@@ -611,6 +611,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         } catch (\Throwable $exception) {
             $this->di['logger']->error('Quizontal Cloud readiness note failed for service #%s: %s', $service->id ?? 0, $exception->getMessage());
         }
+        // Rendered from html_email/mod_serviceinterserver_ready.html.twig. The
+        // activation helper force-resets that database template on every deploy:
+        // email_template rows live forever once created, and an early stub row
+        // (FOSSBilling-branded auto content) previously kept overriding the file.
         try {
             $this->di['mod_service']('email')->sendTemplate([
                 'to_client' => (int) $order->client_id,
@@ -621,6 +625,33 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         } catch (\Throwable $exception) {
             $this->di['logger']->error('Quizontal Cloud ready notification failed for service #%s: %s', $service->id ?? 0, $exception->getMessage());
         }
+    }
+
+    /**
+     * Deletes database email templates of retired notification codes. Rows in
+     * email_template persist forever once created — batch generation registered
+     * these while their files still shipped, and after the files were removed
+     * the generic "Cloud service update" rows would keep mailing customers
+     * stale content. Deleting the files alone never reaches the database.
+     * Idempotent; returns how many rows were removed.
+     */
+    public function purgeRetiredEmailTemplates(): int
+    {
+        $retired = [
+            'mod_serviceinterserver_activated',
+            'mod_serviceinterserver_renewed',
+            'mod_serviceinterserver_suspended',
+            'mod_serviceinterserver_unsuspended',
+            'mod_serviceinterserver_canceled',
+        ];
+        $rows = $this->di['db']->find('EmailTemplate', 'action_code IN ('.implode(',', array_fill(0, count($retired), '?')).')', $retired);
+        foreach ($rows as $row) {
+            $this->di['db']->trash($row);
+        }
+        if ($rows) {
+            $this->di['logger']->info('Purged %d retired Quizontal Cloud service email templates', count($rows));
+        }
+        return count($rows);
     }
 
     public function diagnoseOrder(int $orderId): array
