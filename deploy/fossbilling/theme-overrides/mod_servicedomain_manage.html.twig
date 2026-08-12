@@ -19,12 +19,7 @@
     /* numeric cells get real room so values are never clipped, any screen size */
     #qc-dns-add-ttl,#qc-dns-add-prio,#qc-dns-ed-ttl,#qc-dns-ed-prio{min-width:96px}
     /* colored type pills make the record list scannable */
-    .qc-type{display:inline-block;font-weight:700;font-size:.72rem;letter-spacing:.5px;border-radius:999px;padding:.3em .8em;white-space:nowrap}
-    .qc-type-address{background:#fde8f0;color:#c2185b}
-    .qc-type-alias{background:#f0e9fd;color:#6d28d9}
-    .qc-type-mail{background:#e8f5e9;color:#2e7d32}
-    .qc-type-text{background:#e3f2fd;color:#1565c0}
-    .qc-type-advanced{background:#fff3e0;color:#e65100}
+    .qc-type{display:inline-block;font-weight:700;font-size:.82rem;letter-spacing:.6px;color:#161a23;text-transform:uppercase}
     /* tab bar scrolls sideways on phones instead of wrapping into a mess */
     .card-header .nav.nav-tabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
     .card-header .nav.nav-tabs .nav-link{white-space:nowrap}
@@ -35,21 +30,25 @@
     .qc-stat-label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#939bab}
     .qc-stat-value{font-size:1.02rem;font-weight:700;color:#202634;word-break:break-word}
     a.qc-stat-value:hover{color:#e31c64}
-    /* DNS records turn into stacked cards on mobile — label on the left, value full width */
+    /* DNS records become a flat, divider-separated list on mobile */
     @media (max-width:767.98px){
+        #dns-tab-pane{overflow-x:hidden}
         #qc-dns-table thead{display:none}
-        #qc-dns-table tr{display:block;border:1px solid #e9ecf2;border-radius:14px;margin:0 0 14px;padding:14px 16px;background:#fff;box-shadow:0 2px 6px rgba(25,28,36,.06)}
-        #qc-dns-table td{display:flex;justify-content:space-between;align-items:center;gap:14px;border:0;padding:.55rem 0}
-        #qc-dns-table td::before{content:attr(data-label);font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#96a0b5;flex:none}
-        #qc-dns-table td.qc-dns-actions{justify-content:flex-end;gap:8px;margin-top:.3rem;border-top:1px dashed #edf0f5;padding-top:.6rem}
+        #qc-dns-table tr{display:block;padding:4px 0 12px;border-bottom:2px solid #16181f}
+        #qc-dns-table tbody tr:first-child{border-top:2px solid #16181f}
+        #qc-dns-table td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:.5rem 0;min-width:0}
+        #qc-dns-table td>*{min-width:0}
+        #qc-dns-table td::before{content:attr(data-label);font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#525d73;flex:none}
+        #qc-dns-table td.qc-empty{display:none}
+        #qc-dns-table td.qc-dns-actions{justify-content:flex-end;gap:10px;margin-top:.3rem;border-top:1px dashed #dfe3ec;padding-top:.6rem}
         #qc-dns-table td.qc-dns-actions::before,#qc-dns-table td.qc-dns-plain::before{display:none}
         #qc-dns-table td.qc-dns-plain{display:block;text-align:center;padding:1rem 0}
         #qc-dns-table tr.qc-dns-edit-row td{display:block;padding:.45rem 0}
         #qc-dns-table tr.qc-dns-edit-row td::before{display:block;margin-bottom:5px}
         #qc-dns-table tr.qc-dns-edit-row .form-control,#qc-dns-table tr.qc-dns-edit-row .qc-select>select{width:100%}
         #qc-dns-table tr.qc-dns-edit-row td.qc-dns-actions{display:flex;padding-bottom:0}
+        .qc-dns-edit-row .qc-dd-btn{min-width:0}
         .qc-dns-content{max-width:100%}
-        #qc-dns-table td::before{color:#525d73;font-size:.72rem}
         #qc-dns-table td>code,#qc-dns-table td>strong,#qc-dns-table td{font-size:.92rem}
     }
     /* crisp, high-contrast text inside the DNS manager */
@@ -716,7 +715,7 @@
                         '<td data-label="{{ 'Host'|trans }}"><strong>' + esc(shownName(r.name)) + '</strong></td>' +
                         '<td data-label="{{ 'Content'|trans }}"><code class="qc-dns-content">' + esc(r.content) + '</code></td>' +
                         '<td data-label="{{ 'TTL'|trans }}">' + esc(r.ttl) + '</td>' +
-                        '<td data-label="{{ 'Priority'|trans }}">' + (prioFor(r.type) ? esc(r.prio) : '\u2014') + '</td>' +
+                        '<td data-label="{{ 'Priority'|trans }}" class="' + (prioFor(r.type) ? '' : 'qc-empty') + '">' + (prioFor(r.type) ? esc(r.prio) : '') + '</td>' +
                         '<td class="text-end text-nowrap qc-dns-actions">' +
                             '<button type="button" class="btn btn-outline-primary btn-sm" data-dns-action="edit" data-id="' + esc(r.id) + '">{{ 'Edit'|trans }}</button> ' +
                             '<button type="button" class="btn btn-outline-danger btn-sm" data-dns-action="delete" data-id="' + esc(r.id) + '">{{ 'Delete'|trans }}</button>' +
