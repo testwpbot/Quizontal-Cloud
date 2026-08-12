@@ -569,6 +569,16 @@
             }
             function clearError() { if (errorBox) errorBox.style.display = 'none'; }
             function notify(text) { if (window.FOSSBilling && FOSSBilling.message) FOSSBilling.message(text); }
+            function setBusy(btn, text) {
+                if (!btn) return function () {};
+                var old = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span class="ms-1">' + text + '</span>';
+                return function () {
+                    btn.disabled = false;
+                    btn.innerHTML = old;
+                };
+            }
 
             function api(endpoint, data) {
                 data = data || {};
@@ -740,7 +750,7 @@
                 if (action === 'edit') { editId = id; render(); return; }
                 if (action === 'cancel') { editId = null; render(); return; }
                 if (action === 'save') {
-                    btn.disabled = true;
+                    var doneSave = setBusy(btn, '{{ 'Saving…'|trans }}');
                     api('update', {
                         record_id: id,
                         type: byId('qc-dns-ed-type').value,
@@ -752,16 +762,16 @@
                         editId = null;
                         notify('{{ 'Record updated'|trans }}');
                         load();
-                    }).catch(function (err) { btn.disabled = false; showError(err.message); });
+                    }).catch(function (err) { doneSave(); showError(err.message); });
                     return;
                 }
                 if (action === 'delete') {
                     if (!confirm('{{ 'Delete this DNS record?'|trans }}')) return;
-                    btn.disabled = true;
+                    var doneDelete = setBusy(btn, '{{ 'Deleting…'|trans }}');
                     api('delete', { record_id: id }).then(function () {
                         notify('{{ 'Record deleted'|trans }}');
                         load();
-                    }).catch(function (err) { btn.disabled = false; showError(err.message); });
+                    }).catch(function (err) { doneDelete(); showError(err.message); });
                 }
             });
 
@@ -774,7 +784,7 @@
             addForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 clearError();
-                addBtn.disabled = true;
+                var doneAdd = setBusy(addBtn, '{{ 'Adding record…'|trans }}');
                 api('create', {
                     type: addType.value,
                     name: byId('qc-dns-add-name').value,
@@ -782,12 +792,12 @@
                     ttl: byId('qc-dns-add-ttl').value,
                     prio: byId('qc-dns-add-prio').value
                 }).then(function (res) {
-                    addBtn.disabled = false;
+                    doneAdd();
                     byId('qc-dns-add-name').value = '';
                     byId('qc-dns-add-content').value = '';
                     notify(res && res.already_existed ? '{{ 'That exact record already existed — no duplicate created.'|trans }}' : '{{ 'Record added'|trans }}');
                     load();
-                }).catch(function (err) { addBtn.disabled = false; showError(err.message); });
+                }).catch(function (err) { doneAdd(); showError(err.message); });
             });
 
             if (reloadBtn) reloadBtn.addEventListener('click', function (e) { e.preventDefault(); load(); });

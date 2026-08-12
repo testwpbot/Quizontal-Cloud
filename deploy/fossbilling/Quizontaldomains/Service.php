@@ -155,11 +155,25 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $adapter = $this->adapterFor($service, $order);
         $record = $this->validateRecord($input, $fqdn);
 
-        foreach ($this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn))['records'] ?? [] as $row) {
+        $existing = $this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn))['records'] ?? [];
+        foreach ($existing as $row) {
             $sameName = strcasecmp((string) $row['name'], $record['name']) === 0;
             $sameContent = strcasecmp(trim((string) $row['content']), $record['content']) === 0;
             if ($sameName && $row['type'] === $record['type'] && $sameContent) {
                 return ['id' => (string) $row['id'], 'record' => $record, 'already_existed' => true];
+            }
+        }
+
+        // DNS legality beyond formats: a CNAME can never share its host with
+        // other data (and nothing may join a host that already holds a CNAME).
+        // The upstream accepts such creates silently but drops the record —
+        // flag it here instead of creating a phantom.
+        foreach ($existing as $row) {
+            if (strcasecmp((string) $row['name'], $record['name']) !== 0) {
+                continue;
+            }
+            if ($row['type'] === 'CNAME' || $record['type'] === 'CNAME') {
+                throw new InformationException('DNS rule: a CNAME record cannot share a host with any other record. Remove the other record on this host first, or pick a different host name.');
             }
         }
 
@@ -626,6 +640,13 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
         if ($name !== '' && !preg_match('/^(\*|[a-z0-9_](?:[a-z0-9_\-]{0,61}[a-z0-9_])?)(\.[a-z0-9_](?:[a-z0-9_\-]{0,61}[a-z0-9_])?)*$/', $name)) {
             throw new InformationException('Enter a valid record name — like www, mail, * or @ for the root domain.');
+        }
+
+        // DNS legality: a CNAME can never sit on the zone root — the DNS
+        // standard forbids it and the upstream silently drops such creates.
+        // ALIAS exists precisely for this job; tell the customer, don't fail.
+        if ($type === 'CNAME' && $name === '') {
+            throw new InformationException('A CNAME cannot be used on the root host (@) — the DNS standard forbids it. Add an ALIAS record instead; it does the same job for the root domain.');
         }
 
         $content = trim((string) ($input['content'] ?? ''));

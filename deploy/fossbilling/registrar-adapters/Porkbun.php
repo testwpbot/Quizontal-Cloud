@@ -510,7 +510,17 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     public function dnsCreateRecord(string $fqdn, array $record): string
     {
         $result = $this->call('/dns/create/' . rawurlencode($fqdn), $record, $this->newIdempotencyKey());
-        return (string) ($result['id'] ?? '');
+        $id = $result['id'] ?? '';
+        if (is_array($id)) {
+            // Defensive: some upstream replies nest the reference one level.
+            $id = $id['id'] ?? $id[0] ?? '';
+        }
+        $id = trim((string) $id);
+        if ($id === '') {
+            $this->getLog()->err('Porkbun: create on %s returned no usable reference. Raw: %s', $fqdn, json_encode($result));
+        }
+
+        return $id;
     }
 
     public function dnsEditRecord(string $fqdn, string $recordId, array $record): bool
