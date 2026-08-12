@@ -184,6 +184,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
         $invoiceService = $this->di['mod_service']('Invoice');
         $isDeposit = true;
+        $reSubmission = null;
         if ($invoiceHash !== null && $invoiceHash !== '') {
             $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [$invoiceHash, $client->id]);
             if (!$invoice instanceof \Model_Invoice) throw new InformationException('Invoice not found.');
@@ -191,7 +192,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             // Wallet deposits and order invoices both qualify: a receipt against an
             // order invoice means "this transfer pays for that exact service".
             $isDeposit = $invoiceService->isInvoiceTypeDeposit($invoice);
-            if ($this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id])) throw new InformationException('A receipt was already submitted for this invoice.');
+            $existingId = $this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id]);
+            if ($existingId) {
+                $reSubmission = $this->get((int) $existingId);
+                if (($reSubmission['status'] ?? '') !== 'rejected') {
+                    throw new InformationException('A receipt was already submitted for this invoice.');
+                }
+                // A rejected slip frees the invoice for one fresh attempt. The
+                // prior row is reused, so one-active-submission-per-invoice and
+                // the unique invoice index both still hold.
+            }
             $amount = $invoiceService->getTotalWithTax($invoice);
         } else {
             if (!is_numeric($amount) || (float) $amount <= 0) throw new InformationException('Enter a valid deposit amount.');
@@ -209,13 +219,24 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $storedName = bin2hex(random_bytes(24)).'.'.$this->extensionForMime($mimeType);
         $file->move($this->ensureUploadDirectory(), $storedName);
         $now = date('Y-m-d H:i:s');
-        $statement = $this->di['pdo']->prepare('INSERT INTO quizontal_bank_transfer (client_id, invoice_id, amount, currency, reference, original_name, stored_name, mime_type, file_size, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $statement->execute([
-            (int) $client->id, (int) $invoice->id, number_format((float) $amount, 2, '.', ''),
-            (string) $client->currency, $reference, $originalName, $storedName, $mimeType,
-            $fileSize, 'pending', $now, $now,
-        ]);
-        $submissionId = (int) $this->di['pdo']->lastInsertId();
+        if ($reSubmission !== null) {
+            $statement = $this->di['pdo']->prepare('UPDATE quizontal_bank_transfer SET amount=?, currency=?, reference=?, original_name=?, stored_name=?, mime_type=?, file_size=?, status=?, transaction_id=NULL, admin_note=NULL, updated_at=? WHERE id=?');
+            $statement->execute([
+                number_format((float) $amount, 2, '.', ''), (string) $client->currency, $reference,
+                $originalName, $storedName, $mimeType, $fileSize, 'pending', $now, (int) $reSubmission['id'],
+            ]);
+            $previousReceipt = $this->receiptPath($reSubmission);
+            if (is_file($previousReceipt)) @unlink($previousReceipt);
+            $submissionId = (int) $reSubmission['id'];
+        } else {
+            $statement = $this->di['pdo']->prepare('INSERT INTO quizontal_bank_transfer (client_id, invoice_id, amount, currency, reference, original_name, stored_name, mime_type, file_size, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $statement->execute([
+                (int) $client->id, (int) $invoice->id, number_format((float) $amount, 2, '.', ''),
+                (string) $client->currency, $reference, $originalName, $storedName, $mimeType,
+                $fileSize, 'pending', $now, $now,
+            ]);
+            $submissionId = (int) $this->di['pdo']->lastInsertId();
+        }
         try {
             $this->sendReceiptSubmittedEmails($client, $submissionId, $invoice);
         } catch (\Throwable $exception) {
