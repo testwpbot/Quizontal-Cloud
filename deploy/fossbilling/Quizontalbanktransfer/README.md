@@ -1,14 +1,16 @@
 # Quizontal Cloud Bank Transfer for FOSSBilling
 
-A wallet-first bank transfer workflow for FOSSBilling 0.8.5:
+An invoice-linked bank transfer workflow for FOSSBilling 0.7/0.8, with wallet top-ups still supported:
 
-- Customers submit a wallet deposit amount, bank reference, and JPG/PNG/PDF receipt.
+- Checkout with an insufficient wallet balance lets the customer place the order and pay its exact invoice by bank transfer — no ambiguous "add funds first" wallet detour.
+- Unpaid order invoices show a guided bank-details + slip-upload screen (`/quizontalbanktransfer/invoice/<hash>`); one receipt per invoice is enforced.
+- Customers can still top up the wallet separately: amount, bank reference, and JPG/PNG/PDF receipt.
 - Receipts are stored under FOSSBilling's private `data/uploads` directory.
 - Wallet pages show the complete submission history with color-coded statuses.
-- Invoice payment methods use branded icons, clear labels, and wallet-only rules: deposits show Manual Bank Transfer; product and renewal invoices show Quizontal Cloud Wallet.
-- Administrators review, approve, or reject submissions.
-- Approval records the manual transaction, marks the deposit invoice paid, credits the wallet, and retries existing unpaid invoices against the new balance.
-- The `onBeforeClientCheckout` hook blocks product checkout when wallet balance is insufficient.
+- Invoice payment methods use branded icons and clear labels: every unpaid invoice offers Manual Bank Transfer, and non-deposit invoices also offer Quizontal Cloud Wallet.
+- Administrators review, approve, or reject submissions; the review screen labels each submission as an **order payment** or **wallet top-up** and states exactly what approving does.
+- Approving an order-payment records the bank transaction, marks that exact invoice paid, and FOSSBilling activates the linked order automatically — the wallet is untouched. Approving a top-up credits the wallet, marks the deposit invoice paid, and retries existing unpaid invoices against the new balance.
+- The `onBeforeClientCheckout` wallet-only gate survives as an off-by-default legacy setting (`Require full wallet balance before checkout`).
 - New orders and renewal invoices use FossBilling's built-in credit payment automatically when the wallet covers the total.
 
 ## Install
