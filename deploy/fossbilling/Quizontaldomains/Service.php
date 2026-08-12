@@ -45,7 +45,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function findOwnedDomainService(int $clientId, int $orderId): array
     {
         $order = $this->di['db']->findOne('ClientOrder', 'id = ? AND client_id = ?', [$orderId, $clientId]);
-        if (!$order instanceof \Model_ClientOrder || $order->service_type !== 'servicedomain') {
+        // Domain orders carry the PRODUCT TYPE ('domain') in service_type;
+        // getOrderService() maps it to the ServiceDomain model for us.
+        if (!$order instanceof \Model_ClientOrder || !in_array((string) $order->service_type, ['domain', 'servicedomain'], true)) {
             throw new InformationException('Domain service not found.');
         }
         $manageable = [\Model_ClientOrder::STATUS_ACTIVE, \Model_ClientOrder::STATUS_FAILED_RENEW];
