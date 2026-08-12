@@ -589,14 +589,18 @@
             var DD_CHEV = '<svg class="qc-dd-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e31c64" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
             var DD_CHECK = '<svg class="qc-dd-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e31c64" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
 
+            function typeDesc(t) {
+                return (typeof TYPE_INFO[t] === 'string') ? TYPE_INFO[t] : '';
+            }
+
             function ddSelectedHtml(v) {
-                return '<span class="qc-type ' + typeClass(v) + '">' + v + '</span><span class="qc-dd-desc">' + esc(TYPE_INFO[v] || '') + '</span>';
+                return '<span class="qc-type ' + typeClass(v) + '">' + v + '</span><span class="qc-dd-desc">' + esc(typeDesc(v)) + '</span>';
             }
 
             function ddMenuItem(t, current) {
                 return '<button type="button" class="qc-dd-item' + (t === current ? ' sel' : '') + '" data-qc-dd-item data-value="' + t + '" role="option" aria-selected="' + (t === current) + '">' +
                     '<span class="qc-type ' + typeClass(t) + '">' + t + '</span>' +
-                    '<span class="qc-dd-desc">' + esc(TYPE_INFO[t] || '') + '</span>' +
+                    '<span class="qc-dd-desc">' + esc(typeDesc(t)) + '</span>' +
                     '<span style="' + (t === current ? '' : 'visibility:hidden') + '" class="qc-dd-check">' + DD_CHECK + '</span>' +
                     '</button>';
             }
