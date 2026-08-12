@@ -123,6 +123,10 @@ body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:no
         {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
         <button class="btn btn-primary btn-lg qc-place-order" id="qc-place-order" type="submit">Pay with wallet &amp; place order</button>
       </form>
+      {# Bank transfer cannot be offered beside this button: FOSSBilling always
+         settles a fully wallet-covered order from the balance at checkout, so a
+         bank button here would still charge the wallet. Set the expectation. #}
+      <div class="small text-muted mt-2">Paying from the wallet is instant. Bank transfer checkout appears automatically whenever an order total is larger than the wallet balance.</div>
       {% else %}
       {# Bank transfer path: checkout without a gateway leaves the order invoice
          unpaid, onOrderCheckout forwards the customer to that invoice, and the
