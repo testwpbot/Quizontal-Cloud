@@ -95,14 +95,35 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function isDomainAvailable(Registrar_Domain $domain)
     {
-        $data = $this->call('POST', '/domain/checkDomain/' . rawurlencode($this->fqdn($domain)));
+        $fqdn = $this->fqdn($domain);
+
+        // The same domain is probed several times within seconds across the
+        // purchase path (storefront search -> order-page check -> FOSSBilling
+        // re-validates when the item enters the cart). The registrar paces
+        // checkDomain though, so replay the fresh verdict instead of paying
+        // a live API call every time.
+        $cached = $this->availabilityCacheRead($fqdn);
+        if ($cached !== null) {
+            if (!empty($cached['premium'])) {
+                throw new Registrar_Exception('Premium domains cannot be registered through automatic provisioning. Please contact us for assistance.');
+            }
+            if (isset($cached['available']) && is_bool($cached['available'])) {
+                return $cached['available'];
+            }
+        }
+
+        $data = $this->call('POST', '/domain/checkDomain/' . rawurlencode($fqdn));
         $response = $data['response'] ?? [];
 
         if ($this->truthy($response['isPremium'] ?? $response['premium'] ?? null) || $this->isPremiumPricing($response)) {
+            $this->availabilityCacheWrite($fqdn, ['time' => time(), 'premium' => true, 'available' => false]);
             throw new Registrar_Exception('Premium domains cannot be registered through automatic provisioning. Please contact us for assistance.');
         }
 
-        return $this->availabilitySaysAvailable($response);
+        $available = $this->availabilitySaysAvailable($response);
+        $this->availabilityCacheWrite($fqdn, ['time' => time(), 'premium' => false, 'available' => $available]);
+
+        return $available;
     }
 
     /**
@@ -435,6 +456,56 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         }
 
         return false;
+    }
+
+    // -----------------------------------------------------------------
+    // Freshness window for availability verdicts. Just long enough for one
+    // shopper's search -> order page -> cart-add trip; short enough that a
+    // different shopper always gets a fresh verdict.
+    // -----------------------------------------------------------------
+    private const AVAIL_CACHE_TTL = 45;
+
+    private function availabilityCacheFile(string $fqdn): string
+    {
+        return rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR . 'qc-domain-availability'
+            . DIRECTORY_SEPARATOR . sha1($fqdn) . '.json';
+    }
+
+    /** @return array|null The cached verdict payload, null when missing or stale */
+    private function availabilityCacheRead(string $fqdn): ?array
+    {
+        try {
+            $file = $this->availabilityCacheFile($fqdn);
+            if (!is_file($file)) {
+                return null;
+            }
+            $decoded = json_decode((string) @file_get_contents($file), true);
+            if (!is_array($decoded) || !isset($decoded['time'])) {
+                return null;
+            }
+            if ((time() - (int) $decoded['time']) > self::AVAIL_CACHE_TTL) {
+                return null;
+            }
+
+            return $decoded;
+        } catch (\Throwable) {
+            return null; // caching must never break a sale
+        }
+    }
+
+    private function availabilityCacheWrite(string $fqdn, array $payload): void
+    {
+        try {
+            $file = $this->availabilityCacheFile($fqdn);
+            $dir = dirname($file);
+            if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+                return;
+            }
+            @file_put_contents($file, json_encode($payload), LOCK_EX);
+        } catch (\Throwable) {
+            // see above — worst case simply falls back to live calls
+        }
     }
 
     private function isPremiumPricing(array $response): bool
