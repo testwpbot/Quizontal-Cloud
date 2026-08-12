@@ -42,12 +42,41 @@ find "$TARGET_DIR" -type f -exec chmod 0644 {} +
 # Override the legacy wallet page through each client theme's supported
 # html_custom directory so transfer status is always visible in Wallet.
 APP_ROOT=$(dirname "$MODULES_DIR")
+# Theme overrides are CLIENT-area templates (huraga). The Twig override loader
+# checks <theme>/html_custom for EVERY theme — including admin themes whose
+# layout/templates share file names — so admin themes must never receive these
+# (an admin layout_default override asking for the huraga asset entry crashes
+# the whole admin panel). Skip admin themes and clean up copies placed by
+# older installer versions.
+ADMIN_THEMES=${FOSSBILLING_ADMIN_THEMES:-admin_default}
+is_admin_theme() {
+  local name
+  name=$(basename "$1")
+  case " $ADMIN_THEMES " in *" $name "*) return 0 ;; esac
+  return 1
+}
 if [[ -d "$THEME_OVERRIDES_DIR" && -d "$APP_ROOT/themes" ]]; then
   for theme_dir in "$APP_ROOT/themes"/*; do
     [[ -d "$theme_dir/html" ]] || continue
+    if is_admin_theme "$theme_dir"; then
+      # Clean up overrides accidentally copied here by older installer versions.
+      if [[ -d "$theme_dir/html_custom" ]]; then
+        for override in "$THEME_OVERRIDES_DIR"/*.twig; do
+          [[ -f "$override" ]] || continue
+          rm -f "$theme_dir/html_custom/$(basename "$override")"
+        done
+        rmdir --ignore-fail-on-non-empty "$theme_dir/html_custom" 2>/dev/null || true
+        echo "Cleaned client overrides out of admin theme: $(basename "$theme_dir")"
+      fi
+      continue
+    fi
     install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$theme_dir/html_custom"
     for override in "$THEME_OVERRIDES_DIR"/*.twig; do
       [[ -f "$override" ]] || continue
+      # qc_storefront.html.twig is a stub here; the provisioning installer
+      # regenerates it with the real STOREFRONT_URL on every deploy. Never
+      # clobber the generated copy from this installer.
+      [[ $(basename "$override") == 'qc_storefront.html.twig' ]] && continue
       install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$override" "$theme_dir/html_custom/$(basename "$override")"
     done
   done
