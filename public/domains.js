@@ -32,54 +32,6 @@ const statusOf = tld => state.checks.get(tld) || { status: 'unknown' };
 
 /* ---------- Mobile navigation ---------- */
 
-function menuBackdropElement() {
-  let backdrop = $('#menuBackdrop');
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.id = 'menuBackdrop';
-    backdrop.className = 'menu-backdrop';
-    backdrop.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(backdrop);
-  }
-  if (!backdrop.dataset.bound) {
-    backdrop.dataset.bound = '1';
-    backdrop.addEventListener('click', () => setMenu(false));
-  }
-  return backdrop;
-}
-function placeMenuForViewport() {
-  const menu = $('#navLinks');
-  const shell = document.querySelector('.nav-shell');
-  if (!menu || !shell) return;
-  if (window.innerWidth <= 700) {
-    // Phones: the drawer must live at page level — inside the blurred,
-    // stacking-context-creating header it gets dimmed and mis-anchored.
-    if (menu.parentElement !== document.body) document.body.appendChild(menu);
-  } else if (menu.parentElement === document.body) {
-    shell.insertBefore(menu, shell.querySelector('.nav-ctas'));
-  }
-}
-let menuCloseTimer = null;
-function setMenu(open) {
-  const menu = $('#navLinks');
-  const button = $('#mobileMenuBtn');
-  clearTimeout(menuCloseTimer);
-  if (open) {
-    if (getComputedStyle(menu).display === 'none') menu.style.display = 'flex';
-    void menu.offsetWidth; // reflow so the slide-in transition runs
-    menu.classList.add('open');
-  } else {
-    menu.classList.remove('open');
-    menu.style.display = 'flex'; // stay painted while sliding out
-    menuCloseTimer = setTimeout(() => { if (!menu.classList.contains('open')) menu.style.display = ''; }, 360);
-  }
-  menuBackdropElement().classList.toggle('show', open);
-  document.body.classList.toggle('menu-open', open);
-  document.documentElement.classList.toggle('menu-open', open); // page scrolls on the html layer — lock it too
-  button.setAttribute('aria-expanded', open ? 'true' : 'false');
-  button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-}
-
 /* ---------- Hero ---------- */
 
 function renderChips() {
@@ -535,17 +487,6 @@ $('#domainSearchForm').addEventListener('submit', event => {
   const name = $('#domainSearchInput').value.trim();
   if (name) search(name);
 });
-$('#mobileMenuBtn').addEventListener('click', () => setMenu(!$('#navLinks').classList.contains('open')));
-document.querySelectorAll('.drawer-close').forEach(button => button.addEventListener('click', () => setMenu(false)));
-window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
-window.addEventListener('resize', () => { if (window.innerWidth > 700) setMenu(false); placeMenuForViewport(); });
-document.querySelectorAll('#navLinks a').forEach(link => link.addEventListener('click', () => setMenu(false)));
-document.addEventListener('touchmove', event => {
-  if (document.body.classList.contains('menu-open') && !event.target.closest('.nav-menu')) event.preventDefault();
-}, { passive: false });
-$('#year').textContent = new Date().getFullYear();
-document.scrollingElement.scrollLeft = 0; // drop any restored horizontal offset
-placeMenuForViewport();
 bindTools();
 initialize();
 
