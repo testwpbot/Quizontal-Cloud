@@ -20,7 +20,7 @@ class ScrubThirdPartyBranding extends Command
         {--dry-run : Show every change without writing anything (default)}
         {--force : Apply the rewrites via the FossBilling admin API}';
 
-    protected $description = 'Replace InterServer/Porkbun mentions in FOSSBilling product & category titles/descriptions with Quizontal branding';
+    protected $description = 'Replace InterServer/Porkbun mentions in FOSSBilling product, category and registrar names with Quizontal branding';
 
     private const REPLACEMENTS = [
         'INTERSERVER' => 'QUIZONTAL',
@@ -75,6 +75,36 @@ class ScrubThirdPartyBranding extends Command
                 $apiKey,
                 $apply
             );
+        }
+
+        // Registrars: the guest TLD list exposes each registrar's display name
+        // to every visitor, so those must stay brand-free as well.
+        try {
+            $registrars = $this->adminCall($fossbillingUrl, $apiKey, 'servicedomain/registrar_get_list', ['per_page' => 100]);
+            foreach ((array) ($registrars['list'] ?? $registrars ?? []) as $registrar) {
+                $name = (string) ($registrar['title'] ?? $registrar['name'] ?? '');
+                $newName = $this->clean($name);
+                if ($name === '' || $newName === $name) {
+                    continue;
+                }
+                $this->line(sprintf('  [registrar #%s] %s  →  <info>%s</info>', $registrar['id'] ?? '?', $name, $newName));
+                if ($apply) {
+                    try {
+                        $this->adminCall($fossbillingUrl, $apiKey, 'servicedomain/registrar_update', [
+                            'id' => (int) ($registrar['id'] ?? 0),
+                            'title' => $newName,
+                        ]);
+                        $this->line('      <info>updated ✓</info>');
+                        $changed++;
+                    } catch (\RuntimeException $exception) {
+                        $this->warn('      rename failed (rename it manually: admin → Domain registration → registrars): '.$exception->getMessage());
+                    }
+                } else {
+                    $changed++;
+                }
+            }
+        } catch (\RuntimeException $exception) {
+            $this->warn('Could not read registrars: '.$exception->getMessage());
         }
 
         $this->newLine();

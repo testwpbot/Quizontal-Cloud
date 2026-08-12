@@ -32,6 +32,14 @@
                             </div>
                             <button class="btn btn-sm btn-dark" type="button" id="domain-check">{{ 'Check'|trans }}</button>
                         </div>
+                        {# Quizontal: inline status + skeleton shimmer (replaces the stock spinner) #}
+                        <div class="qc-dom-status" id="qcRegStatus" hidden>
+                            <div class="qc-dom-skel" id="qcRegSkel">
+                                <span class="qc-skel-bar" style="width:52%"></span>
+                                <span class="qc-skel-bar" style="width:30%"></span>
+                            </div>
+                            <div class="small" id="qcRegMsg" hidden></div>
+                        </div>
                     </div>
                     <div class="c">
                         <div class="onAfterDomainCheck" style="display:none;">
@@ -82,6 +90,14 @@
                             </div>
                             <button class="btn btn-sm btn-dark" type="button" id="transfer-check">{{ 'Check'|trans }}</button>
                         </div>
+                        {# Quizontal: inline status + skeleton shimmer #}
+                        <div class="qc-dom-status" id="qcTrStatus" hidden>
+                            <div class="qc-dom-skel" id="qcTrSkel">
+                                <span class="qc-skel-bar" style="width:52%"></span>
+                                <span class="qc-skel-bar" style="width:30%"></span>
+                            </div>
+                            <div class="small" id="qcTrMsg" hidden></div>
+                        </div>
                     </div>
                     <div id="domain-transfer-config" style="display:none;">
                         <p class="fs-7 mt-2">{{ 'Transfer price is'|trans }}&nbsp;<span class="fw-bold" id="transfer-price"></span></p>
@@ -98,131 +114,208 @@
 <input type="hidden" name="action" value="register" id="domain-action"/>
 
 {% set currency = guest.cart_get_currency %}
-<script type="text/javascript">
-    let nameserversCbEl = document.getElementById('nameserversCb');
-    let nameserversEl = document.getElementById('nameservers');
-    if (nameserversCbEl && nameserversEl) {
-        nameserversCbEl.addEventListener('change', () => {
-            if (nameserversCbEl.checked) {
-                nameserversEl.style.display = "flex";
-            } else {
-                nameserversEl.style.display = "none";
-            }
-        });
+
+<style>
+    .qc-dom-status { margin-top: .5rem; }
+    .qc-dom-skel { display: flex; flex-direction: column; gap: 8px; padding: 6px 0 2px; }
+    .qc-skel-bar {
+        display: block; height: 10px; border-radius: 999px;
+        background: linear-gradient(90deg, rgba(134,134,139,.14) 20%, rgba(134,134,139,.34) 48%, rgba(134,134,139,.14) 76%);
+        background-size: 400% 100%; animation: qcSkel 1.1s ease-in-out infinite;
     }
+    .qc-skel-bar + .qc-skel-bar { animation-delay: .14s; }
+    @keyframes qcSkel { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .qc-skel-bar { animation: none; } }
+</style>
 
-    $(function () {
-        $('ul.nav.nav-tabs > li.domain-tab a').on('click', function () {
-            $('#domain-action').val($(this).attr('rel'));
-        });
+<script type="text/javascript">
+    (function () {
+        // ---------------------------------------------------------------
+        // Quizontal UX layer:
+        // - our own skeleton shimmer while checking (never the stock spinner)
+        // - registrar cooldowns ("retry in Ns") are retried silently
+        // - results and errors render inline next to the input
+        // ---------------------------------------------------------------
 
-        $('#config-next').hide();
-        $( "#config-next" ).prop( "disabled", true );
-
-        if ($(".addons").length) {
-            $('.order-button').one('click', function () {
-                $(this).hide();
-                $('.addons').slideDown('fast');
-
-                return false;
+        var nameserversCbEl = document.getElementById('nameserversCb');
+        var nameserversEl = document.getElementById('nameservers');
+        if (nameserversCbEl && nameserversEl) {
+            nameserversCbEl.addEventListener('change', function () {
+                nameserversEl.style.display = nameserversCbEl.checked ? 'flex' : 'none';
             });
         }
 
-        $('.addon-period-selector').on('change', function () {
-            var r = $(this).attr('rel');
-
-            $('#' + r + ' span').hide();
-            $('#' + r + ' span.' + $(this).val()).fadeIn();
-        }).trigger('change');
-
-        $('#transfer-check').on('click', function (event) {
-            var sld = $('input[name="transfer_sld"]').val();
-            var tld = $('select[name="transfer_tld"]').val();
-            $('#domain-action').val('transfer');
-            var domain = sld + tld;
-
-            bb.post(
-                'guest/servicedomain/can_be_transferred',
-                {sld: sld, tld: tld},
-                function (result) {
-                    setTransferPricing(tld);
-                    $('#domain-name').text(domain);
-                    $('#domain-transfer-config').fadeIn('fast');
-                    $('.onAfterDomainCheck').fadeIn('fast');
-                    $('#transfer-check').hide();
-                    $('#transfer .order-button').show();
+        // Direct guest-API calls: same-origin, no global loader overlay.
+        function qcApi(endpoint, data) {
+            return fetch('/api/guest/' + endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(function (response) { return response.json(); }).then(function (json) {
+                if (json && json.error) {
+                    var message = json.error.message ? String(json.error.message) : '{{ 'The domain service reported an error.'|trans }}';
+                    var error = new Error(message);
+                    var retry = /retry in (\d+)\s*s/i.exec(message);
+                    if (retry) { error.retryAfter = parseInt(retry[1], 10); }
+                    throw error;
                 }
-            );
+                return json ? json.result : null;
+            });
+        }
 
-            return false;
-        });
+        function cleanMessage(message) {
+            return String(message || '{{ 'Something went wrong. Please try again.'|trans }}')
+                .replace(/\s*\(\s*retry in \d+\s*s\s*\)\s*/i, ' {{ 'Please wait a moment and try again.'|trans }}');
+        }
 
-        $('#domain-check').on('click', function (event) {
-            var sld = $('input[name="register_sld"]').val();
-            sld = sld.toLowerCase();
-            var tld = $('select[name="register_tld"]').val();
-            var domain = sld + tld;
-            $('#domain-action').val('register');
-            bb.post(
-                'guest/servicedomain/check',
-                {sld: sld, tld: tld},
-                function (result) {
-                    setPricing(tld);
-                    $('#domain-name').text(domain);
-                    $('.onAfterDomainCheck').fadeIn('fast');
-                    $('#domain-check').hide();
-                    $('#register .order-button').show();
-                }
-            );
+        function domStatus(prefix, state, text) {
+            var wrap = document.getElementById(prefix + 'Status');
+            if (!wrap) { return; }
+            var skel = document.getElementById(prefix + 'Skel');
+            var msg = document.getElementById(prefix + 'Msg');
+            wrap.hidden = false;
+            skel.hidden = !(state === 'loading' || state === 'hint');
+            msg.hidden = !text;
+            if (text) {
+                msg.textContent = text;
+                msg.className = 'small ' + (state === 'ok' ? 'text-success' : (state === 'error' ? 'text-danger' : 'text-muted'));
+            }
+        }
 
-            return false;
-        });
+        function hideStatus(prefix) {
+            var wrap = document.getElementById(prefix + 'Status');
+            if (wrap) { wrap.hidden = true; }
+        }
 
-        function setPricing(tld) {
-            bb.post(
-                'guest/servicedomain/pricing',
-                {tld: tld},
-                function (result) {
-                    var s = $("#registration-years");
-                    s.find('option').remove();
-                    for (i = 1; i < 6; i++) {
-                        var price = bb.currency(result.price_registration, {{ currency.conversion_rate }}, "{{ currency.code }}", i);
+        function enableNext() {
+            $('#config-next').show();
+            $('#config-next').prop('disabled', false);
+        }
 
-                        s.append(new Option(i + "{{ ' Year/s @ '|trans }}" + price, i));
+        function setPricing(prefix, tld, domainLabel) {
+            return qcApi('servicedomain/pricing', { tld: tld }).then(function (result) {
+                if (prefix === 'qcReg') {
+                    var select = document.getElementById('registration-years');
+                    select.innerHTML = '';
+                    for (var i = 1; i < 6; i++) {
+                        var price = bb.currency(result.price_registration, {{ currency.conversion_rate }}, '{{ currency.code }}', i);
+                        select.appendChild(new Option(i + '{{ ' Year/s @ '|trans }}' + price, i));
                     }
-                    $('#config-next').show();
-                    $( "#config-next" ).prop( "disabled", false );
-                    {% if request.auto and request.register_sld %}
-                    // Quizontal: storefront "Add to cart" deep-link — availability passed, add straight to the cart.
-                    setTimeout(function () {
-                        var next = $('#config-next');
-                        if (next.length && !next.prop('disabled')) next.trigger('click');
-                    }, 350);
-                    {% endif %}
+                } else {
+                    $('#transfer-price').text(bb.currency(result.price_transfer, {{ currency.conversion_rate }}, '{{ currency.code }}'));
                 }
-            );
+                $('#domain-name').text(domainLabel);
+                enableNext();
+                {% if request.auto and request.register_sld %}
+                // Storefront "Add to cart" deep link — availability passed, go straight to checkout.
+                setTimeout(function () {
+                    var next = $('#config-next');
+                    if (next.length && !next.prop('disabled')) { next.trigger('click'); }
+                }, 350);
+                {% endif %}
+            }).catch(function (error) {
+                domStatus(prefix, 'error', cleanMessage(error.message));
+            });
         }
 
-        function setTransferPricing(tld) {
-            bb.post(
-                'guest/servicedomain/pricing',
-                {tld: tld},
-                function (result) {
-                    var price = bb.currency(result.price_transfer, {{ currency.conversion_rate }}, "{{ currency.code }}");
-                    $('#transfer-price').text(price);
-                    $('#config-next').show();
-                    $( "#config-next" ).prop( "disabled", false );
+        // ------------------------- register -------------------------
+        var registerBtn = document.getElementById('domain-check');
+
+        function runRegisterCheck(attempt) {
+            var sldInput = document.querySelector('input[name="register_sld"]');
+            var tldInput = document.querySelector('select[name="register_tld"]');
+            var sld = (sldInput.value || '').toLowerCase().trim();
+            if (sld === '') { sldInput.focus(); return; }
+            var tld = tldInput.value;
+            document.getElementById('domain-action').value = 'register';
+            registerBtn.disabled = true;
+            domStatus('qcReg', 'loading');
+
+            qcApi('servicedomain/check', { sld: sld, tld: tld }).then(function () {
+                domStatus('qcReg', 'ok', '✓ ' + sld + tld + ' {{ 'is available'|trans }}');
+                registerBtn.style.display = 'none';
+                $('.onAfterDomainCheck').fadeIn('fast');
+                $('#register .order-button').show();
+                setPricing('qcReg', tld, sld + tld);
+            }).catch(function (error) {
+                if (error.retryAfter && attempt < 3) {
+                    domStatus('qcReg', 'hint', '{{ 'The availability checker is cooling down — retrying automatically…'|trans }}');
+                    setTimeout(function () { runRegisterCheck(attempt + 1); }, error.retryAfter * 1000 + 400);
+                    return;
                 }
-            );
+                domStatus('qcReg', 'error', cleanMessage(error.message));
+                registerBtn.disabled = false;
+            });
         }
 
-        {% if request.transfer_sld and transfer_tlds is not empty %}
-        // Quizontal: transfer link prefilled — open the Transfer tab and run the check.
-        $('#transfer-tab').tab('show');
-        setTimeout(function () { $('#transfer-check').trigger('click'); }, 300);
-        {% elseif request.register_sld and tlds is not empty %}
-        // Quizontal: register link prefilled — run the availability check immediately.
-        setTimeout(function () { $('#domain-check').trigger('click'); }, 300);
-        {% endif %}
-    });
+        // ------------------------- transfer -------------------------
+        var transferBtn = document.getElementById('transfer-check');
+
+        function runTransferCheck(attempt) {
+            var sldInput = document.querySelector('input[name="transfer_sld"]');
+            var tldInput = document.querySelector('select[name="transfer_tld"]');
+            var sld = (sldInput.value || '').toLowerCase().trim();
+            if (sld === '') { sldInput.focus(); return; }
+            var tld = tldInput.value;
+            document.getElementById('domain-action').value = 'transfer';
+            transferBtn.disabled = true;
+            domStatus('qcTr', 'loading');
+
+            qcApi('servicedomain/can_be_transferred', { sld: sld, tld: tld }).then(function () {
+                hideStatus('qcTr');
+                transferBtn.style.display = 'none';
+                $('#domain-transfer-config').fadeIn('fast');
+                $('.onAfterDomainCheck').fadeIn('fast');
+                $('#transfer .order-button').show();
+                setPricing('qcTr', tld, sld + tld);
+            }).catch(function (error) {
+                if (error.retryAfter && attempt < 3) {
+                    domStatus('qcTr', 'hint', '{{ 'The availability checker is cooling down — retrying automatically…'|trans }}');
+                    setTimeout(function () { runTransferCheck(attempt + 1); }, error.retryAfter * 1000 + 400);
+                    return;
+                }
+                domStatus('qcTr', 'error', cleanMessage(error.message));
+                transferBtn.disabled = false;
+            });
+        }
+
+        $(function () {
+            $('ul.nav.nav-tabs > li.domain-tab a').on('click', function () {
+                $('#domain-action').val($(this).attr('rel'));
+            });
+
+            $('#config-next').hide();
+            $('#config-next').prop('disabled', true);
+
+            if ($('.addons').length) {
+                $('.order-button').one('click', function () {
+                    $(this).hide();
+                    $('.addons').slideDown('fast');
+                    return false;
+                });
+            }
+
+            $('.addon-period-selector').on('change', function () {
+                var rel = $(this).attr('rel');
+                $('#' + rel + ' span').hide();
+                $('#' + rel + ' span.' + $(this).val()).fadeIn();
+            }).trigger('change');
+
+            if (registerBtn) {
+                registerBtn.addEventListener('click', function () { runRegisterCheck(0); return false; });
+            }
+            if (transferBtn) {
+                transferBtn.addEventListener('click', function () { runTransferCheck(0); return false; });
+            }
+
+            {% if request.transfer_sld and transfer_tlds is not empty %}
+            // Quizontal: transfer link prefilled — open the Transfer tab and run the check.
+            $('#transfer-tab').tab('show');
+            setTimeout(function () { runTransferCheck(0); }, 300);
+            {% elseif request.register_sld and tlds is not empty %}
+            // Quizontal: register link prefilled — run the availability check immediately.
+            setTimeout(function () { runRegisterCheck(0); }, 300);
+            {% endif %}
+        });
+    })();
 </script>

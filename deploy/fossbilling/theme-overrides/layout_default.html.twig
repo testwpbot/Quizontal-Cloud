@@ -267,10 +267,32 @@
         <a href="#top" class="position-fixed btn btn-primary bottom-0 end-0 m-3">
             <span class="awe-arrow-up"></span> {{ 'Top'|trans }}</a>
     {% endif %}
+    {# Quizontal: skeleton shimmer instead of the stock spinner — matches the storefront's loading style. #}
     <div class="wait" style="display:none" onclick="$(this).hide();">
-        <div class="spinner-border"
-             style="width: 4rem; height: 4rem; top: 50%; left: 50%; position: fixed; z-index: 999"></div>
+        <div class="qc-load-card" role="status" aria-label="{{ 'Loading'|trans }}">
+            <span class="qc-shimmer-line" style="width: 58%"></span>
+            <span class="qc-shimmer-line" style="width: 88%"></span>
+            <span class="qc-shimmer-line" style="width: 42%"></span>
+        </div>
     </div>
+    <style>
+        .wait { z-index: 1080; }
+        .qc-load-card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1081;
+            width: min(320px, 82vw); padding: 20px; display: flex; flex-direction: column; gap: 12px;
+            background: var(--bs-body-bg, #fff); border: 1px solid rgba(134, 134, 139, .22);
+            border-radius: 16px; box-shadow: 0 18px 50px rgba(0, 0, 0, .16);
+        }
+        .qc-shimmer-line {
+            display: block; height: 12px; border-radius: 999px;
+            background: linear-gradient(90deg, rgba(134,134,139,.14) 20%, rgba(134,134,139,.34) 48%, rgba(134,134,139,.14) 76%);
+            background-size: 400% 100%; animation: qcShimmer 1.15s ease-in-out infinite;
+        }
+        .qc-shimmer-line:nth-child(2) { animation-delay: .12s; }
+        .qc-shimmer-line:nth-child(3) { animation-delay: .24s; }
+        @keyframes qcShimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+        @media (prefers-reduced-motion: reduce) { .qc-shimmer-line { animation: none; } }
+    </style>
     <noscript>{{ "NOTE: Many features on FOSSBilling require Javascript and cookies. You can enable both in your browser's preference settings."|trans }}</noscript>
 
     {# Quizontal: live cart badge in the header. Refreshes on load and whenever the tab regains focus. #}

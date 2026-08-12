@@ -40,13 +40,13 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         if (!empty($options['api-key'])) {
             $this->config['api-key'] = trim((string) $options['api-key']);
         } else {
-            throw new Registrar_Exception('The ":domain_registrar" domain registrar is not fully configured. Please configure the :missing', [':domain_registrar' => 'Porkbun', ':missing' => 'API Key'], 3001);
+            throw new Registrar_Exception('The ":domain_registrar" domain registrar is not fully configured. Please configure the :missing', [':domain_registrar' => 'Billing', ':missing' => 'API Key'], 3001);
         }
 
         if (!empty($options['secret-api-key'])) {
             $this->config['secret-api-key'] = trim((string) $options['secret-api-key']);
         } else {
-            throw new Registrar_Exception('The ":domain_registrar" domain registrar is not fully configured. Please configure the :missing', [':domain_registrar' => 'Porkbun', ':missing' => 'Secret API Key'], 3001);
+            throw new Registrar_Exception('The ":domain_registrar" domain registrar is not fully configured. Please configure the :missing', [':domain_registrar' => 'Billing', ':missing' => 'Secret API Key'], 3001);
         }
 
         if (!empty($options['api-url'])) {
@@ -116,7 +116,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     {
         $details = $this->callQuiet('GET', '/domain/get/' . rawurlencode($this->fqdn($domain)));
         if (is_array($details)) {
-            throw new Registrar_Exception('This domain is already in our Porkbun account and cannot be transferred in.');
+            throw new Registrar_Exception('This domain is already registered with us and cannot be transferred in.');
         }
 
         $transferPrice = $this->tldPrice(ltrim((string) $domain->getTld(), '.'), 'transfer');
@@ -147,7 +147,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $requirements = $this->call('GET', '/domain/getRegistrationRequirements/' . rawurlencode($tld));
         if (array_key_exists('apiRegisterable', $requirements) && !$this->truthy($requirements['apiRegisterable'])) {
             $reason = (string) ($requirements['notApiRegisterableReason'] ?? 'this extension has registry rules that prevent API registration');
-            throw new Registrar_Exception(sprintf('%s cannot be registered automatically: %s.', strtoupper($tld), $reason));
+            throw new Registrar_Exception(sprintf('%s cannot be registered automatically: %s.', strtoupper($tld), $this->neutral($reason)));
         }
 
         $costCents = $this->quotePriceCents($domain, 'registration');
@@ -159,8 +159,9 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
 
         $preview = $this->call('POST', '/domain/create/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
-            $message = (string) ($preview['message'] ?? 'the provider refused the registration preview');
-            throw new Registrar_Exception(sprintf('Registration of %s cannot be completed right now: %s', $fqdn, $message));
+            $message = (string) ($preview['message'] ?? 'the registration preview was refused');
+            $this->getLog()->err('Porkbun: registration preview for %s refused: %s', $fqdn, $message);
+            throw new Registrar_Exception(sprintf('Registration of %s cannot be completed right now. Please try again or contact support.', $fqdn));
         }
 
         $result = $this->call('POST', '/domain/create/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
@@ -193,8 +194,9 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
 
         $preview = $this->call('POST', '/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents, 'dryRun' => true]);
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
-            $message = (string) ($preview['message'] ?? 'the provider refused the renewal preview');
-            throw new Registrar_Exception(sprintf('Renewal of %s cannot be completed right now: %s', $fqdn, $message));
+            $message = (string) ($preview['message'] ?? 'the renewal preview was refused');
+            $this->getLog()->err('Porkbun: renewal preview for %s refused: %s', $fqdn, $message);
+            throw new Registrar_Exception(sprintf('Renewal of %s cannot be completed right now. Please try again or contact support.', $fqdn));
         }
 
         $result = $this->call('POST', '/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents], $this->newIdempotencyKey());
@@ -222,8 +224,9 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $payload = ['authCode' => $epp, 'cost' => $costCents];
         $preview = $this->call('POST', '/domain/transfer/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
-            $message = (string) ($preview['message'] ?? 'the provider refused the transfer preview');
-            throw new Registrar_Exception(sprintf('Transfer of %s cannot be started right now: %s', $fqdn, $message));
+            $message = (string) ($preview['message'] ?? 'the transfer preview was refused');
+            $this->getLog()->err('Porkbun: transfer preview for %s refused: %s', $fqdn, $message);
+            throw new Registrar_Exception(sprintf('Transfer of %s cannot be started right now. Please try again or contact support.', $fqdn));
         }
 
         $result = $this->call('POST', '/domain/transfer/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
@@ -323,7 +326,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function deleteDomain(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Porkbun does not delete domains via the API. Let the domain expire instead (disable auto-renewal in the Porkbun control panel).');
+        throw new Registrar_Exception('Domains cannot be deleted through the API. Let the domain expire instead (disable auto-renewal in the registrar control panel).');
     }
 
     /**
@@ -340,7 +343,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             return true;
         }
 
-        throw new Registrar_Exception('WHOIS privacy was switched off for this domain in the Porkbun control panel. Re-enable it there (Domain Management → Details → WHOIS Privacy); it is always free.');
+        throw new Registrar_Exception('WHOIS privacy was switched off for this domain at the registrar. Staff can re-enable it in the registrar control panel; it is always free.');
     }
 
     /**
@@ -348,7 +351,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function disablePrivacyProtection(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Porkbun does not allow disabling WHOIS privacy via the API. Use the Porkbun control panel if this is really required.');
+        throw new Registrar_Exception('WHOIS privacy cannot be disabled through the API. Use the registrar control panel if this is really required.');
     }
 
     /**
@@ -359,7 +362,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function lock(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Domains at Porkbun are transfer-locked by default and the lock can only be managed in the Porkbun control panel (Domain Management → Details).');
+        throw new Registrar_Exception('Domains are transfer-locked by default and the lock can only be managed in the registrar control panel.');
     }
 
     /**
@@ -367,7 +370,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function unlock(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Unlocking is only possible in the Porkbun control panel (Domain Management → Details → toggle Registrar Lock off).');
+        throw new Registrar_Exception('Unlocking is only possible in the registrar control panel (toggle Registrar Lock off).');
     }
 
     /**
@@ -377,7 +380,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function getEpp(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Transfer authorization codes are issued in the Porkbun control panel: Domain Management → Details → Authorization Code. Fetch it there and paste it for the customer.');
+        throw new Registrar_Exception('Transfer authorization codes are issued in the registrar control panel. Fetch it there and paste it for the customer.');
     }
 
     // ---------------------------------------------------------------------
@@ -564,13 +567,13 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $sandboxKey = str_starts_with($apiKey, 'pk1_sb_') || str_starts_with($secretKey, 'sk1_sb_');
         $liveKey = str_starts_with($apiKey, 'pk1_') && !$sandboxKey;
         if ($sandboxKey === $liveKey) {
-            throw new Registrar_Exception('The Porkbun API key pair looks inconsistent. Use a matching live pair (pk1_…/sk1_…) or sandbox pair (pk1_sb_…/sk1_sb_…).');
+            throw new Registrar_Exception('The API key pair looks inconsistent. Use a matching live pair (pk1_…/sk1_…) or sandbox pair (pk1_sb_…/sk1_sb_…).');
         }
         if ($this->_testMode && !$sandboxKey) {
-            throw new Registrar_Exception('This registrar is in Test mode but live Porkbun keys are configured. Enter the sandbox keys (pk1_sb_…) or disable Test mode.');
+            throw new Registrar_Exception('Test mode is enabled but live keys are configured. Enter the sandbox keys (pk1_sb_…) or disable Test mode.');
         }
         if (!$this->_testMode && $sandboxKey) {
-            throw new Registrar_Exception('Sandbox Porkbun keys are configured while Test mode is disabled. Enable Test mode for sandbox keys, or enter the live keys.');
+            throw new Registrar_Exception('Sandbox keys are configured while Test mode is disabled. Enable Test mode for sandbox keys, or enter the live keys.');
         }
 
         $headers = [
@@ -594,24 +597,52 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             $statusCode = $response->getStatusCode();
             $decoded = json_decode($response->getContent(false), true);
         } catch (\Symfony\Contracts\HttpClient\Exception\ExceptionInterface $e) {
-            throw new Registrar_Exception('Could not reach Porkbun: ' . $e->getMessage());
+            $this->getLog()->err('Porkbun: transport failure on %s %s: %s', strtoupper($method), $path, $e->getMessage());
+            throw new Registrar_Exception('The domain service could not be reached. Please try again.');
         }
 
         if (!is_array($decoded)) {
-            throw new Registrar_Exception(sprintf('Porkbun returned an unexpected response (HTTP %s).', $statusCode));
+            throw new Registrar_Exception(sprintf('The domain service returned an unexpected response (HTTP %s). Please try again.', $statusCode));
         }
 
         if ($statusCode >= 400 || ($decoded['status'] ?? '') !== 'SUCCESS') {
             $message = (string) ($decoded['message'] ?? sprintf('HTTP %s', $statusCode));
             $code = (string) ($decoded['code'] ?? '');
-            if ($code !== '' && stripos($code, 'RATE') !== false && isset($decoded['ttlRemaining'])) {
-                $message .= sprintf(' (retry in %ss)', $decoded['ttlRemaining']);
+
+            // Upstream pacing (rate limits / cooldowns): the order form retries
+            // automatically when it sees the "(retry in Ns)" marker, so give it
+            // a calm, brand-free sentence and keep the raw detail in the log.
+            $looksLikeCooldown = ($code !== '' && stripos($code, 'RATE') !== false)
+                || preg_match('/\bwithin\b.+\bused\b|\brate.?limit/i', $message) === 1;
+            if ($looksLikeCooldown) {
+                $retry = $decoded['ttlRemaining'] ?? null;
+                if (!is_numeric($retry) && preg_match('/(\d+)\s*(?:seconds?|secs?|s)\b/i', $message, $match)) {
+                    $retry = $match[1];
+                }
+                $retry = max(2, (int) ceil((float) ($retry ?: 6)));
+                $this->getLog()->err('Porkbun %s %s paced: %s%s', strtoupper($method), $path, $code !== '' ? '[' . $code . '] ' : '', $message);
+
+                throw new Registrar_Exception(sprintf('Our availability checker is cooling down. (retry in %ds)', $retry));
             }
+
             $this->getLog()->err('Porkbun %s %s failed: %s%s', strtoupper($method), $path, $code !== '' ? '[' . $code . '] ' : '', $message);
 
-            throw new Registrar_Exception('Porkbun: ' . $message);
+            throw new Registrar_Exception($this->neutral($message));
         }
 
         return $decoded;
+    }
+
+    /**
+     * Error text reaching customers must never name upstream providers or
+     * expose internal error codes. Server-side logs keep the full detail.
+     */
+    private function neutral(string $message): string
+    {
+        $message = preg_replace('/pork\s*bun|inter-?server/i', 'the domain registrar', $message) ?? $message;
+        $message = preg_replace('/\s*\(\d{3,}\)\s*$/', '', $message) ?? $message;
+        $message = trim((string) preg_replace('/\s{2,}/', ' ', $message));
+
+        return $message !== '' ? $message : 'The domain service reported an error. Please try again.';
     }
 }
