@@ -71,7 +71,7 @@
     .qc-dd.open .qc-dd-chev{transform:rotate(180deg)}
     .qc-dd-selected{display:flex;align-items:center;gap:9px;min-width:0}
     .qc-dd-desc{font-size:.82rem;color:#5b6b83;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .qc-dd-menu{display:none;position:absolute;z-index:80;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #e6e9f0;border-radius:12px;box-shadow:0 16px 36px rgba(23,26,38,.16);padding:5px;max-height:264px;overflow-y:auto}
+    .qc-dd-menu{display:none;position:absolute;z-index:80;left:0;right:auto;top:calc(100% + 6px);min-width:100%;width:max-content;max-width:min(340px,92vw);background:#fff;border:1px solid #e6e9f0;border-radius:12px;box-shadow:0 16px 36px rgba(23,26,38,.16);padding:5px;max-height:264px;overflow-y:auto;overflow-x:hidden}
     .qc-dd.up .qc-dd-menu{top:auto;bottom:calc(100% + 6px)}
     .qc-dd.open .qc-dd-menu{display:block}
     .qc-dd-item{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:9px;padding:.55rem .65rem;text-align:left;font:inherit;color:#161a23;cursor:pointer}
@@ -657,19 +657,10 @@
                     var dd = item.closest('[data-qc-dd]');
                     var value = item.getAttribute('data-value');
                     var hidden = dd.querySelector('input[type="hidden"]');
-                    if (hidden) {
-                        hidden.value = value;
-                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                    var selectedBox = dd.querySelector('[data-qc-dd-selected]');
-                    if (selectedBox) selectedBox.innerHTML = ddSelectedHtml(value);
-                    dd.querySelectorAll('[data-qc-dd-item]').forEach(function (it) {
-                        var on = it === item;
-                        it.classList.toggle('sel', on);
-                        it.setAttribute('aria-selected', on ? 'true' : 'false');
-                        var check = it.querySelector('.qc-dd-check');
-                        if (check) check.style.visibility = on ? 'visible' : 'hidden';
-                    });
+                    // Full atomic rebuild from the source-of-truth maps — a
+                    // partially mutated menu can never display stale text.
+                    mountTypeDropdown(dd, value);
+                    if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
                     dd.classList.remove('open');
                     var btnBack = dd.querySelector('[data-qc-dd-btn]');
                     if (btnBack) btnBack.setAttribute('aria-expanded', 'false');

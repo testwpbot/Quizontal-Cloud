@@ -168,6 +168,51 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             throw new InformationException('The record was created but no reference was returned. Refresh the list in a moment.');
         }
 
+        if (isset($this->di['logger'])) {
+            $this->di['logger']->info(
+                'Quizontaldomains: create request on %s — type %s, name "%s", content "%s", ttl %d → upstream ref %s',
+                $fqdn,
+                $record['type'],
+                $record['name'] === '' ? '@' : $record['name'],
+                $record['content'],
+                $record['ttl'],
+                $id
+            );
+        }
+
+        // Proof over promise: re-list the zone and confirm the record really
+        // exists. An "accepted but never applied" create is a lie we must not
+        // tell the customer — surface it and log the exact upstream ref so
+        // the store owner can see what happened.
+        $applied = false;
+        foreach ($this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn))['records'] ?? [] as $row) {
+            $sameName = strcasecmp((string) $row['name'], $record['name']) === 0;
+            $sameContent = strcasecmp(trim((string) $row['content']), $record['content']) === 0;
+            if ($sameName && $row['type'] === $record['type'] && $sameContent) {
+                $applied = true;
+                break;
+            }
+        }
+        if (!$applied) {
+            if (isset($this->di['logger'])) {
+                $this->di['logger']->err(
+                    'Quizontaldomains: PHANTOM create on %s — upstream returned ref %s but %s %s "%s" is absent in a fresh listing.',
+                    $fqdn,
+                    $id,
+                    $record['type'],
+                    $record['name'] === '' ? '@' : $record['name'],
+                    $record['content']
+                );
+            }
+            // Remove the phantom reference before asking the customer to retry.
+            try {
+                $adapter->dnsDeleteRecord($fqdn, $id);
+            } catch (\Throwable) {
+                // best effort — the phantom ref may not even be deletable
+            }
+            throw new InformationException('The change was accepted but the record did not appear in the DNS zone. Please try again — if it keeps happening, contact support and we will add it for you.');
+        }
+
         return ['id' => $id, 'record' => $record, 'already_existed' => false];
     }
 
