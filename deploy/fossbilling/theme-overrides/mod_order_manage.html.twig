@@ -30,7 +30,19 @@
 {% endblock %}
 
 {% block content %}
-    <style>.qc-badge-setup{background:#fff8e8;color:#92600a;border:1px solid rgba(230,167,0,.35)}</style>
+    <style>
+    .qc-badge-setup{background:#fff8e8;color:#92600a;border:1px solid rgba(230,167,0,.35)}
+    /* Quizontal Cloud: modern service-details presentation (mobile-first) */
+    .qc-details{display:flex;flex-direction:column}
+    .qc-details-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:11px 2px;border-bottom:1px solid #eef1f5}
+    .qc-details-row:last-child{border-bottom:0}
+    .qc-details-label{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a93a6;padding-top:3px;flex:none}
+    .qc-details-value{font-weight:600;color:#242a35;text-align:right;min-width:0;word-break:break-word}
+    @media (max-width:575.98px){
+        .qc-details-row{flex-direction:column;gap:3px}
+        .qc-details-value{text-align:left}
+    }
+    </style>
     <div class="row">
         <div class="col-md-12">
             {# Order info #}
@@ -44,78 +56,76 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <table class="table table-hover table-bordered table-sm">
-                        <tbody>
-                        <tr>
-                            <td><label>{{ 'Order'|trans }}</label></td>
-                            <td>#{{ order.id }}</td>
-                        </tr>
+                    <div class="qc-details">
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Order'|trans }}</span>
+                            <span class="qc-details-value">#{{ order.id }}</span>
+                        </div>
 
-                        <tr>
-                            <td><label>{{ 'Product name'|trans }}</label></td>
-                            <td><strong>{{ order.title }}</strong></td>
-                        </tr>
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Product name'|trans }}</span>
+                            <span class="qc-details-value"><strong>{{ order.title }}</strong></span>
+                        </div>
 
-                        <tr>
-                            <td><label>{{ 'Payment amount'|trans }}</label></td>
-                            <td>{{ order.total|money(order.currency) }}</td>
-                        </tr>
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Payment amount'|trans }}</span>
+                            <span class="qc-details-value">{{ order.total|money(order.currency) }}</span>
+                        </div>
 
                         {% if order.period %}
-                            <tr>
-                                <td><label>{{ 'Billing cycle'|trans }}</label></td>
-                                <td>{{ order.period|period_title }}</td>
-                            </tr>
+                            <div class="qc-details-row">
+                                <span class="qc-details-label">{{ 'Billing cycle'|trans }}</span>
+                                <span class="qc-details-value">{{ order.period|period_title }}</span>
+                            </div>
                         {% endif %}
 
-                        <tr>
-                            <td><label>{{ 'Order status'|trans }}</label></td>
-                            <td>
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Order status'|trans }}</span>
+                            <span class="qc-details-value">
                                 {% if qc_setup %}
                                     <span class="badge qc-badge-setup">{{ 'Setting up'|trans }}</span>
                                     <div class="small text-muted mt-1">{{ 'Payment confirmed — your server is being created. Most servers are ready within 30 minutes of payment.' }}</div>
                                 {% else %}
                                 <span class="badge {% if order.status == 'active' %}bg-success{% elseif order.status == 'pending_setup' %}bg-warning{% elseif order.status == 'failed_setup' or order.status == 'suspended' or order.status == 'failed_renew' %}bg-danger{% elseif order.status == 'canceled' %}bg-secondary{% endif %}">{{ mf.status_name(order.status) }}</span>
                                 {% endif %}
-                            </td>
-                        </tr>
+                            </span>
+                        </div>
 
-                        <tr>
-                            <td><label>{{ 'Order created'|trans }}</label></td>
-                            <td>{{ order.created_at|format_date }}</td>
-                        </tr>
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Order created'|trans }}</span>
+                            <span class="qc-details-value">{{ order.created_at|format_date }}</span>
+                        </div>
 
-                        <tr>
-                            <td><label>{{ 'Activated at'|trans }}</label></td>
-                            <td>{% if order.activated_at %}{{ order.activated_at|format_date }}{% else %}-{% endif %}</td>
-                        </tr>
+                        <div class="qc-details-row">
+                            <span class="qc-details-label">{{ 'Activated at'|trans }}</span>
+                            <span class="qc-details-value">{% if order.activated_at %}{{ order.activated_at|format_date }}{% else %}-{% endif %}</span>
+                        </div>
 
                         {% if order.period %}
-                            <tr>
-                                <td><label>{{ 'Renewal date'|trans }} {% if order.expires_at %} in {{ order.expires_at|daysleft }} day(s) {% endif %}</label></td>
-                                <td>{% if order.expires_at %}{{ order.expires_at|format_date }}{% else %}-{% endif %}</td>
-                            </tr>
+                            <div class="qc-details-row">
+                                <span class="qc-details-label">{{ 'Renewal date'|trans }} {% if order.expires_at %} in {{ order.expires_at|daysleft }} day(s) {% endif %}</span>
+                                <span class="qc-details-value">{% if order.expires_at %}{{ order.expires_at|format_date }}{% else %}-{% endif %}</span>
+                            </div>
                         {% endif %}
 
                         {% if order.notes %}
-                            <tr>
-                                <td><label>{{ 'Order notes'|trans }}</label></td>
-                                <td>{{ order.notes|markdown }}</td>
-                            </tr>
+                            <div class="qc-details-row">
+                                <span class="qc-details-label">{{ 'Order notes'|trans }}</span>
+                                <span class="qc-details-value">{{ order.notes|markdown }}</span>
+                            </div>
                         {% endif %}
 
                         {% if order.active_tickets > 0 %}
-                            <tr>
-                                <td><label>{{ 'Active support tickets'|trans }}</label></td>
-                                <td>
-                                    <div class="num"><a href="{{ 'support'|link }}" class="redNum">{{ order.active_tickets }}</a></div>
-                                </td>
-                            </tr>
+                            <div class="qc-details-row">
+                                <span class="qc-details-label">{{ 'Active support tickets'|trans }}</span>
+                                <span class="qc-details-value">
+                                    <a href="{{ 'support'|link }}" class="badge bg-danger text-decoration-none">{{ order.active_tickets }}</a>
+                                </span>
+                            </div>
                         {% endif %}
-                        </tbody>
-                    </table>
+                    </div>
                 </div>
-                <div class="card-footer">
+                <div class="card-footer d-flex flex-wrap gap-2">
                     {% if order.period and order.status != 'failed_renew' %}
                         <button class="btn btn-primary btn-sm" type="button" id="renewal-button">{{ 'Renew now'|trans }}</button>
                     {% endif %}
