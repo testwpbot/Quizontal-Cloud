@@ -16,12 +16,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% block opengraph %}{% endblock %}
+    {# Crash guard: shared layout name means a stale copy resolved in the ADMIN
+       area must never ask Encore for the client 'huraga' entry (that entry only
+       exists in the client theme and fataled the whole admin panel once). #}
+    {% set qc_encore_entry = constant('ADMIN_AREA') ? 'fossbilling' : 'huraga' %}
     <link rel='stylesheet' type='text/css' href="{{ 'css/font-awesome.css' | asset_url }}">
-    {{ encore_entry_link_tags('huraga') }}
+    {{ encore_entry_link_tags(qc_encore_entry) }}
     <link rel="shortcut icon" href="{{ guest.system_company.favicon_url }}">
 
     {{ "Api/API.js" | library_url | script_tag }}
-    {{ encore_entry_script_tags('huraga') }}
+    {{ encore_entry_script_tags(qc_encore_entry) }}
 
     {{ DebugBar_renderHead() }}
 
