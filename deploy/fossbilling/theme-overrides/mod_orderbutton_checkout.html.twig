@@ -10,6 +10,10 @@
 #qc-cart .qc-wallet-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:var(--qc-soft)}
 #qc-cart .qc-promo{display:flex;gap:8px;max-width:420px}
 #qc-cart .qc-promo input{min-width:0}
+#qc-cart .qc-item-points{list-style:none;margin:7px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.8rem;color:#5c636a}
+#qc-cart .qc-item-points li::before{content:"✓";color:#34a853;font-weight:700;margin-right:5px}
+#qc-cart .qc-item-points li strong{color:var(--qc-text)}
+#qc-cart .qc-item-desc{font-size:.8rem;color:#5c636a;margin:5px 0 2px;max-width:56ch}
 #qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
 #qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
 #qc-checkout-loading{display:none;position:absolute;inset:0;z-index:30;background:rgba(255,255,255,.97);place-items:center;padding:24px}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
@@ -30,9 +34,54 @@ body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:no
   <div id="checkout" class="accordion-collapse collapse {% if request.checkout and client %}show{% endif %}" data-bs-parent="#orderManager">
     <div class="accordion-body"><div class="accordion-inner">
       <div class="qc-summary mb-3">
+        {# Quizontal: index enabled products so each line can show its description,
+           and pull TLD rows so domain lines can quote the renewal price. #}
+        {% set qc_products = {} %}
+        {% for p in guest.product_get_list({"per_page": 200}).list|default([]) %}
+          {% set qc_products = qc_products|merge({ (p.id ~ ''): p }) %}
+        {% endfor %}
+        {% set qc_reg_tlds = guest.serviceDomain_tlds({"allow_register": 1}) %}
         {% for item in cart.items %}
         <div class="qc-product-row">
-          <div><strong class="d-block">{{ item.title }}</strong><small class="text-muted">{% if item.period %}{{ item.period|period_title }}{% endif %}{% if item.quantity > 1 %} · Quantity {{ item.quantity }}{% endif %}</small></div>
+          <div>
+          <strong class="d-block">{{ item.title }}</strong>
+          <small class="text-muted">{% if item.period %}{{ item.period|period_title }}{% endif %}{% if item.quantity > 1 %} · {{ 'Quantity'|trans }} {{ item.quantity }}{% endif %}</small>
+          {% if item.type == 'domain' %}
+            {% if item.action == 'transfer' %}
+              <ul class="qc-item-points">
+                <li><strong>{{ item.transfer_sld }}{{ item.transfer_tld }}</strong></li>
+                <li>{{ 'Domain transfer to Quizontal Cloud'|trans }}</li>
+                <li>{{ 'Full DNS & nameserver control'|trans }}</li>
+                <li>{{ 'Track progress from your dashboard'|trans }}</li>
+              </ul>
+            {% else %}
+              {% set qc_years = item.register_years|default(1) %}
+              <ul class="qc-item-points">
+                <li><strong>{{ item.register_sld }}{{ item.register_tld }}</strong></li>
+                <li>{{ qc_years }} {{ qc_years == 1 ? 'year'|trans : 'years'|trans }} {{ 'registration'|trans }}</li>
+                <li>{{ 'Free WHOIS privacy'|trans }}</li>
+                <li>{{ 'Registrar lock enabled by default'|trans }}</li>
+                <li>{{ 'Full DNS & nameserver control'|trans }}</li>
+              </ul>
+              {% set qc_tld_row = qc_reg_tlds|filter(t => t.tld == item.register_tld)|first %}
+              {% if qc_tld_row and qc_tld_row.price_renew > 0 %}
+              <div class="small text-muted mt-1">{{ 'Renews at'|trans }} {{ qc_tld_row.price_renew|money_convert }} / {{ 'yr'|trans }} · {{ 'reminders before expiry'|trans }}</div>
+              {% endif %}
+            {% endif %}
+          {% else %}
+            {% set qc_prod = qc_products[item.product_id ~ '']|default(null) %}
+            {% if item.hostname is defined and item.hostname %}<div class="small text-muted mt-1">{{ 'Hostname'|trans }}: {{ item.hostname }}</div>{% endif %}
+            {% if item.os is defined and item.os %}<div class="small text-muted">{{ 'OS template'|trans }}: {{ item.os }}</div>{% endif %}
+            {% if qc_prod and qc_prod.description %}
+              {% set qc_desc = qc_prod.description|striptags|trim %}
+              {% if qc_desc %}<p class="qc-item-desc">{{ qc_desc|slice(0, 180) }}{% if qc_desc|length > 180 %}…{% endif %}</p>{% endif %}
+            {% endif %}
+            <ul class="qc-item-points">
+              <li>{{ 'Provisioned automatically after payment'|trans }}</li>
+              <li>{{ 'Managed from your dashboard'|trans }}</li>
+            </ul>
+          {% endif %}
+          </div>
           <div class="fw-bold">{% if item.discount_price %}<del class="text-muted">{{ item.total|money_convert }}</del><br><span class="text-success">{{ (item.total-item.discount_price)|money_convert }}</span>{% else %}{{ item.total|money_convert }}{% endif %}</div>
           <button data-cart-item-id="{{ item.id }}" class="btn btn-outline-danger btn-sm remove-cart-item qc-remove" type="button" title="Remove">×</button>
         </div>

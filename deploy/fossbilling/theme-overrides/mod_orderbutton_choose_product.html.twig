@@ -23,6 +23,15 @@
     window.location.replace({{ 'order'|link(forward_query)|json_encode|raw }});
 </script>
 {% endif %}
+{# Bare /order with nothing selected: shoppers landing here are lost — the catalogue
+   browser means nothing to them. Funnel them to the friendly product pages instead;
+   deep links (/order?product=…, /order/slug), domain intents and the checkout step
+   all skip this guard above/below, so the buying flow is never interrupted. #}
+{% if picker_open and not has_domain_intent and guest.extension_is_on({"mod": "custompages"}) %}
+<script>
+    window.location.replace({{ 'custompages/vps'|link|json_encode|raw }});
+</script>
+{% endif %}
 <div class="accordion-item">
     <h2 class="accordion-header">
         <button class="accordion-button {% if not picker_open %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#products" aria-expanded="{{ picker_open ? 'true' : 'false' }}" aria-controls="products">
