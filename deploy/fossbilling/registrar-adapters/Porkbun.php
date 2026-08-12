@@ -180,6 +180,18 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
 
         $preview = $this->call('POST', '/domain/create/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
+            // Phase-0 manual fulfillment: when prepaid registrar balance is not
+            // an option, the store owner buys the domain on the registrar's own
+            // website (card checkout) BEFORE marking the store invoice paid.
+            // Activation then finds the domain taken — by our own linked
+            // account. Detect exactly that case and adopt the domain: the order
+            // links the already-owned registration, nothing is charged twice,
+            // and the whois sync that follows fills dates/lock/privacy/NS from
+            // the account. A domain taken by anyone else still hard-fails.
+            if ($this->isDomainInOurAccount($fqdn)) {
+                $this->getLog()->info('Porkbun: %s already exists in the linked account (manual purchase) — adopted without charging', $fqdn);
+                return true;
+            }
             $message = (string) ($preview['message'] ?? 'the registration preview was refused');
             $this->getLog()->err('Porkbun: registration preview for %s refused: %s', $fqdn, $message);
             throw new Registrar_Exception(sprintf('Registration of %s cannot be completed right now. Please try again or contact support.', $fqdn));
@@ -622,6 +634,17 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         } catch (Registrar_Exception) {
             return null;
         }
+    }
+
+    /**
+     * True only when the domain already lives inside the Porkbun account these
+     * API keys belong to. This is what makes manual website purchases adoptable
+     * at activation time; it can never mistake a stranger's registration for
+     * ours because /domain/get only answers for domains in the account.
+     */
+    private function isDomainInOurAccount(string $fqdn): bool
+    {
+        return is_array($this->callQuiet('GET', '/domain/get/' . rawurlencode($fqdn)));
     }
 
     /**
