@@ -95,7 +95,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     {
         [$order, $service, $fqdn] = $this->findOwnedDomainService($clientId, $orderId);
         $adapter = $this->adapterFor($service, $order);
-        $result = $adapter->dnsListRecords($fqdn);
+        $result = $this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn));
 
         return [
             'domain' => $fqdn,
@@ -118,7 +118,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $adapter = $this->adapterFor($service, $order);
         $record = $this->validateRecord($input, $fqdn);
 
-        foreach ($adapter->dnsListRecords($fqdn)['records'] ?? [] as $row) {
+        foreach ($this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn))['records'] ?? [] as $row) {
             $sameName = strcasecmp((string) $row['name'], $record['name']) === 0;
             $sameContent = strcasecmp(trim((string) $row['content']), $record['content']) === 0;
             if ($sameName && $row['type'] === $record['type'] && $sameContent) {
@@ -126,7 +126,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             }
         }
 
-        $id = $adapter->dnsCreateRecord($fqdn, $record);
+        $id = $this->dnsGuard(fn () => $adapter->dnsCreateRecord($fqdn, $record));
         if ($id === '') {
             throw new InformationException('The record was created but no reference was returned. Refresh the list in a moment.');
         }
@@ -140,7 +140,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $adapter = $this->adapterFor($service, $order);
         $record = $this->validateRecord($input, $fqdn);
 
-        $adapter->dnsEditRecord($fqdn, $recordId, $record);
+        $this->dnsGuard(fn () => $adapter->dnsEditRecord($fqdn, $recordId, $record));
 
         return ['id' => $recordId, 'record' => $record];
     }
@@ -165,7 +165,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                     break;
                 }
             }
-            if ($stillThere) throw $exception;
+            if ($stillThere) {
+                // Re-raise through the guard so customer-facing wording stays clean.
+                $this->dnsGuard(function () use ($exception) { throw $exception; });
+            }
         }
 
         return true;
@@ -214,6 +217,30 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         return true;
+    }
+
+    /**
+     * Route adapter failures to customer-safe wording. Anything describing a
+     * store-side setting the customer cannot change (like the registrar's
+     * per-domain API opt-in) becomes a generic retry/contact message, with
+     * the raw reason logged for the store owner.
+     *
+     * @throws InformationException
+     */
+    private function dnsGuard(callable $operation)
+    {
+        try {
+            return $operation();
+        } catch (\Registrar_Exception $exception) {
+            $message = $exception->getMessage();
+            if (stripos($message, 'opted in to API access') !== false) {
+                if (isset($this->di['logger'])) {
+                    $this->di['logger']->err('Quizontaldomains: DNS refused — domain is not opted into registrar API access. Enable it in the registrar dashboard. Raw reason: %s', $message);
+                }
+                throw new InformationException('DNS management is being enabled for this domain. Please try again shortly, or contact support and we will finish the setup.');
+            }
+            throw new InformationException($message !== '' ? $message : 'The domain DNS service reported an error.');
+        }
     }
 
     /**
