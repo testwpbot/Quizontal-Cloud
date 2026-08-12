@@ -39,11 +39,17 @@ class FossBillingDomains
             $productId = null;
         }
 
+        $base = rtrim((string) config('services.fossbilling.url'), '/');
+
         if ($productId) {
-            return rtrim((string) config('services.fossbilling.url'), '/').'/order?product='.(int) $productId;
+            return $base.'/order?product='.(int) $productId;
         }
 
-        return null;
+        // Never strand customers on a bare login redirect: when no domain
+        // product can be located, land on the order page itself, which opens
+        // the product picker. That page works for guests and skips straight
+        // past login for customers who already have a billing session.
+        return $base.'/order';
     }
 
     /**
@@ -54,12 +60,26 @@ class FossBillingDomains
     private static function discoverDomainProductId(): ?int
     {
         try {
-            $categories = self::guest('product_category/get_list', ['per_page' => 100]);
+            // Note: the endpoint really is product/category_get_list — product
+            // categories live under the Product module's guest API, there is
+            // no separate "product_category" module.
+            $categories = self::guest('product/category_get_list', ['per_page' => 100]);
             foreach (($categories['list'] ?? []) as $category) {
                 if (($category['type'] ?? null) === 'domain' && ! empty($category['products'])) {
                     $id = (int) ($category['products'][0]['id'] ?? 0);
                     if ($id > 0) {
                         return $id;
+                    }
+                }
+
+                // Category type is derived from its first product only, so also
+                // scan the embedded products themselves for a domain product.
+                foreach (($category['products'] ?? []) as $product) {
+                    if (($product['type'] ?? null) === 'domain') {
+                        $id = (int) ($product['id'] ?? 0);
+                        if ($id > 0) {
+                            return $id;
+                        }
                     }
                 }
             }
