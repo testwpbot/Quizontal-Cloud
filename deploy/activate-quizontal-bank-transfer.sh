@@ -44,6 +44,9 @@ api_post_soft() {
 }
 
 api_post 'extension/activate' '{"id":"quizontalbanktransfer","type":"mod"}'
+# Customer DNS record manager — soft so an older module copy never blocks the
+# rest of activation; re-run the main installer + this script to enable it.
+api_post_soft 'extension/activate' '{"id":"quizontaldomains","type":"mod"}'
 # Reconnect every active module so core Invoice, Support, Order, and Client
 # lifecycle emails fire as well as the custom receipt notification.
 api_post 'hook/batch_connect' '{}'

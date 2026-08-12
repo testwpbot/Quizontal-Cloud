@@ -4,6 +4,7 @@ set -Eeuo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SOURCE_DIR="$SCRIPT_DIR/fossbilling/Serviceinterserver"
 CUSTOMER_API_DIR="$SCRIPT_DIR/fossbilling/Cloudvps"
+DOMAINS_SOURCE="$SCRIPT_DIR/fossbilling/Quizontaldomains"
 THEME_OVERRIDES_DIR="$SCRIPT_DIR/fossbilling/theme-overrides"
 [[ $EUID -eq 0 ]] || { echo 'Run with sudo -E.' >&2; exit 1; }
 [[ -d "$SOURCE_DIR" ]] || { echo "Module source missing: $SOURCE_DIR" >&2; exit 1; }
@@ -26,6 +27,15 @@ cp -a "$CUSTOMER_API_DIR"/. "$CUSTOMER_TARGET"/
 chown -R "$WEB_USER:$WEB_GROUP" "$CUSTOMER_TARGET"
 find "$CUSTOMER_TARGET" -type d -exec chmod 0755 {} +
 find "$CUSTOMER_TARGET" -type f -exec chmod 0644 {} +
+# Customer DNS record manager (theme probe stays silent while inactive).
+if [[ -d "$DOMAINS_SOURCE" ]]; then
+  DOMAINS_TARGET="$MODULES_DIR/Quizontaldomains"
+  install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$DOMAINS_TARGET"
+  cp -a "$DOMAINS_SOURCE"/. "$DOMAINS_TARGET"/
+  chown -R "$WEB_USER:$WEB_GROUP" "$DOMAINS_TARGET"
+  find "$DOMAINS_TARGET" -type d -exec chmod 0755 {} +
+  find "$DOMAINS_TARGET" -type f -exec chmod 0644 {} +
+fi
 APP_ROOT=$(dirname "$MODULES_DIR")
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 # Storefront URL that the order page domain search card bounces to (/domains?q=…).

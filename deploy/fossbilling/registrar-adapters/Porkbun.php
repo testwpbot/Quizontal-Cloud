@@ -417,6 +417,74 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     }
 
     // ---------------------------------------------------------------------
+    // DNS zone management (Quizontal Cloud domain manager)
+    //
+    // Customer-facing record CRUD. Every write carries an Idempotency-Key so
+    // browser retries cannot double-apply, and the central call() helper
+    // already strips provider branding from any error the customer sees.
+    // These are account-level API calls, so they work the same for domains
+    // the adapter registered and for domains adopted after a manual purchase.
+    // ---------------------------------------------------------------------
+
+    public function supportsDnsRecords(): bool
+    {
+        return true;
+    }
+
+    /**
+     * All editable zone records (SOA and default NS are excluded upstream).
+     * Names are shortened to the subdomain form ('' for the zone root).
+     */
+    public function dnsListRecords(string $fqdn): array
+    {
+        $data = $this->call('POST', '/dns/retrieve/' . rawurlencode($fqdn));
+        $rows = [];
+        foreach ((array) ($data['records'] ?? []) as $row) {
+            $rows[] = [
+                'id' => (string) ($row['id'] ?? ''),
+                'name' => $this->shortenRecordName((string) ($row['name'] ?? ''), $fqdn),
+                'type' => strtoupper((string) ($row['type'] ?? '')),
+                'content' => (string) ($row['content'] ?? ''),
+                'ttl' => (int) ($row['ttl'] ?? 600),
+                'prio' => (int) ($row['prio'] ?? 0),
+                'notes' => (string) ($row['notes'] ?? ''),
+            ];
+        }
+
+        return ['records' => $rows, 'cloudflare' => $this->truthy($data['cloudflare'] ?? null)];
+    }
+
+    /** @return string the new record id */
+    public function dnsCreateRecord(string $fqdn, array $record): string
+    {
+        $result = $this->call('POST', '/dns/create/' . rawurlencode($fqdn), $record, $this->newIdempotencyKey());
+        return (string) ($result['id'] ?? '');
+    }
+
+    public function dnsEditRecord(string $fqdn, string $recordId, array $record): bool
+    {
+        $this->call('POST', '/dns/edit/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), $record, $this->newIdempotencyKey());
+        return true;
+    }
+
+    public function dnsDeleteRecord(string $fqdn, string $recordId): bool
+    {
+        $this->call('POST', '/dns/delete/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), [], $this->newIdempotencyKey());
+        return true;
+    }
+
+    /** 'www.example.com' -> 'www'; 'example.com' -> '' (zone root). */
+    private function shortenRecordName(string $name, string $fqdn): string
+    {
+        $name = strtolower(rtrim(trim($name), '.'));
+        $fqdn = strtolower($fqdn);
+        if ($name === $fqdn) return '';
+        $suffix = '.' . $fqdn;
+        if (str_ends_with($name, $suffix)) return substr($name, 0, -strlen($suffix));
+        return $name;
+    }
+
+    // ---------------------------------------------------------------------
     // Internals
     // ---------------------------------------------------------------------
 
