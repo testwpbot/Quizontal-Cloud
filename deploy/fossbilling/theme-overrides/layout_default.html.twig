@@ -62,6 +62,8 @@
 {% endif %}
 <div class="container">
     <header>
+        {# Quizontal: initial cart count server-side (JS keeps it live afterwards) #}
+        {% set qc_cart_count = guest.cart_get.items|default([])|length %}
         <nav class="navbar navbar-expand-md py-4">
             <div class="container-fluid">
                 {% if logo_url and settings.show_company_logo %}
@@ -77,7 +79,7 @@
                 {% endif %}
                 <a href="{{ '/order'|link({'checkout': 1}) }}" class="nav-link d-md-none ms-auto pe-2 position-relative" aria-label="{{ 'Cart'|trans }}" title="{{ 'Cart'|trans }}">
                     <svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M17,18C15.89,18 15,18.89 15,20A2,2 0 0,0 17,22A2,2 0 0,0 19,20C19,18.89 18.1,18 17,18M1,2V4H3L6.6,11.59L5.24,14.04C5.09,14.32 5,14.65 5,15A2,2 0 0,0 7,17H19V15H7.42A0.25,0.25 0 0,1 7.17,14.75C7.17,14.7 7.18,14.66 7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.59 17.3,11.97L20.88,5.5C20.95,5.34 21,5.17 21,5A1,1 0 0,0 20,4H5.21L4.27,2M7,18C5.89,18 5,18.89 5,20A2,2 0 0,0 7,22A2,2 0 0,0 9,20C9,18.89 8.1,18 7,18Z" /></svg>
-                    <span class="qc-cart-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size:.6rem" title="0 items in cart">0</span>
+                    <span class="qc-cart-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size:.6rem" title="{{ qc_cart_count }} {% if qc_cart_count == 1 %}{{ 'item in cart'|trans }}{% else %}{{ 'items in cart'|trans }}{% endif %}">{{ qc_cart_count }}</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -114,7 +116,7 @@
                         <li class="nav-item d-none d-md-block">
                             <a class="nav-link d-flex align-items-center" href="{{ '/order'|link({'checkout': 1}) }}">
                                 <svg class="svg-icon me-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M17,18C15.89,18 15,18.89 15,20A2,2 0 0,0 17,22A2,2 0 0,0 19,20C19,18.89 18.1,18 17,18M1,2V4H3L6.6,11.59L5.24,14.04C5.09,14.32 5,14.65 5,15A2,2 0 0,0 7,17H19V15H7.42A0.25,0.25 0 0,1 7.17,14.75C7.17,14.7 7.18,14.66 7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.59 17.3,11.97L20.88,5.5C20.95,5.34 21,5.17 21,5A1,1 0 0,0 20,4H5.21L4.27,2M7,18C5.89,18 5,18.89 5,20A2,2 0 0,0 7,22A2,2 0 0,0 9,20C9,18.89 8.1,18 7,18Z" /></svg>
-                                {{ 'Cart'|trans }}&nbsp;<span class="qc-cart-count badge rounded-pill bg-success" title="0 items in cart">0</span>
+                                {{ 'Cart'|trans }}&nbsp;<span class="qc-cart-count badge rounded-pill bg-success" title="{{ qc_cart_count }} {% if qc_cart_count == 1 %}{{ 'item in cart'|trans }}{% else %}{{ 'items in cart'|trans }}{% endif %}">{{ qc_cart_count }}</span>
                             </a>
                         </li>
 
@@ -277,6 +279,35 @@
     </div>
     <style>
         .wait { z-index: 1080; }
+        /* Quizontal: top navigation as pill buttons with real gaps (desktop only — mobile uses the drawer) */
+        @media (min-width: 768px) {
+            header .navbar-nav { align-items: center; gap: .6rem; }
+            header .navbar-nav .nav-item > .nav-link,
+            header .navbar-nav .dropdown > .btn.dropdown-toggle {
+                display: inline-flex; align-items: center; gap: .4rem;
+                padding: .5rem 1.05rem; border-radius: 999px;
+                border: 1px solid rgba(134, 134, 139, .28);
+                background: transparent; color: inherit;
+                font-weight: 500; font-size: .95rem; line-height: 1.2;
+                transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+            }
+            header .navbar-nav .nav-item > .nav-link:hover,
+            header .navbar-nav .nav-item > .nav-link:focus-visible,
+            header .navbar-nav .dropdown > .btn.dropdown-toggle:hover {
+                background: rgba(216, 27, 96, .07);
+                border-color: rgba(216, 27, 96, .4);
+                color: #d81b60;
+                box-shadow: 0 3px 12px rgba(216, 27, 96, .12);
+            }
+            header .navbar-nav .dropdown > .btn.dropdown-toggle { padding: .35rem 1rem .35rem .45rem; }
+            header .navbar-nav .dropdown > .btn.dropdown-toggle img { border-radius: 50%; }
+            header .navbar-nav .btn-outline-primary { border-radius: 999px; padding: .5rem 1.15rem; }
+            header .navbar-nav .js-language-selector {
+                border-radius: 999px; border-color: rgba(134, 134, 139, .28);
+                padding: .45rem 2rem .45rem 1rem; font-weight: 500; font-size: .95rem;
+            }
+            header .navbar-nav .js-language-selector:hover { border-color: rgba(216, 27, 96, .4); box-shadow: 0 3px 12px rgba(216, 27, 96, .12); }
+        }
         .qc-load-card {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1081;
             width: min(320px, 82vw); padding: 20px; display: flex; flex-direction: column; gap: 12px;
@@ -301,7 +332,7 @@
         var badges = document.querySelectorAll('.qc-cart-count');
         if (!badges.length || typeof API === 'undefined' || !API.guest) return;
         function refreshCartCount() {
-            API.guest.get('cart_get', {}, function (result) {
+            API.guest.get('cart/get', {}, function (result) {
                 var count = result && result.items ? result.items.length : 0;
                 badges.forEach(function (badge) {
                     badge.textContent = count;
