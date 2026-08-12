@@ -48,7 +48,7 @@ class ScrubThirdPartyBranding extends Command
         $products = $this->adminCall($fossbillingUrl, $apiKey, 'product/get_list', ['per_page' => 1000]);
         // The admin API has no category list endpoint; the guest list carries
         // everything we need (id, title, description) without credentials.
-        $categories = $this->guestCall($fossbillingUrl, 'product_category/get_list', ['per_page' => 500]);
+        $categories = $this->guestCall($fossbillingUrl, 'product/category_get_list', ['per_page' => 500]);
 
         $this->info($apply ? 'Mode: APPLY (writing changes via admin API)' : 'Mode: DRY RUN (nothing will be written — use --force to apply)');
         $this->newLine();

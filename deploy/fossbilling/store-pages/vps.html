@@ -157,7 +157,7 @@
     } catch (error) { console.warn('Quizontal VPS page: currency parse failed', error); }
   }, function () { console.warn('Quizontal VPS page: currency fetch failed, showing default-currency prices'); });
 
-  apiGet('product_category/get_list', { per_page: 100 }, function (response) {
+  apiGet('product/category_get_list', { per_page: 100 }, function (response) {
     try {
       var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
       categories = list.filter(function (category) {

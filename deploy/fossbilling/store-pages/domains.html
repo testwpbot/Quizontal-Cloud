@@ -149,7 +149,7 @@
   });
 
   if (STOREFRONT === '') {
-    apiGet('product_category/get_list', { per_page: 100 }, function (response) {
+    apiGet('product/category_get_list', { per_page: 100 }, function (response) {
       var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
       var domainCategory = list.filter(function (c) { return c && c.type === 'domain' && Array.isArray(c.products) && c.products.length; })[0];
       if (domainCategory) domainProductId = domainCategory.products[0].id;
