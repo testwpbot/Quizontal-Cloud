@@ -38,12 +38,19 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     private function renderInvoice(\Box_App $app, string $hash): string
     {
         $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [$hash, $this->di['loggedin_client']->id]);
-        if (!$invoice instanceof \Model_Invoice || !$this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice)) {
-            throw new InformationException('Deposit invoice not found.');
+        if (!$invoice instanceof \Model_Invoice) {
+            throw new InformationException('Invoice not found.');
         }
+        if ($invoice->status !== \Model_Invoice::STATUS_UNPAID) {
+            throw new InformationException('This invoice is already paid or cancelled.');
+        }
+        // Wallet deposits and order invoices both qualify — an order-invoice
+        // receipt means "this bank transfer pays for that exact service".
+        $isDeposit = $this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice);
         return $app->render('mod_quizontalbanktransfer_index', [
             'config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig(),
             'deposit_invoice' => $this->di['mod_service']('Invoice')->toApiArray($invoice, true, $this->di['loggedin_client']),
+            'invoice_kind' => $isDeposit ? 'deposit' : 'service',
         ]);
     }
 
@@ -59,7 +66,12 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             $request->files->get('receipt'),
             ($hash = trim((string) $request->request->get('invoice_hash', ''))) !== '' ? $hash : null
         );
-        return $app->redirect('client/balance?receipt_submitted='.$result['id']);
+        // Deposits land on the wallet page; order payments go back to the
+        // invoice so the customer immediately sees "awaiting verification".
+        $target = !empty($result['is_deposit'])
+            ? 'client/balance?receipt_submitted='.$result['id']
+            : 'invoice/'.$result['invoice_hash'].'?receipt_submitted=1';
+        return $app->redirect($target);
     }
 
     public function get_receipt(\Box_App $app, $id): string

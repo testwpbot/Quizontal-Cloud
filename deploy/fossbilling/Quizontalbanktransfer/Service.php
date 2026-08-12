@@ -72,7 +72,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return array_merge([
             'bank_name' => '', 'account_name' => 'Quizontal Cloud', 'account_number' => '',
             'branch' => '', 'swift_code' => '', 'instructions' => '', 'max_file_mb' => 5,
-            'admin_notification_email' => '', 'wallet_only_checkout' => true,
+            'admin_notification_email' => '', 'wallet_only_checkout' => false,
         ], $config);
     }
 
@@ -183,11 +183,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $this->ensureClientCurrency($client);
 
         $invoiceService = $this->di['mod_service']('Invoice');
+        $isDeposit = true;
         if ($invoiceHash !== null && $invoiceHash !== '') {
             $invoice = $this->di['db']->findOne('Invoice', 'hash = ? AND client_id = ?', [$invoiceHash, $client->id]);
-            if (!$invoice instanceof \Model_Invoice) throw new InformationException('Deposit invoice not found.');
-            if ($invoice->status !== \Model_Invoice::STATUS_UNPAID) throw new InformationException('Only unpaid deposit invoices can receive a receipt.');
-            if (!$invoiceService->isInvoiceTypeDeposit($invoice)) throw new InformationException('The selected invoice is not a wallet deposit invoice.');
+            if (!$invoice instanceof \Model_Invoice) throw new InformationException('Invoice not found.');
+            if ($invoice->status !== \Model_Invoice::STATUS_UNPAID) throw new InformationException('Only unpaid invoices can receive a receipt.');
+            // Wallet deposits and order invoices both qualify: a receipt against an
+            // order invoice means "this transfer pays for that exact service".
+            $isDeposit = $invoiceService->isInvoiceTypeDeposit($invoice);
             if ($this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE invoice_id=?', [(int) $invoice->id])) throw new InformationException('A receipt was already submitted for this invoice.');
             $amount = $invoiceService->getTotalWithTax($invoice);
         } else {
@@ -218,7 +221,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         } catch (\Throwable $exception) {
             error_log('Receipt submission email could not be queued: '.$exception->getMessage());
         }
-        return ['id' => $submissionId, 'invoice_hash' => (string) $invoice->hash];
+        return ['id' => $submissionId, 'invoice_hash' => (string) $invoice->hash, 'is_deposit' => $isDeposit];
     }
 
     public function normalizeEmailSubjects(): bool
@@ -260,6 +263,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'customer' => $customer,
             'review_url' => $this->di['url']->adminLink('quizontalbanktransfer/'.$submissionId),
             'wallet_url' => $this->di['url']->link('client/balance'),
+            'invoice_kind' => $this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice) ? 'deposit' : 'service',
             'send_now' => true,
         ];
         $emailService->sendTemplate(array_merge($common, [
@@ -305,9 +309,18 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'customer' => $customer,
             'available_balance' => $balance,
             'wallet_url' => $this->di['url']->link('client/balance'),
+            'invoice_kind' => $this->submissionInvoiceKind($submission),
             'send_now' => true,
             'throw_exceptions' => false,
         ]);
+    }
+
+
+    private function submissionInvoiceKind(array $submission): string
+    {
+        $invoice = $this->di['db']->load('Invoice', (int) ($submission['invoice_id'] ?? 0));
+        if (!$invoice instanceof \Model_Invoice) return 'deposit';
+        return $this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice) ? 'deposit' : 'service';
     }
 
     public function search(array $data): array
@@ -326,6 +339,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $statement->execute([$id]);
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
         if (!$row) throw new InformationException('Bank transfer submission not found.');
+        // Lets the review screen say exactly what approving will do: credit the
+        // wallet (deposit) or mark the order invoice paid and activate (service).
+        $row['invoice_kind'] = $this->submissionInvoiceKind($row);
         return $row;
     }
 
@@ -338,9 +354,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $duplicate = $this->fetchOne('SELECT id FROM quizontal_bank_transfer WHERE transaction_id=? AND id<>?', [$transactionId, $id]);
         if ($duplicate) throw new InformationException('This bank transaction ID was already used.');
 
-        $invoice = $this->di['db']->getExistingModelById('Invoice', (int) $row['invoice_id'], 'Deposit invoice not found.');
-        if ($invoice->status === \Model_Invoice::STATUS_PAID) throw new InformationException('This deposit invoice is already paid.');
-        if (!$this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice)) throw new InformationException('The linked invoice is not a wallet deposit invoice.');
+        $invoice = $this->di['db']->getExistingModelById('Invoice', (int) $row['invoice_id'], 'Invoice not found.');
+        if ($invoice->status === \Model_Invoice::STATUS_PAID) throw new InformationException('This invoice is already paid.');
+        $isDeposit = $this->di['mod_service']('Invoice')->isInvoiceTypeDeposit($invoice);
 
         $this->updateSubmission( ['status' => 'processing', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
         try {
@@ -350,26 +366,31 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             $invoiceService = $this->di['mod_service']('Invoice');
 
             if (method_exists($invoiceService, 'markAsPaidByAdmin')) {
-                // FOSSBilling 0.8+: admin confirmation no longer credits deposit invoices itself.
-                $client = $this->di['mod_service']('Client')->get(['id' => (int) $row['client_id']]);
-                $description = 'Quizontal Cloud bank transfer '.$transactionId;
-                $existingCredit = $this->fetchOne(
-                    'SELECT id FROM client_balance WHERE client_id=? AND type=? AND rel_id=?',
-                    [(int) $row['client_id'], 'quizontal_bank_transfer', (string) $invoice->id]
-                );
-                if (!$existingCredit) {
-                    $this->di['mod_service']('Client')->addFunds($client, (float) $row['amount'], $description, ['type' => 'quizontal_bank_transfer', 'rel_id' => (int) $invoice->id]);
+                if ($isDeposit) {
+                    // FOSSBilling 0.8+: admin confirmation no longer credits deposit invoices itself.
+                    $client = $this->di['mod_service']('Client')->get(['id' => (int) $row['client_id']]);
+                    $description = 'Quizontal Cloud bank transfer '.$transactionId;
+                    $existingCredit = $this->fetchOne(
+                        'SELECT id FROM client_balance WHERE client_id=? AND type=? AND rel_id=?',
+                        [(int) $row['client_id'], 'quizontal_bank_transfer', (string) $invoice->id]
+                    );
+                    if (!$existingCredit) {
+                        $this->di['mod_service']('Client')->addFunds($client, (float) $row['amount'], $description, ['type' => 'quizontal_bank_transfer', 'rel_id' => (int) $invoice->id]);
+                    }
                 }
                 $invoiceService->markAsPaidByAdmin($invoice, ['gateway_id' => (int) $gateway->id, 'transactionId' => $transactionId, 'execute' => true]);
             } else {
-                // FOSSBilling 0.7: the Custom adapter credits the deposit while processing.
+                // FOSSBilling 0.7: the Custom adapter credits deposits while processing;
+                // service invoices settle directly so the linked orders activate.
                 $this->di['api_admin']->invoice_mark_as_paid(['id' => (int) $invoice->id, 'transactionId' => $transactionId, 'execute' => true]);
             }
 
-            // Apply the newly confirmed wallet credit to any existing unpaid order
-            // or renewal invoices. New checkouts and newly generated renewals already
-            // request credit payment automatically in FossBilling.
-            $invoiceService->doBatchPayWithCredits(['client_id' => (int) $row['client_id']]);
+            if ($isDeposit) {
+                // Apply the newly confirmed wallet credit to any existing unpaid order
+                // or renewal invoices. New checkouts and newly generated renewals already
+                // request credit payment automatically in FossBilling.
+                $invoiceService->doBatchPayWithCredits(['client_id' => (int) $row['client_id']]);
+            }
 
             $this->updateSubmission( ['status' => 'approved', 'transaction_id' => $transactionId, 'admin_note' => trim($note), 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
             try { $this->sendReceiptStatusEmail($id); } catch (\Throwable $emailError) { error_log('Wallet approval email failed: '.$emailError->getMessage()); }
@@ -396,7 +417,8 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     {
         $di = $event->getDi();
         $config = (array) $di['mod_config']('quizontalbanktransfer');
-        if (array_key_exists('wallet_only_checkout', $config) && !$config['wallet_only_checkout']) return;
+        // Off by default since the bank-transfer invoice flow covers direct payments.
+        if (!((bool) ($config['wallet_only_checkout'] ?? false))) return;
         $params = $event->getParameters();
         $client = $di['db']->getExistingModelById('Client', (int) $params['client_id']);
         $cart = $di['db']->getExistingModelById('Cart', (int) $params['cart_id']);

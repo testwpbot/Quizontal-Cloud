@@ -14,6 +14,11 @@
 #qc-cart .qc-item-points li::before{content:"✓";color:#34a853;font-weight:700;margin-right:5px}
 #qc-cart .qc-item-points li strong{color:var(--qc-text)}
 #qc-cart .qc-item-desc{font-size:.8rem;color:#5c636a;margin:5px 0 2px;max-width:56ch}
+#qc-cart .qc-bank{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:#fff}
+#qc-cart .qc-bank-steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;font-size:.85rem;color:#5c636a;counter-reset:qcstep}
+#qc-cart .qc-bank-steps li{display:flex;gap:9px;align-items:flex-start;counter-increment:qcstep}
+#qc-cart .qc-bank-steps li::before{content:counter(qcstep);flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:var(--qc-soft);color:var(--qc-accent);font-weight:700;font-size:.72rem;display:grid;place-items:center;margin-top:1px}
+#qc-cart .qc-bank-steps li strong{color:var(--qc-text)}
 #qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
 #qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
 #qc-checkout-loading{display:none;position:absolute;inset:0;z-index:30;background:rgba(255,255,255,.97);place-items:center;padding:24px}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
@@ -107,18 +112,40 @@ body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:no
         <div class="d-flex align-items-center gap-3">
           <div class="qc-wallet-icon"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Wallet"></div>
           <div class="flex-grow-1"><strong class="d-block fs-5">Quizontal Cloud Wallet</strong><span class="text-muted">Available balance: {{ wallet_balance|money_convert }}</span></div>
-          <span class="badge {{ enough_in_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ enough_in_balance ? 'Ready to pay' : 'Insufficient funds' }}</span>
+          <span class="badge {{ enough_in_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ enough_in_balance ? 'Ready to pay' : 'Not enough for this order' }}</span>
         </div>
-        {% if not enough_in_balance %}<hr><div class="d-flex flex-wrap align-items-center justify-content-between gap-2"><div><strong>Add {{ (amount_due-wallet_balance)|money_convert }}</strong> more to place this order.<div class="small text-muted">Product orders can only be paid from your wallet.</div></div><a class="btn btn-primary" href="{{ 'client/balance'|link }}">Add wallet funds</a></div>{% endif %}
       </div>
 
       {% if enough_in_balance %}
       <form class="api-form" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
-        <div class="alert alert-success">The full order total will be deducted from your Quizontal Cloud Wallet.</div>
+        <div class="alert alert-success">The full order total will be deducted from your Quizontal Cloud Wallet and provisioning starts right away.</div>
         {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
-        <button class="btn btn-primary btn-lg" id="qc-place-order" type="submit">Pay with wallet &amp; place order</button>
+        <button class="btn btn-primary btn-lg qc-place-order" id="qc-place-order" type="submit">Pay with wallet &amp; place order</button>
       </form>
+      {% else %}
+      {# Bank transfer path: checkout without a gateway leaves the order invoice
+         unpaid, onOrderCheckout forwards the customer to that invoice, and the
+         invoice page leads into the guided bank-details + slip-upload flow.
+         Approving the slip marks this exact invoice paid, so the service this
+         money belongs to is never ambiguous. #}
+      <div class="qc-bank mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="qc-wallet-icon"><img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Bank transfer"></div>
+          <div class="flex-grow-1"><strong class="d-block fs-5">Pay by bank transfer</strong><span class="text-muted">Order now and pay from any Sri Lankan bank app or branch.</span></div>
+        </div>
+        <ul class="qc-bank-steps">
+          <li>Place the order now — it is reserved under your account</li>
+          <li>Transfer <strong>{{ amount_due|money_convert }}</strong> with the bank details shown on the next page</li>
+          <li>Upload the transfer slip — we verify it and activate your service automatically</li>
+        </ul>
+        <form class="api-form mt-3" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
+          <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+          {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos-bank" required><label class="form-check-label" for="qc-tos-bank">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
+          <button class="btn btn-primary btn-lg qc-place-order" id="qc-place-order-bank" type="submit">Place order &amp; get payment instructions</button>
+        </form>
+        <div class="small text-muted mt-2">Want instant activation instead? <a href="{{ 'client/balance'|link }}">Add {{ (amount_due-wallet_balance)|money_convert }} to your wallet</a> — wallet orders start provisioning immediately.</div>
+      </div>
       {% endif %}
     </div></div>
   </div>
@@ -130,7 +157,7 @@ $('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).
 $('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim(),message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
 var qcCheckoutDone=false;
 function qcCheckoutBusy(on){var overlay=document.getElementById('qc-checkout-loading');overlay.classList.toggle('show',on);document.body.classList.toggle('qc-busy',on);}
-$('#qc-place-order').on('click',function(){var form=this.closest('form');if(!form||form.checkValidity()){qcCheckoutBusy(true);}});
+$('.qc-place-order').on('click',function(){var form=this.closest('form');if(!form||form.checkValidity()){var text=document.getElementById('qc-checkout-text');if(text){text.textContent=this.id==='qc-place-order-bank'?'Reserving the service under your account and preparing the payment instructions. Please keep this page open.':'Paying from your wallet and preparing cloud resources. Please keep this page open.';}qcCheckoutBusy(true);}});
 /* When the request ends, FOSSBilling removes its injected body-level spinner.
    On failure the checkout unlocks immediately next to the error message; the
    success path is owned by onOrderCheckout and untouched here. */

@@ -17,6 +17,12 @@
 {% set seller = invoice.seller %}
 {% set buyer = invoice.buyer %}
 {% set company = guest.system_company %}
+    {% if request.receipt_submitted %}
+    <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+        <svg class="svg-icon" style="width:22px;height:22px;flex:0 0 22px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg>
+        <div><strong>Payment slip received.</strong> We are verifying your transfer now — once approved, this invoice is marked paid and your service activates automatically. No further action is needed.</div>
+    </div>
+    {% endif %}
     <div class="row mb-3">
         <div class="col-md-12">
             {% if invoice.status == 'unpaid' %}
@@ -31,7 +37,7 @@
                         <input type="hidden" name="hash" value="{{ invoice.hash }}"/>
                         <div class="row g-3">
                             {% for gtw in guest.invoice_gateways %}
-                                {% if invoice.currency in gtw.accepted_currencies and ((is_deposit and gtw.code == 'Custom') or (not is_deposit and gtw.code == 'ClientBalance')) %}
+                                {% if invoice.currency in gtw.accepted_currencies and (gtw.code == 'Custom' or (not is_deposit and gtw.code == 'ClientBalance')) %}
                                     {% set is_wallet = gtw.code == 'ClientBalance' %}
                                     {% set is_bank = gtw.code == 'Custom' %}
                                     {% set gateway_icon = is_wallet ? ('wallet.svg'|mod_asset_url('quizontalbanktransfer')) : (is_bank ? ('bank-transfer.svg'|mod_asset_url('quizontalbanktransfer')) : gtw.logo.logo) %}
@@ -57,6 +63,20 @@
                         </div>
                         <input type="hidden" name="gateway_id" id="gateway_id">
                     </form>
+                    {% if not is_deposit %}
+                    {# Guided bank-transfer path: the module page shows our bank
+                       details and collects the transfer slip against THIS exact
+                       invoice, so admin approval marks this invoice paid and the
+                       linked service activates — never a detached wallet top-up. #}
+                    <div class="d-flex flex-wrap align-items-center gap-3 mt-4 p-3 rounded-3" style="background:#fff1f6;border:1px solid #f3c2d6">
+                        <img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="44" height="44" alt="" style="flex:0 0 44px">
+                        <div class="flex-grow-1" style="min-width:220px">
+                            <strong class="d-block">Paying by bank transfer?</strong>
+                            <span class="small text-muted">View our bank details, transfer {{ invoice.total|money(invoice.currency) }} and upload the slip — this invoice is then marked paid and your service activates automatically. Use <strong>{{ nr }}</strong> as the transfer reference where possible.</span>
+                        </div>
+                        <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">Bank details &amp; slip upload</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}

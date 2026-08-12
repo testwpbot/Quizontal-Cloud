@@ -7,10 +7,10 @@
       <div style="font-size:22px;font-weight:700;margin-bottom:8px">Quizontal Cloud</div>
       {% if recipient_type == 'admin' %}
         <h1 style="font-size:24px;margin:24px 0 8px">New payment slip is uploaded</h1>
-        <p style="color:#6b7280;line-height:1.6;margin-top:0">A customer uploaded a new payment slip for wallet funding. Please verify the payment against the bank account before approving it.</p>
+        <p style="color:#6b7280;line-height:1.6;margin-top:0">A customer uploaded a new payment slip {% if invoice_kind|default('deposit') == 'service' %}for invoice {{ submission.serie_nr }} — approving it will mark that invoice paid and activate the service{% else %}for wallet funding{% endif %}. Please verify the payment against the bank account before approving it.</p>
       {% else %}
         <h1 style="font-size:24px;margin:24px 0 8px">Receipt submitted successfully</h1>
-        <p style="color:#6b7280;line-height:1.6;margin-top:0">Hello {{ customer.first_name }}, we received your bank transfer receipt. Your wallet will be credited after the payment is confirmed in our bank account.</p>
+        <p style="color:#6b7280;line-height:1.6;margin-top:0">Hello {{ customer.first_name }}, we received your bank transfer receipt. {% if invoice_kind|default('deposit') == 'service' %}Your service will be activated right after the payment is confirmed in our bank account.{% else %}Your wallet will be credited after the payment is confirmed in our bank account.{% endif %}</p>
       {% endif %}
       <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px">
         <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Submission</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">#{{ submission.id }}</td></tr>
@@ -23,7 +23,7 @@
         <p><strong>Customer:</strong> {{ customer.first_name }} {{ customer.last_name }} ({{ customer.email }})</p>
         <p style="color:#6b7280;line-height:1.6">Sign in to the Quizontal Cloud administrator area and open <strong>Invoices → Bank Transfer Receipts</strong> to review submission #{{ submission.id }}.</p>
       {% else %}
-        <a href="{{ wallet_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">View wallet status</a>
+        <a href="{{ wallet_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">{% if invoice_kind|default('deposit') == 'service' %}Track my order{% else %}View wallet status{% endif %}</a>
       {% endif %}
       <p style="margin:26px 0 0;color:#8a8f98;font-size:13px;line-height:1.5">This is an automated notification from Quizontal Cloud. A receipt alone does not confirm payment.</p>
     </div>

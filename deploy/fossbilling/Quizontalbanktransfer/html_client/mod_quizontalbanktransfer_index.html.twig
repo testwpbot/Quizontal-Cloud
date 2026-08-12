@@ -7,7 +7,7 @@
 <style>
 .qc-receipt-card{position:relative;overflow:hidden}#qc-receipt-loading{display:none;position:absolute;inset:0;z-index:20;background:rgba(255,255,255,.97);padding:22px}#qc-receipt-loading.show{display:block}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:14px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}.qc-receipt-shimmer.field{height:42px}.qc-receipt-shimmer.notice{height:78px}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
 </style>
-{% if request.submitted %}<div class="alert alert-success">Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.</div>{% endif %}
+{% if request.submitted %}<div class="alert alert-success">{% if invoice_kind|default('deposit') == 'service' %}Receipt submitted — we verify it and activate your service right after approval.{% else %}Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.{% endif %}</div>{% endif %}
 <div class="row g-4">
   <div class="col-lg-6">
     <div class="card h-100">
@@ -29,18 +29,22 @@
   </div>
   <div class="col-lg-6">
     <div class="card h-100 qc-receipt-card">
-      <div class="card-header"><h2 class="card-title">Add funds to your wallet</h2></div>
+      <div class="card-header"><h2 class="card-title">{% if invoice_kind|default('deposit') == 'service' %}{{ 'Upload your payment slip'|trans }}{% else %}{{ 'Add funds to your wallet'|trans }}{% endif %}</h2></div>
       <form id="qc-receipt-form" method="post" action="{{ 'quizontalbanktransfer/submit'|link }}" enctype="multipart/form-data">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
         {% if deposit_invoice %}<input type="hidden" name="invoice_hash" value="{{ deposit_invoice.hash }}">{% endif %}
         <div class="card-body">
           {% if deposit_invoice %}
+            {% if invoice_kind|default('deposit') == 'service' %}
+            <div class="alert alert-info">{{ 'Paying for'|trans }} <strong>{{ 'invoice'|trans }} {{ deposit_invoice.serie_nr }}</strong> {{ '— once verified, your service activates automatically.'|trans }} {{ 'Use the invoice number as the bank reference where possible.'|trans }}</div>
+            {% else %}
             <div class="alert alert-info">Upload the receipt for deposit invoice <strong>{{ deposit_invoice.serie_nr }}</strong>.</div>
+            {% endif %}
             <div class="mb-3"><label class="form-label">Amount ({{ deposit_invoice.currency }})</label><input class="form-control" type="text" value="{{ deposit_invoice.total }}" readonly></div>
           {% else %}
             <div class="mb-3"><label class="form-label">Amount (LKR)</label><input class="form-control" type="number" name="amount" min="1" step="0.01" required></div>
           {% endif %}
-          <div class="mb-3"><label class="form-label">Bank transfer reference</label><input class="form-control" type="text" name="reference" maxlength="191" required></div>
+          <div class="mb-3"><label class="form-label">{{ 'Bank transfer reference'|trans }}</label><input class="form-control" type="text" name="reference" maxlength="191" required>{% if invoice_kind|default('deposit') == 'service' %}<div class="form-text">{{ 'Hint: using the invoice number'|trans }} <strong>{{ deposit_invoice.serie_nr }}</strong> {{ 'as the reference helps us verify faster.'|trans }}</div>{% endif %}</div>
           <div class="mb-3"><label class="form-label">Payment receipt</label><input class="form-control" type="file" name="receipt" accept="image/jpeg,image/png,application/pdf" required><small class="form-hint">JPG, PNG, or PDF. Maximum {{ config.max_file_mb }} MB.</small></div>
           <div class="alert alert-warning mb-0">A receipt does not guarantee approval. Funds are credited only after the payment appears in our bank account.</div>
         </div>
