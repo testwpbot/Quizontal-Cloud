@@ -38,8 +38,8 @@
     /* DNS records turn into stacked cards on mobile — label on the left, value full width */
     @media (max-width:767.98px){
         #qc-dns-table thead{display:none}
-        #qc-dns-table tr{display:block;border:1px solid #e9ecf2;border-radius:14px;margin:0 0 12px;padding:10px 14px;background:#fff;box-shadow:0 1px 2px rgba(25,28,36,.05)}
-        #qc-dns-table td{display:flex;justify-content:space-between;align-items:center;gap:14px;border:0;padding:.35rem 0}
+        #qc-dns-table tr{display:block;border:1px solid #e9ecf2;border-radius:14px;margin:0 0 14px;padding:14px 16px;background:#fff;box-shadow:0 2px 6px rgba(25,28,36,.06)}
+        #qc-dns-table td{display:flex;justify-content:space-between;align-items:center;gap:14px;border:0;padding:.55rem 0}
         #qc-dns-table td::before{content:attr(data-label);font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#96a0b5;flex:none}
         #qc-dns-table td.qc-dns-actions{justify-content:flex-end;gap:8px;margin-top:.3rem;border-top:1px dashed #edf0f5;padding-top:.6rem}
         #qc-dns-table td.qc-dns-actions::before,#qc-dns-table td.qc-dns-plain::before{display:none}
@@ -49,7 +49,36 @@
         #qc-dns-table tr.qc-dns-edit-row .form-control,#qc-dns-table tr.qc-dns-edit-row .qc-select>select{width:100%}
         #qc-dns-table tr.qc-dns-edit-row td.qc-dns-actions{display:flex;padding-bottom:0}
         .qc-dns-content{max-width:100%}
+        #qc-dns-table td::before{color:#525d73;font-size:.72rem}
+        #qc-dns-table td>code,#qc-dns-table td>strong,#qc-dns-table td{font-size:.92rem}
     }
+    /* crisp, high-contrast text inside the DNS manager */
+    #qc-dns-table{color:#161a23}
+    #qc-dns-table td{color:#161a23}
+    #qc-dns-table thead th{font-size:.72rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#525d73;border-bottom:2px solid #edf0f5;padding:.7rem .6rem}
+    #qc-dns-table tbody tr{border-bottom:1px solid #f1f3f8}
+    #qc-dns-table strong{color:#161a23}
+    #qc-dns-table code{color:#161a23;background:#f4f6fa;padding:.15em .5em;border-radius:6px}
+    #dns-tab-pane .form-label{font-size:.74rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#525d73;margin-bottom:.4rem}
+    #qc-dns-add .form-control,.qc-dns-edit-row .form-control{color:#161a23;font-weight:500;border-radius:10px;border:1.5px solid #dde1e9}
+    #qc-dns-add .form-control:focus,.qc-dns-edit-row .form-control:focus{border-color:#e31c64;box-shadow:0 0 0 .2rem rgba(227,28,100,.12)}
+    #qc-dns-add{margin-top:.5rem}
+    /* custom dropdown component — native select menus can't be styled on mobile */
+    .qc-dd{position:relative}
+    .qc-dd-btn{display:flex;align-items:center;gap:9px;width:100%;background:#fff;border:1.5px solid #dde1e9;border-radius:10px;padding:.5rem .75rem;min-height:38px;font:inherit;color:#161a23;cursor:pointer;text-align:left}
+    .qc-dd-btn:hover{border-color:#c3cbdb}
+    .qc-dd-btn:focus,.qc-dd.open .qc-dd-btn{border-color:#e31c64;box-shadow:0 0 0 .2rem rgba(227,28,100,.12);outline:none}
+    .qc-dd-chev{margin-left:auto;flex:none;transition:transform .15s ease}
+    .qc-dd.open .qc-dd-chev{transform:rotate(180deg)}
+    .qc-dd-selected{display:flex;align-items:center;gap:9px;min-width:0}
+    .qc-dd-desc{font-size:.82rem;color:#5b6b83;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .qc-dd-menu{display:none;position:absolute;z-index:80;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #e6e9f0;border-radius:12px;box-shadow:0 16px 36px rgba(23,26,38,.16);padding:5px;max-height:264px;overflow-y:auto}
+    .qc-dd.up .qc-dd-menu{top:auto;bottom:calc(100% + 6px)}
+    .qc-dd.open .qc-dd-menu{display:block}
+    .qc-dd-item{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:9px;padding:.55rem .65rem;text-align:left;font:inherit;color:#161a23;cursor:pointer}
+    .qc-dd-item:hover,.qc-dd-item:focus{background:#fdf2f7;outline:none}
+    .qc-dd-item.sel{background:#fde8f0}
+    .qc-dd-check{margin-left:auto;flex:none}
     </style>
 
     <div class="card mb-4">
@@ -242,7 +271,7 @@
                         <thead>
                             <tr>
                                 <th style="width:86px">{{ 'Type'|trans }}</th>
-                                <th style="width:150px">{{ 'Name'|trans }}</th>
+                                <th style="width:150px">{{ 'Host'|trans }}</th>
                                 <th>{{ 'Content'|trans }}</th>
                                 <th style="width:88px">{{ 'TTL'|trans }}</th>
                                 <th style="width:72px">{{ 'Priority'|trans }}</th>
@@ -253,14 +282,21 @@
                     </table>
                 </div>
                 <h6 class="mt-4 mb-2">{{ 'Add a new record'|trans }}</h6>
-                <form id="qc-dns-add" class="row g-2 align-items-end">
+                <form id="qc-dns-add" class="row g-3 align-items-end">
                     <div class="col-12 col-sm-6 col-md-2">
                         <label class="form-label" for="qc-dns-add-type">{{ 'Type'|trans }}</label>
-                        <div class="qc-select"><select class="form-select" id="qc-dns-add-type"></select></div>
+                        <div class="qc-dd" data-qc-dd id="qc-dns-add-type-dd">
+                            <input type="hidden" id="qc-dns-add-type" value="A">
+                            <button type="button" class="qc-dd-btn" data-qc-dd-btn aria-haspopup="listbox" aria-expanded="false">
+                                <span class="qc-dd-selected" data-qc-dd-selected></span>
+                                <svg class="qc-dd-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e31c64" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="qc-dd-menu" data-qc-dd-menu role="listbox"></div>
+                        </div>
                     </div>
                     <div class="col-12 col-sm-6 col-md-2">
-                        <label class="form-label" for="qc-dns-add-name">{{ 'Name'|trans }}</label>
-                        <input class="form-control" id="qc-dns-add-name" placeholder="@ or www" autocomplete="off">
+                        <label class="form-label" for="qc-dns-add-name">{{ 'Host'|trans }}</label>
+                        <input class="form-control" id="qc-dns-add-name" placeholder="@ or www" autocomplete="off" title="{{ 'The host this record applies to — @ for the root domain'|trans }}">
                     </div>
                     <div class="col-12 col-md">
                         <label class="form-label" for="qc-dns-add-content">{{ 'Content'|trans }}</label>
@@ -482,6 +518,18 @@
             var ORDER_ID = {{ order.id }};
             var TOKEN = '{{ CSRFToken }}';
             var TYPES = ['A', 'AAAA', 'CNAME', 'ALIAS', 'MX', 'TXT', 'SRV', 'CAA', 'TLSA', 'NAPTR'];
+            var TYPE_INFO = {
+                A: 'IPv4 address — point to your server',
+                AAAA: 'IPv6 address',
+                CNAME: 'Alias to another hostname',
+                ALIAS: 'Alias for the root domain',
+                MX: 'Mail server',
+                TXT: 'Verification / SPF / text',
+                SRV: 'Service location',
+                CAA: 'Who may issue SSL certificates',
+                TLSA: 'TLS certificate pinning',
+                NAPTR: 'Name authority pointer'
+            };
             var PLACEHOLDERS = {
                 A: '192.0.2.10',
                 AAAA: '2001:db8::10',
@@ -503,13 +551,9 @@
             var reloadBtn = document.getElementById('qc-dns-reload');
             var editId = null;
             var lastRows = [];
-            if (!tbody || !addForm) return;
+            if (!tbody || !addForm || !addType) return;
 
-            TYPES.forEach(function (t) {
-                var o = document.createElement('option');
-                o.value = t; o.textContent = t;
-                addType.appendChild(o);
-            });
+            mountTypeDropdown(document.getElementById('qc-dns-add-type-dd'), 'A');
 
             function esc(s) {
                 return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -543,13 +587,97 @@
                 });
             }
 
-            function typeSelect(current) {
-                var html = '<div class="qc-select"><select class="form-select form-select-sm" id="qc-dns-ed-type">';
-                TYPES.forEach(function (t) {
-                    html += '<option value="' + t + '"' + (t === current ? ' selected' : '') + '>' + t + '</option>';
-                });
-                return html + '</select></div>';
+            var DD_CHEV = '<svg class="qc-dd-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e31c64" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+            var DD_CHECK = '<svg class="qc-dd-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e31c64" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+
+            function ddSelectedHtml(v) {
+                return '<span class="qc-type ' + typeClass(v) + '">' + v + '</span><span class="qc-dd-desc">' + esc(TYPE_INFO[v] || '') + '</span>';
             }
+
+            function ddMenuItem(t, current) {
+                return '<button type="button" class="qc-dd-item' + (t === current ? ' sel' : '') + '" data-qc-dd-item data-value="' + t + '" role="option" aria-selected="' + (t === current) + '">' +
+                    '<span class="qc-type ' + typeClass(t) + '">' + t + '</span>' +
+                    '<span class="qc-dd-desc">' + esc(TYPE_INFO[t] || '') + '</span>' +
+                    '<span style="' + (t === current ? '' : 'visibility:hidden') + '" class="qc-dd-check">' + DD_CHECK + '</span>' +
+                    '</button>';
+            }
+
+            function mountTypeDropdown(container, current) {
+                if (!container) return;
+                var menu = container.querySelector('[data-qc-dd-menu]');
+                var selected = container.querySelector('[data-qc-dd-selected]');
+                var hidden = container.querySelector('input[type="hidden"]');
+                if (menu) menu.innerHTML = TYPES.map(function (t) { return ddMenuItem(t, current); }).join('');
+                if (selected) selected.innerHTML = ddSelectedHtml(current);
+                if (hidden) hidden.value = current;
+            }
+
+            function typeSelect(current) {
+                return '<div class="qc-dd" data-qc-dd>' +
+                    '<input type="hidden" id="qc-dns-ed-type" value="' + current + '">' +
+                    '<button type="button" class="qc-dd-btn" data-qc-dd-btn aria-haspopup="listbox" aria-expanded="false">' +
+                        '<span class="qc-dd-selected" data-qc-dd-selected>' + ddSelectedHtml(current) + '</span>' + DD_CHEV +
+                    '</button>' +
+                    '<div class="qc-dd-menu" data-qc-dd-menu role="listbox">' +
+                        TYPES.map(function (t) { return ddMenuItem(t, current); }).join('') +
+                    '</div></div>';
+            }
+
+            function closeAllDropdowns(except) {
+                document.querySelectorAll('[data-qc-dd].open').forEach(function (c) {
+                    if (c === except) return;
+                    c.classList.remove('open');
+                    var b = c.querySelector('[data-qc-dd-btn]');
+                    if (b) b.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            // One delegated listener drives every custom dropdown (incl. ones
+            // rendered later inside the record table).
+            document.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest('[data-qc-dd-btn]') : null;
+                if (btn) {
+                    var container = btn.closest('[data-qc-dd]');
+                    var willOpen = !container.classList.contains('open');
+                    closeAllDropdowns(container);
+                    container.classList.toggle('open', willOpen);
+                    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) {
+                        var rect = btn.getBoundingClientRect();
+                        container.classList.toggle('up', (window.innerHeight - rect.bottom) < 280);
+                    }
+                    e.preventDefault();
+                    return;
+                }
+                var item = e.target && e.target.closest ? e.target.closest('[data-qc-dd-item]') : null;
+                if (item) {
+                    var dd = item.closest('[data-qc-dd]');
+                    var value = item.getAttribute('data-value');
+                    var hidden = dd.querySelector('input[type="hidden"]');
+                    if (hidden) {
+                        hidden.value = value;
+                        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    var selectedBox = dd.querySelector('[data-qc-dd-selected]');
+                    if (selectedBox) selectedBox.innerHTML = ddSelectedHtml(value);
+                    dd.querySelectorAll('[data-qc-dd-item]').forEach(function (it) {
+                        var on = it === item;
+                        it.classList.toggle('sel', on);
+                        it.setAttribute('aria-selected', on ? 'true' : 'false');
+                        var check = it.querySelector('.qc-dd-check');
+                        if (check) check.style.visibility = on ? 'visible' : 'hidden';
+                    });
+                    dd.classList.remove('open');
+                    var btnBack = dd.querySelector('[data-qc-dd-btn]');
+                    if (btnBack) btnBack.setAttribute('aria-expanded', 'false');
+                    e.preventDefault();
+                    return;
+                }
+                closeAllDropdowns(null);
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeAllDropdowns(null);
+            });
 
             function typeClass(t) {
                 if (t === 'A' || t === 'AAAA') return 'qc-type-address';
@@ -574,10 +702,10 @@
                     if (editId === r.id) {
                         return '<tr class="qc-dns-edit-row">' +
                             '<td data-label="{{ 'Type'|trans }}">' + typeSelect(r.type) + '</td>' +
-                            '<td data-label="{{ 'Name'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-name" value="' + esc(r.name) + '" autocomplete="off"></td>' +
+                            '<td data-label="{{ 'Host'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-name" value="' + esc(r.name) + '" autocomplete="off"></td>' +
                             '<td data-label="{{ 'Content'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-content" value="' + esc(r.content) + '" autocomplete="off"></td>' +
                             '<td data-label="{{ 'TTL'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-ttl" type="number" min="600" step="60" value="' + esc(r.ttl) + '"></td>' +
-                            '<td data-label="{{ 'Priority'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-prio" type="number" min="0" value="' + esc(r.prio) + '"' + (prioFor(r.type) ? '' : ' disabled') + '></td>' +
+                            '<td data-label="{{ 'Priority'|trans }}"><input class="form-control form-control-sm" id="qc-dns-ed-prio" type="number" min="0"' + (prioFor(r.type) ? ' value="' + esc(r.prio) + '"' : ' value="" disabled placeholder="Not used"') + '></td>' +
                             '<td class="text-end text-nowrap qc-dns-actions">' +
                                 '<button type="button" class="btn btn-primary btn-sm" data-dns-action="save" data-id="' + esc(r.id) + '">{{ 'Save'|trans }}</button> ' +
                                 '<button type="button" class="btn btn-outline-secondary btn-sm" data-dns-action="cancel">{{ 'Cancel'|trans }}</button>' +
@@ -585,7 +713,7 @@
                     }
                     return '<tr>' +
                         '<td data-label="{{ 'Type'|trans }}"><span class="qc-type ' + typeClass(r.type) + '">' + esc(r.type) + '</span></td>' +
-                        '<td data-label="{{ 'Name'|trans }}"><strong>' + esc(shownName(r.name)) + '</strong></td>' +
+                        '<td data-label="{{ 'Host'|trans }}"><strong>' + esc(shownName(r.name)) + '</strong></td>' +
                         '<td data-label="{{ 'Content'|trans }}"><code class="qc-dns-content">' + esc(r.content) + '</code></td>' +
                         '<td data-label="{{ 'TTL'|trans }}">' + esc(r.ttl) + '</td>' +
                         '<td data-label="{{ 'Priority'|trans }}">' + (prioFor(r.type) ? esc(r.prio) : '\u2014') + '</td>' +
