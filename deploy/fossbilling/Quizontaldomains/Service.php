@@ -66,7 +66,8 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     /**
      * Theme probe: fail-soft capability check used to decide whether the
-     * manage page renders the DNS tab at all.
+     * manage page renders the DNS tab at all. Every refusal reason is logged
+     * so a hidden tab is never a silent mystery.
      */
     public function supported(int $clientId, int $orderId): array
     {
@@ -79,7 +80,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 'domain' => $fqdn,
                 'registrar_nameservers' => $this->usesRegistrarNameservers($service),
             ];
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
+            if (isset($this->di['logger'])) {
+                $this->di['logger']->info('Quizontaldomains: DNS tab hidden (order #%d, client #%d): %s', $orderId, $clientId, $exception->getMessage());
+            }
+
             return ['supported' => false];
         }
     }
@@ -168,9 +173,20 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     // Internals
     // ---------------------------------------------------------------------
 
+    /**
+     * Resolve the registrar adapter for the domain's extension. The TLD carries
+     * the registrar link; when the stored link is missing or stale (e.g. the
+     * price was created from the products screen before a registrar linkage
+     * existed), fall back to the live TLD record for the service extension.
+     */
     private function adapterFor(\Model_ServiceDomain $service, \Model_ClientOrder $order)
     {
-        $tldRegistrar = $this->di['db']->load('TldRegistrar', (int) $service->tld_registrar_id);
+        $tldRegistrarId = (int) ($service->tld_registrar_id ?? 0);
+        if ($tldRegistrarId <= 0) {
+            $tld = $this->di['db']->findOne('Tld', 'tld = ?', [(string) $service->tld]);
+            $tldRegistrarId = (int) ($tld->tld_registrar_id ?? 0);
+        }
+        $tldRegistrar = $tldRegistrarId > 0 ? $this->di['db']->load('TldRegistrar', $tldRegistrarId) : null;
         if (!$tldRegistrar instanceof \Model_TldRegistrar) {
             throw new InformationException('No registrar is configured for this domain extension.');
         }
