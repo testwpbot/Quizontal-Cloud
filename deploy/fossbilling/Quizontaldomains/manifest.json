@@ -2,9 +2,9 @@
   "id": "quizontaldomains",
   "type": "mod",
   "name": "Quizontal Cloud Domain Manager",
-  "description": "Customer self-service DNS record management for store domains, synced live to the registrar adapter (A, AAAA, CNAME, ALIAS, MX, TXT, SRV, CAA).",
+  "description": "Customer self-service DNS record management for store domains, synced live to the registrar adapter (A, AAAA, CNAME, ALIAS, MX, TXT, SRV, CAA). Includes the branding engine: parked-page sweep, branded welcome records and nameserver sync on activation.",
   "icon_url": "icon.svg",
   "author": "Quizontal Cloud",
   "license": "Proprietary",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

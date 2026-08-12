@@ -37,6 +37,25 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     private const MAX_TTL = 86400;
 
     /**
+     * Welcome-page target shown on freshly sold domains — a host on the
+     * store's own network, so a customer never meets the upstream supplier.
+     * Overridable without code changes via the extension config key parked_ip.
+     */
+    private const DEFAULT_PARKED_IP = '216.219.95.93';
+
+    /** Upstream parking IPs — the ONLY whitelisted fingerprints the sweeper may remove. */
+    private const PARKING_IPS = ['44.227.65.245', '44.227.76.166'];
+
+    /** Hostname marker of the upstream's parking infrastructure (pixie, fwd, spf...). */
+    private const PARKING_HOSTMARKER = 'porkbun.com';
+
+    /** Record types the sweeper may touch. NS is deliberately absent — untouchable. */
+    private const SWEEPABLE_TYPES = ['A', 'AAAA', 'ALIAS', 'CNAME', 'MX', 'TXT', 'URL', 'FWD', 'REDIRECT'];
+
+    /** Minimum seconds between automatic branding passes for one order. */
+    private const AUTOBRAND_INTERVAL = 3600;
+
+    /**
      * Load the order, prove the logged-in client owns it, and resolve the
      * domain service record plus its FQDN.
      *
@@ -76,6 +95,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         try {
             [$order, $service, $fqdn] = $this->findOwnedDomainService($clientId, $orderId);
             $this->adapterFor($service, $order);
+            // Self-heals branding + nameserver fields for anything the
+            // activation pass could not reach (throttled per order).
+            $this->maybeAutoBrand($order, $service);
 
             return [
                 'supported' => true,
@@ -97,9 +119,17 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $adapter = $this->adapterFor($service, $order);
         $result = $this->dnsGuard(fn () => $adapter->dnsListRecords($fqdn));
 
+        // Nameserver rows stay out of the zone view: they belong to the
+        // Nameservers tab, and keeping upstream hostnames out of here keeps
+        // the customer experience brand-clean.
+        $records = array_values(array_filter(
+            $result['records'] ?? [],
+            static fn (array $row): bool => strtoupper((string) ($row['type'] ?? '')) !== 'NS'
+        ));
+
         return [
             'domain' => $fqdn,
-            'records' => $result['records'],
+            'records' => $records,
             'cloudflare_proxy' => (bool) ($result['cloudflare'] ?? false),
             'registrar_nameservers' => $this->usesRegistrarNameservers($service),
             'types' => self::RECORD_TYPES,
@@ -175,6 +205,119 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     }
 
     // ---------------------------------------------------------------------
+    // Branding engine: parked-page replacement + upstream fingerprint sweep
+    //
+    // Runs three times in a domain's life: right after order activation
+    // (event hook below), throttled on manage-page views (self-heals anything
+    // the activation pass could not reach, like a domain that was not opted
+    // into the registrar API yet), and on demand from the staff API.
+    // ---------------------------------------------------------------------
+
+    /**
+     * The Hook module wires any public Service method typed on Box_Event as a
+     * listener when extensions activate / hooks reconnect — so this fires the
+     * moment a domain order activates (checkout auto-activation, staff
+     * re-activate, adoption). Fail-soft by design: activation of a paid order
+     * must never break because of a cosmetic branding step.
+     */
+    public static function onAfterAdminOrderActivate(\Box_Event $event): void
+    {
+        $orderId = (int) ($event->getParameters()['id'] ?? 0);
+        if ($orderId <= 0) {
+            return;
+        }
+        $di = $event->getDi();
+        try {
+            $order = $di['db']->load('ClientOrder', $orderId);
+            if (!$order instanceof \Model_ClientOrder) {
+                return;
+            }
+            if (!in_array((string) $order->service_type, ['domain', 'servicedomain'], true)) {
+                return;
+            }
+            $di['mod_service']('quizontaldomains')->applyBrandingToService($order, 'activation');
+        } catch (\Throwable $exception) {
+            if (isset($di['logger'])) {
+                $di['logger']->err('Quizontaldomains: post-activation branding skipped (order #%d): %s', $orderId, $exception->getMessage());
+            }
+        }
+    }
+
+    /**
+     * One idempotent pass that makes a domain brand-clean:
+     *   1. sync the registrar's current nameservers into ns1..ns4 (fills the
+     *      Nameservers tab — after a manual adoption those fields can sit empty);
+     *   2. sweep the upstream parking records (whitelisted fingerprints only);
+     *   3. plant our own A records pointing at the Quizontal welcome page —
+     *      but only when no record the sweeper rejects already claims the name.
+     *
+     * Every external step is individually wrapped: a partial failure is
+     * logged and retried on the next pass, never fatal to the caller.
+     */
+    public function applyBrandingToService(\Model_ClientOrder $order, string $trigger = 'manual'): array
+    {
+        $summary = ['trigger' => $trigger, 'domain' => '', 'ns_synced' => false, 'swept' => 0, 'branded' => false, 'deferred' => false];
+
+        $service = $this->di['mod_service']('Order')->getOrderService($order);
+        if (!$service instanceof \Model_ServiceDomain) {
+            throw new InformationException('Domain service details were not found.');
+        }
+        $fqdn = strtolower(trim((string) $service->sld) . trim((string) $service->tld));
+        $summary['domain'] = $fqdn;
+        $adapter = $this->adapterFor($service, $order);
+
+        try {
+            $summary['ns_synced'] = $this->syncNameservers($service, $adapter);
+        } catch (\Throwable $exception) {
+            if (isset($this->di['logger'])) {
+                $this->di['logger']->info('Quizontaldomains: nameserver sync deferred for %s: %s', $fqdn, $exception->getMessage());
+            }
+        }
+
+        try {
+            $records = $adapter->dnsListRecords($fqdn)['records'] ?? [];
+        } catch (\Throwable $exception) {
+            // Zone API not usable yet (e.g. the registrar's per-domain API
+            // opt-in is still pending) — the throttled auto pass retries it.
+            $summary['deferred'] = true;
+            if (isset($this->di['logger'])) {
+                $this->di['logger']->info('Quizontaldomains: branding deferred for %s: %s', $fqdn, $exception->getMessage());
+            }
+
+            return $summary;
+        }
+
+        foreach ($records as $record) {
+            if (!$this->isParkingFingerprint($record)) {
+                continue;
+            }
+            try {
+                $adapter->dnsDeleteRecord($fqdn, (string) $record['id']);
+                $summary['swept']++;
+            } catch (\Throwable $exception) {
+                if (isset($this->di['logger'])) {
+                    $this->di['logger']->err('Quizontaldomains: could not sweep parking record #%s on %s: %s', $record['id'] ?? '?', $fqdn, $exception->getMessage());
+                }
+            }
+        }
+
+        $summary['branded'] = $this->ensureBrandedDefaults($adapter, $fqdn, $records);
+
+        if (isset($this->di['logger'])) {
+            $this->di['logger']->info(
+                'Quizontaldomains: branding pass (%s) for %s — nameservers %s, %d parking record(s) swept, welcome records %s.',
+                $trigger,
+                $fqdn,
+                $summary['ns_synced'] ? 'synced' : 'unchanged',
+                $summary['swept'],
+                $summary['branded'] ? 'planted' : 'already in place'
+            );
+        }
+
+        return $summary;
+    }
+
+    // ---------------------------------------------------------------------
     // Internals
     // ---------------------------------------------------------------------
 
@@ -203,20 +346,176 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $adapter;
     }
 
-    /** Records only resolve publicly while the zone is hosted on registrar DNS. */
-    private function usesRegistrarNameservers(\Model_ServiceDomain $service): bool
+    /**
+     * Tri-state: TRUE = every stored nameserver is the registrar's DNS (zone
+     * records here are live), FALSE = at least one custom nameserver (zone
+     * records are not live — worth a banner), NULL = nothing stored yet
+     * (fresh adoption — don't warn either way).
+     */
+    private function usesRegistrarNameservers(\Model_ServiceDomain $service): ?bool
     {
         $ns = [];
         foreach (['ns1', 'ns2', 'ns3', 'ns4'] as $field) {
             $value = strtolower(trim((string) ($service->{$field} ?? '')));
             if ($value !== '') $ns[] = $value;
         }
-        if ($ns === []) return false;
+        if ($ns === []) return null;
         foreach ($ns as $host) {
             if (!str_ends_with($host, '.ns.porkbun.com')) return false;
         }
 
         return true;
+    }
+
+    /**
+     * Self-healing branding pass tied to the manage-page probe, throttled per
+     * order through an extension_meta marker. Covers everything the activation
+     * hook could not finish (most commonly: the domain had no registrar API
+     * opt-in yet). The marker stores the ATTEMPT time, so even a failing
+     * upstream can never turn a page render into a retry loop.
+     */
+    private function maybeAutoBrand(\Model_ClientOrder $order, \Model_ServiceDomain $service): void
+    {
+        try {
+            $stamp = $this->di['db']->findOne(
+                'extension_meta',
+                " extension = 'quizontaldomains' AND rel_type = 'order' AND rel_id = ? AND meta_key = 'branding_last_run' ",
+                [(string) $order->id]
+            );
+            $lastRun = $stamp ? strtotime((string) $stamp->meta_value) : 0;
+            if ($lastRun > 0 && (time() - $lastRun) < self::AUTOBRAND_INTERVAL) {
+                return;
+            }
+
+            // Attempt-time marker FIRST: even a permanently failing upstream
+            // backs off for an hour instead of retrying on every page view.
+            if (!$stamp) {
+                $stamp = $this->di['db']->dispense('extension_meta');
+                $stamp->extension = 'quizontaldomains';
+                $stamp->rel_type = 'order';
+                $stamp->rel_id = (string) $order->id;
+                $stamp->meta_key = 'branding_last_run';
+                $stamp->created_at = date('Y-m-d H:i:s');
+            }
+            $stamp->meta_value = date('Y-m-d H:i:s');
+            $stamp->updated_at = date('Y-m-d H:i:s');
+            $this->di['db']->store($stamp);
+
+            $this->applyBrandingToService($order, 'auto');
+        } catch (\Throwable $exception) {
+            if (isset($this->di['logger'])) {
+                $this->di['logger']->info('Quizontaldomains: auto branding skipped (order #%d): %s', $order->id, $exception->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Copy the registrar's current nameservers into the service fields so the
+     * Nameservers tab and the lock-state banner quote reality. Only fills
+     * empty fields — a customer's own nameserver edit is never overwritten.
+     */
+    private function syncNameservers(\Model_ServiceDomain $service, $adapter): bool
+    {
+        $wrapper = new \Registrar_Domain();
+        $wrapper->setSld((string) $service->sld);
+        $wrapper->setTld((string) $service->tld);
+        $details = $adapter->getDomainDetails($wrapper);
+
+        $changed = false;
+        foreach (['ns1' => 'getNs1', 'ns2' => 'getNs2', 'ns3' => 'getNs3', 'ns4' => 'getNs4'] as $field => $getter) {
+            if (trim((string) ($service->{$field} ?? '')) !== '') {
+                continue;
+            }
+            $fresh = strtolower(trim((string) ($details->{$getter}() ?? '')));
+            if ($fresh !== '') {
+                $service->{$field} = $fresh;
+                $changed = true;
+            }
+        }
+        if ($changed) {
+            $this->di['db']->store($service);
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Plant welcome-page A records for the root and the wildcard — unless a
+     * record the sweeps rejects already claims that name. Works off the
+     * pre-sweep listing, so the just-deleted parking rows can never fake
+     * "already exists" and block planting.
+     */
+    private function ensureBrandedDefaults($adapter, string $fqdn, array $records): bool
+    {
+        $ip = $this->parkedIp();
+        $planted = false;
+        foreach (['', '*'] as $name) {
+            $exists = false;
+            foreach ($records as $record) {
+                if ((string) ($record['name'] ?? '') !== $name) {
+                    continue;
+                }
+                if (!in_array(strtoupper((string) ($record['type'] ?? '')), ['A', 'AAAA', 'ALIAS', 'CNAME', 'URL'], true)) {
+                    continue;
+                }
+                if ($this->isParkingFingerprint($record)) {
+                    continue; // being swept this very pass
+                }
+                $exists = true;
+                break;
+            }
+            if ($exists) {
+                continue;
+            }
+            try {
+                $adapter->dnsCreateRecord($fqdn, ['name' => $name, 'type' => 'A', 'content' => $ip, 'ttl' => self::MIN_TTL, 'prio' => 0]);
+                $planted = true;
+            } catch (\Throwable $exception) {
+                if (isset($this->di['logger'])) {
+                    $this->di['logger']->err('Quizontaldomains: could not plant the welcome record on %s: %s', $fqdn, $exception->getMessage());
+                }
+            }
+        }
+
+        return $planted;
+    }
+
+    /**
+     * Whitelist match on the upstream's default parking assets: their parking
+     * IPs and any answer pointing at their own hostnames. Anything that does
+     * not match is considered customer content and is left untouched — the
+     * sweep can therefore never eat a real record.
+     */
+    private function isParkingFingerprint(array $record): bool
+    {
+        if (!in_array(strtoupper((string) ($record['type'] ?? '')), self::SWEEPABLE_TYPES, true)) {
+            return false; // NS and anything unknown are untouchable
+        }
+        $content = strtolower(rtrim(trim((string) ($record['content'] ?? '')), '.'));
+        if (in_array($content, self::PARKING_IPS, true)) {
+            return true;
+        }
+
+        return $content !== '' && str_contains($content, self::PARKING_HOSTMARKER);
+    }
+
+    /**
+     * Welcome-page target IP. Defaults to the store network; can be moved
+     * later from the extension settings (parked_ip) without a code change.
+     */
+    private function parkedIp(): string
+    {
+        try {
+            $config = $this->di['mod']('quizontaldomains')->getConfig();
+            $ip = trim((string) ($config['parked_ip'] ?? ''));
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                return $ip;
+            }
+        } catch (\Throwable) {
+            // no stored config — the default carries us
+        }
+
+        return self::DEFAULT_PARKED_IP;
     }
 
     /**

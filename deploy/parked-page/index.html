@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coming Soon</title>
+<meta name="robots" content="noindex">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:#12091f;color:#f5f0ff;
+    background-image:radial-gradient(900px 500px at 20% -10%,rgba(227,28,100,.35),transparent 60%),
+                     radial-gradient(700px 420px at 110% 110%,rgba(124,58,237,.28),transparent 60%);
+  }
+  .card{max-width:560px;width:calc(100% - 48px);text-align:center;padding:56px 40px;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+        border-radius:24px;backdrop-filter:blur(6px)}
+  .logo{display:flex;align-items:center;justify-content:center;gap:10px;
+        font-size:1.05rem;font-weight:700;letter-spacing:.4px;margin-bottom:34px}
+  .logo .accent{color:#ff4d8d}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:2px;
+         text-transform:uppercase;color:#ffb3d1;background:rgba(227,28,100,.16);
+         border:1px solid rgba(255,77,141,.4);border-radius:999px;
+         padding:7px 16px;margin-bottom:20px}
+  .domain{font-size:1.65rem;font-weight:800;word-break:break-all;margin-bottom:14px}
+  h1{font-size:1.9rem;font-weight:800;line-height:1.25;margin-bottom:14px}
+  p.lead{font-size:1rem;line-height:1.6;color:#cdbfe6;margin-bottom:26px}
+  footer{margin-top:38px;font-size:.76rem;color:#8f7fb3}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6.5 19a4.5 4.5 0 0 1-.42-8.98 6 6 0 0 1 11.7-1.84A4.5 4.5 0 0 1 17.5 19h-11Z"
+              fill="url(#g)"/>
+        <defs><linearGradient id="g" x1="4" y1="4" x2="20" y2="20">
+          <stop stop-color="#e31c64"/><stop offset="1" stop-color="#a855f7"/>
+        </linearGradient></defs>
+      </svg>
+      Quizontal&nbsp;<span class="accent">Cloud</span>
+    </div>
+
+    <div class="badge">Domain secured</div>
+    <div class="domain" id="domain">This domain</div>
+    <h1>Something great is coming.</h1>
+    <p class="lead">
+      This domain was registered at <strong>Quizontal&nbsp;Cloud</strong> and its owner
+      is setting things up right now. Check back soon.
+    </p>
+    <p class="lead" style="font-size:.85rem;color:#b7a6d6;margin-bottom:0">
+      Own this domain? Point it to your website from your Quizontal&nbsp;Cloud
+      client area — DNS &amp; Nameservers are one click away.
+    </p>
+    <footer>Registered &amp; managed by Quizontal Cloud</footer>
+  </div>
+
+<script>
+  (function () {
+    var host = window.location.hostname || '';
+    // Only print a real domain name — never a bare IP or localhost.
+    var looksLikeIp = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1 || host === 'localhost';
+    if (host && !looksLikeIp) {
+      document.getElementById('domain').textContent = host;
+      document.title = host + ' — Coming Soon';
+    }
+  })();
+</script>
+</body>
+</html>
