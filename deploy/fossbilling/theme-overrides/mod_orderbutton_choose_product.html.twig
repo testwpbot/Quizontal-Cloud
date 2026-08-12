@@ -5,8 +5,10 @@
 {% set register_tlds = guest.serviceDomain_tlds({"allow_register": 1})|default([]) %}
 {% set domain_category = categories|filter(c => c.type == 'domain' and c.products is not empty)|first %}
 {% set domain_product = domain_category ? domain_category.products|first : null %}
-{# Covers ?product=ID deep links as well as pretty /order/slug routes (controller passes `product`). #}
-{% set picker_open = not ((product is defined and product) or request.product) %}
+{# Covers ?product=ID deep links as well as pretty /order/slug routes (controller passes `product`).
+   Never auto-open on the checkout step (/order?checkout=1): the customer already chose —
+   the picker must not photobomb the payment view. #}
+{% set picker_open = not ((product is defined and product) or request.product or request.checkout) %}
 {# Legacy/short links like /order?register_sld=x&register_tld=.com&auto=1 carry a domain
    intent but no product id — forward them straight into the domain product so the
    order form can prefill and auto-proceed instead of showing a bare picker. #}
