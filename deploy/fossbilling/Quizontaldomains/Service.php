@@ -30,8 +30,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $this->di;
     }
 
-    /** Types customers may manage. NS records stay registrar-owned by design. */
-    public const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'ALIAS', 'MX', 'TXT', 'SRV', 'CAA'];
+    /**
+     * Every record type the upstream DNS service offers, except NS: NS stays
+     * registrar-owned by design and lives in the Nameservers tab instead.
+     */
+    public const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'ALIAS', 'MX', 'TXT', 'SRV', 'CAA', 'TLSA', 'NAPTR'];
 
     private const MIN_TTL = 600;   // registrar account minimum
     private const MAX_TTL = 86400;
@@ -94,7 +97,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     {
         try {
             [$order, $service, $fqdn] = $this->findOwnedDomainService($clientId, $orderId);
-            $this->adapterFor($service, $order);
+            $adapter = $this->adapterFor($service, $order);
             // Self-heals branding + nameserver fields for anything the
             // activation pass could not reach (throttled per order).
             $this->maybeAutoBrand($order, $service);
@@ -103,6 +106,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
                 'supported' => true,
                 'domain' => $fqdn,
                 'registrar_nameservers' => $this->usesRegistrarNameservers($service),
+                // Capability probes let the theme swap dead-end stock buttons
+                // (lock toggle, EPP fetch) for support guidance per adapter.
+                'protection_editable' => $this->adapterFeature($adapter, 'supportsDomainLock'),
+                'epp_supported' => $this->adapterFeature($adapter, 'supportsEppCode'),
             ];
         } catch (\Throwable $exception) {
             if (isset($this->di['logger'])) {
@@ -519,6 +526,15 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     }
 
     /**
+     * Optional capability probe on adapters: an adapter that does not declare
+     * the feature keeps stock behavior (editable / supported).
+     */
+    private function adapterFeature($adapter, string $method): bool
+    {
+        return !method_exists($adapter, $method) || (bool) $adapter->{$method}();
+    }
+
+    /**
      * Route adapter failures to customer-safe wording. Anything describing a
      * store-side setting the customer cannot change (like the registrar's
      * per-domain API opt-in) becomes a generic retry/contact message, with
@@ -550,7 +566,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     {
         $type = strtoupper(trim((string) ($input['type'] ?? '')));
         if (!in_array($type, self::RECORD_TYPES, true)) {
-            throw new InformationException('Choose a record type: A, AAAA, CNAME, ALIAS, MX, TXT, SRV or CAA.');
+            throw new InformationException('Choose a record type: ' . implode(', ', self::RECORD_TYPES) . '.');
         }
 
         // Name: accept '@'/blank for the root and auto-strip the zone suffix
@@ -601,6 +617,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             case 'CAA':
                 if (!preg_match('/^\d{1,3}\s+(issue|issuewild|iodef)\s+\S+$/i', $content)) {
                     throw new InformationException('CAA content format is: flags tag value — for example 0 issue "letsencrypt.org".');
+                }
+                break;
+            case 'TLSA':
+                if (!preg_match('/^\\d\\s+\\d\\s+\\d\\s+[0-9a-f]{32,}$/i', $content)) {
+                    throw new InformationException('TLSA content format is: usage selector matching-type fingerprint — for example 3 1 1 followed by the hex fingerprint.');
+                }
+                break;
+            case 'NAPTR':
+                if (!preg_match('/^\\d{1,5}\\s+\\d{1,5}\\s+\\S+/', $content)) {
+                    throw new InformationException('NAPTR content format is: order preference flags "service" "regex" replacement — for example 100 10 "U" "E2U+sip" "!^.*$!sip:info@example.com!" .');
                 }
                 break;
         }

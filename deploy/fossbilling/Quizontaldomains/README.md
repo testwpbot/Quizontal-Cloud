@@ -13,12 +13,20 @@ A **DNS Records** tab on the domain manage page
 - Live record list (type, name, content, TTL, priority) straight from the
   registrar — refresh button included; nothing is cached or mirrored in the
   billing DB.
-- Add / inline edit / delete for `A`, `AAAA`, `CNAME`, `ALIAS`, `MX`, `TXT`,
-  `SRV` and `CAA` records. `NS` records stay registrar-owned by design, and
-  upstream SOA/default-NS records are never shown as editable.
+- Add / inline edit / delete for every record type the upstream DNS offers:
+  `A`, `AAAA`, `CNAME`, `ALIAS`, `MX`, `TXT`, `SRV`, `CAA`, `TLSA` and
+  `NAPTR`. `NS` records stay registrar-owned by design and live in the
+  Nameservers tab — they are never shown as editable zone rows.
 - Friendly validation per record type (IPv4/IPv6 checks, hostname checks,
-  SRV `weight port target`, CAA `flags tag value`), `@`/blank = zone root,
-  full hostnames pasted with the zone suffix are auto-shortened.
+  SRV `weight port target`, CAA `flags tag value`, TLSA/NAPTR formats),
+  `@`/blank = zone root, per-type content examples, colored type pills,
+  and branded dropdowns that stay readable on desktop and mobile.
+
+The manage page also adapts to adapter capabilities: when the adapter cannot
+toggle the registrar lock or issue transfer codes via API (panel-only
+upstream), the stock dead-end buttons are replaced with support guidance, and
+the WHOIS form forces a valid 2-letter ISO country via a dropdown plus clear
+phone-code hints — so customers never hit raw upstream validation errors.
 - TTL clamped to the registrar account range (600–86400s).
 - A warning banner when the domain uses custom nameservers, because zone edits
   only affect live DNS while the domain points at registrar DNS.

@@ -7,8 +7,24 @@
     #qc-dns-rows .qc-dns-skel{height:16px;border-radius:6px;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-dns-shimmer 1.15s infinite}
     @keyframes qc-dns-shimmer{to{background-position:-200% 0}}
     #qc-dns-rows td{vertical-align:middle}
-    .qc-dns-content{word-break:break-all;max-width:340px;display:inline-block}
+    .qc-dns-content{word-break:break-word;max-width:340px;display:inline-block}
     .qc-dns-edit-row .form-control,#qc-dns-add .form-control,#qc-dns-add .form-select{margin-bottom:0}
+    /* Quizontal Cloud: branded custom dropdown (native arrows are tiny on mobile). */
+    .qc-select{position:relative}
+    .qc-select>select{appearance:none;-webkit-appearance:none;-moz-appearance:none;text-indent:0;padding-right:38px;border-radius:10px;border:1px solid #dde1e6;background-color:#fff;cursor:pointer;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e31c64' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat:no-repeat;background-position:right 12px center;background-size:14px}
+    .qc-select>select:focus{border-color:#e31c64;box-shadow:0 0 0 .2rem rgba(227,28,100,.15);outline:none}
+    .qc-select>select:disabled{cursor:not-allowed;background-color:#f6f7f9}
+    /* numeric cells get real room so values are never clipped, any screen size */
+    #qc-dns-add-ttl,#qc-dns-add-prio,#qc-dns-ed-ttl,#qc-dns-ed-prio{min-width:96px}
+    /* colored type pills make the record list scannable */
+    .qc-type{display:inline-block;font-weight:700;font-size:.72rem;letter-spacing:.5px;border-radius:999px;padding:.3em .8em;white-space:nowrap}
+    .qc-type-address{background:#fde8f0;color:#c2185b}
+    .qc-type-alias{background:#f0e9fd;color:#6d28d9}
+    .qc-type-mail{background:#e8f5e9;color:#2e7d32}
+    .qc-type-text{background:#e3f2fd;color:#1565c0}
+    .qc-type-advanced{background:#fff3e0;color:#e65100}
     </style>
 
     <div class="card mb-4">
@@ -63,6 +79,17 @@
                     <h5 class="mt-1 mb-1">{{ 'Domain Protection'|trans }}</h5>
                     <span class="small text-secondary">{{ 'Domain locking is a security feature which prevents your domain name from being transferred without first unlocking it. When this is enabled, a domain cannot be transferred even with the transfer code.'|trans }}</span>
                 </div>
+                {% if qc_dns.supported and qc_dns.protection_editable is same as(false) %}
+                {# Quizontal Cloud: lock has no registrar API — guidance instead of a dead-end button. #}
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="small text-muted">{{ 'Current status'|trans }}:</span>
+                    <span class="badge {{ service.locked == 1 ? 'bg-success' : 'bg-warning' }}">{{ service.locked == 1 ? 'Locked'|trans : 'Unlocked'|trans }}</span>
+                </div>
+                <div class="alert alert-info mb-0">
+                    <strong>{{ 'Domain locking is managed by our team.'|trans }}</strong><br>
+                    {{ 'To protect you from unauthorized transfers, lock changes are handled by Quizontal Cloud support. If you ever need this domain unlocked — for example before transferring it out — just open a support ticket and we will take care of it right away.'|trans }}
+                </div>
+                {% else %}
                 <button class="btn btn-danger icon-link" type="button" id="domain-unlock" {% if service.locked == 0 %}style="display:none;"{% endif %}>
                     <svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 13C11.1 13 12 13.89 12 15C12 16.11 11.11 17 10 17S8 16.11 8 15 8.9 13 10 13M18 1C15.24 1 13 3.24 13 6V8H4C2.9 8 2 8.9 2 10V20C2 21.1 2.9 22 4 22H16C17.1 22 18 21.1 18 20V10C18 8.9 17.1 8 16 8H15V6C15 4.34 16.34 3 18 3S21 4.34 21 6V8H23V6C23 3.24 20.76 1 18 1M16 10V20H4V10H16Z" /></svg>
                     {{ 'Unlock'|trans }}
@@ -71,6 +98,7 @@
                     <svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,17C10.89,17 10,16.1 10,15C10,13.89 10.89,13 12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10C4,8.89 4.89,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" /></svg>
                     {{ 'Lock'|trans }}
                 </button>
+                {% endif %}
             </div>
 
             {# Domain privacy settings #}
@@ -176,31 +204,31 @@
                 </div>
                 <h6 class="mt-4 mb-2">{{ 'Add a new record'|trans }}</h6>
                 <form id="qc-dns-add" class="row g-2 align-items-end">
-                    <div class="col-md-2">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <label class="form-label" for="qc-dns-add-type">{{ 'Type'|trans }}</label>
-                        <select class="form-select" id="qc-dns-add-type"></select>
+                        <div class="qc-select"><select class="form-select" id="qc-dns-add-type"></select></div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <label class="form-label" for="qc-dns-add-name">{{ 'Name'|trans }}</label>
                         <input class="form-control" id="qc-dns-add-name" placeholder="@ or www" autocomplete="off">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-md">
                         <label class="form-label" for="qc-dns-add-content">{{ 'Content'|trans }}</label>
                         <input class="form-control" id="qc-dns-add-content" placeholder="192.0.2.10" autocomplete="off" required>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-6 col-md-auto">
                         <label class="form-label" for="qc-dns-add-ttl">{{ 'TTL'|trans }}</label>
                         <input class="form-control" id="qc-dns-add-ttl" type="number" value="600" min="600" step="60">
                     </div>
-                    <div class="col-md-2" id="qc-dns-add-prio-wrap" style="display:none">
+                    <div class="col-6 col-md-auto" id="qc-dns-add-prio-wrap" style="display:none">
                         <label class="form-label" for="qc-dns-add-prio">{{ 'Priority'|trans }}</label>
                         <input class="form-control" id="qc-dns-add-prio" type="number" value="10" min="0">
                     </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary w-100" id="qc-dns-add-btn" type="submit">{{ 'Add record'|trans }}</button>
+                    <div class="col-12 col-md-auto">
+                        <button class="btn btn-primary w-100" id="qc-dns-add-btn" type="submit" style="min-width:132px">{{ 'Add record'|trans }}</button>
                     </div>
                 </form>
-                <p class="small text-muted mt-2 mb-0"><strong>{{ 'Hints'|trans }}:</strong> {{ '@ or an empty name targets the root domain. Point your website with an A record, mail with MX, and verifications with TXT. Minimum TTL is 600 seconds.'|trans }}</p>
+                <p class="small text-muted mt-2 mb-0"><strong>{{ 'Hints'|trans }}:</strong> {{ '@ or an empty name targets the root domain. All record types our DNS service offers are supported: A, AAAA, CNAME, ALIAS, MX, TXT, SRV, CAA, TLSA and NAPTR. Minimum TTL is 600 seconds.'|trans }}</p>
             </div>
             {% endif %}
 
@@ -251,8 +279,15 @@
                     <div class="mb-3 row">
                         <div class="col-md-5">
                             <label for="whois_country" class="form-label">{{ 'Country'|trans }}</label>
-                            <input class="form-control" type="text" name="contact[country]" id="whois_country"
-                                   value="{{ request.country|default(service.contact.country) }}" required>
+                            {# Quizontal Cloud: dropdown = always a valid 2-letter ISO code; free text here used to break contact updates. #}
+                            {% set qc_country = request.country|default(service.contact.country)|upper %}
+                            <div class="qc-select">
+                                <select class="form-select" name="contact[country]" id="whois_country" required>
+                                    {% for qc_val, qc_label in guest.system_countries %}
+                                    <option value="{{ qc_val }}" {% if qc_val|upper == qc_country %}selected{% endif %}>{{ qc_label|e }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-5">
                             <label for="whois_city" class="form-label">{{ 'City'|trans }}</label>
@@ -277,12 +312,17 @@
                         <div class="col-md-5">
                             <label for="whois_phone_cc" class="form-label">{{ 'Phone Country Code'|trans }}</label>
                             <input class="form-control" type="text" name="contact[phone_cc]" id="whois_phone_cc"
-                                   value="{{ request.phone_cc|default(service.contact.phone_cc) }}" required>
+                                   value="{{ request.phone_cc|default(service.contact.phone_cc) }}"
+                                   placeholder="94" maxlength="4" inputmode="numeric" pattern="[0-9]{1,4}"
+                                   title="{{ '1 to 4 digits, no plus sign — like 94 for Sri Lanka'|trans }}" required>
+                            <div class="form-text">{{ 'Digits only, without the + sign — like 94 for Sri Lanka, 1 for USA.'|trans }}</div>
                         </div>
                         <div class="col-md-5">
                             <label for="whois_phone" class="form-label">{{ 'Phone number'|trans }}</label>
                             <input class="form-control" type="text" name="contact[phone]" id="whois_phone"
-                                   value="{{ request.phone|default(service.contact.phone) }}" required>
+                                   value="{{ request.phone|default(service.contact.phone) }}"
+                                   placeholder="712345678" required>
+                            <div class="form-text">{{ 'Your number without the country code.'|trans }}</div>
                         </div>
                     </div>
                     <input type="hidden" name="order_id" value="{{ order.id }}">
@@ -296,7 +336,15 @@
                     <h5 class="mt-1 mb-1">{{ 'Domain Secret'|trans }}</h5>
                     <span class="small text-secondary">{{ 'Most domain names (except a few top-level domains like .EU and .UK) have a Domain Secret Key/Authorization Code (EPP Code) associated with them. This code is typically required when transferring the domain to a new registrar.'|trans }}</span>
                 </div>
+                {% if qc_dns.supported and qc_dns.epp_supported is same as(false) %}
+                {# Quizontal Cloud: EPP has no registrar API — assisted flow instead of a dead-end button. #}
+                <div class="alert alert-info mb-0">
+                    <strong>{{ 'Transfer codes are issued by our team.'|trans }}</strong><br>
+                    {{ 'Open a support ticket from the menu and we will send the transfer authorization (EPP) code for this domain to your account email address as soon as possible.'|trans }}
+                </div>
+                {% else %}
                 <button class="btn btn-primary" type="button" id="get-epp">{{ 'Get EPP code'|trans }}</button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -383,7 +431,19 @@
         (function () {
             var ORDER_ID = {{ order.id }};
             var TOKEN = '{{ CSRFToken }}';
-            var TYPES = ['A', 'AAAA', 'CNAME', 'ALIAS', 'MX', 'TXT', 'SRV', 'CAA'];
+            var TYPES = ['A', 'AAAA', 'CNAME', 'ALIAS', 'MX', 'TXT', 'SRV', 'CAA', 'TLSA', 'NAPTR'];
+            var PLACEHOLDERS = {
+                A: '192.0.2.10',
+                AAAA: '2001:db8::10',
+                CNAME: 'example.com',
+                ALIAS: 'example.com',
+                MX: 'mail.example.com',
+                TXT: 'v=spf1 include:_spf.example.com ~all',
+                SRV: '0 443 sip.example.com',
+                CAA: '0 issue "letsencrypt.org"',
+                TLSA: '3 1 1 0123abcd...',
+                NAPTR: '100 10 "U" "E2U+sip" "!^.*$!sip:info@example.com!" .'
+            };
             var tbody = document.getElementById('qc-dns-rows');
             var errorBox = document.getElementById('qc-dns-error');
             var addForm = document.getElementById('qc-dns-add');
@@ -434,11 +494,19 @@
             }
 
             function typeSelect(current) {
-                var html = '<select class="form-select form-select-sm" id="qc-dns-ed-type">';
+                var html = '<div class="qc-select"><select class="form-select form-select-sm" id="qc-dns-ed-type">';
                 TYPES.forEach(function (t) {
                     html += '<option value="' + t + '"' + (t === current ? ' selected' : '') + '>' + t + '</option>';
                 });
-                return html + '</select>';
+                return html + '</select></div>';
+            }
+
+            function typeClass(t) {
+                if (t === 'A' || t === 'AAAA') return 'qc-type-address';
+                if (t === 'CNAME' || t === 'ALIAS') return 'qc-type-alias';
+                if (t === 'MX') return 'qc-type-mail';
+                if (t === 'TXT') return 'qc-type-text';
+                return 'qc-type-advanced';
             }
 
             function loading() {
@@ -466,7 +534,7 @@
                             '</td></tr>';
                     }
                     return '<tr>' +
-                        '<td><span class="badge bg-secondary">' + esc(r.type) + '</span></td>' +
+                        '<td><span class="qc-type ' + typeClass(r.type) + '">' + esc(r.type) + '</span></td>' +
                         '<td><strong>' + esc(shownName(r.name)) + '</strong></td>' +
                         '<td><code class="qc-dns-content">' + esc(r.content) + '</code></td>' +
                         '<td>' + esc(r.ttl) + '</td>' +
@@ -527,6 +595,8 @@
 
             addType.addEventListener('change', function () {
                 prioWrap.style.display = prioFor(addType.value) ? '' : 'none';
+                var hint = PLACEHOLDERS[addType.value];
+                if (hint) byId('qc-dns-add-content').setAttribute('placeholder', hint);
             });
 
             addForm.addEventListener('submit', function (e) {

@@ -348,6 +348,21 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     {
         $contact = $domain->getContactRegistrar();
 
+        // Pre-flight: turn the most common customer mistakes into clear,
+        // field-specific messages BEFORE anything reaches the upstream API.
+        $country = strtoupper((string) preg_replace('/[^A-Za-z]/', '', (string) $contact->getCountry()));
+        if (strlen($country) !== 2) {
+            throw new Registrar_Exception('Country must be a 2-letter code (LK for Sri Lanka, US for United States...). Pick it from the Country dropdown on the form.');
+        }
+        $telCc = (string) preg_replace('/\D/', '', (string) $contact->getTelCc());
+        if ($telCc === '' || strlen($telCc) > 4) {
+            throw new Registrar_Exception('Phone country code must be 1 to 4 digits, without the plus sign — like 94 for Sri Lanka.');
+        }
+        $phone = (string) preg_replace('/[\s()\-+]/', '', (string) $contact->getTel());
+        if (strlen($phone) < 6) {
+            throw new Registrar_Exception('The phone number looks too short — enter your full number without the country code.');
+        }
+
         $payload = [
             'contacts' => [
                 'registrant' => [
@@ -359,9 +374,9 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
                     'city' => (string) $contact->getCity(),
                     'state' => (string) $contact->getState(),
                     'postalCode' => (string) $contact->getZip(),
-                    'country' => strtoupper((string) $contact->getCountry()),
-                    'phone' => (string) $contact->getTel(),
-                    'phoneCountryCode' => (string) $contact->getTelCc(),
+                    'country' => $country,
+                    'phone' => $phone,
+                    'phoneCountryCode' => $telCc,
                     'email' => (string) $contact->getEmail(),
                 ],
             ],
@@ -379,7 +394,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function deleteDomain(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Domains cannot be deleted through the API. Let the domain expire instead (disable auto-renewal in the registrar control panel).');
+        throw new Registrar_Exception('Domains cannot be deleted early — a domain simply expires when it is not renewed. Open a support ticket and we can disable auto-renewal for you.');
     }
 
     /**
@@ -396,7 +411,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             return true;
         }
 
-        throw new Registrar_Exception('WHOIS privacy was switched off for this domain at the registrar. Staff can re-enable it in the registrar control panel; it is always free.');
+        throw new Registrar_Exception('WHOIS privacy was switched off for this domain. It is always free here — open a support ticket and we will re-enable it for you.');
     }
 
     /**
@@ -404,7 +419,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function disablePrivacyProtection(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('WHOIS privacy cannot be disabled through the API. Use the registrar control panel if this is really required.');
+        throw new Registrar_Exception('WHOIS privacy cannot be disabled automatically. Open a support ticket if you truly need it disabled.');
     }
 
     /**
@@ -415,7 +430,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function lock(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Domains are transfer-locked by default and the lock can only be managed in the registrar control panel.');
+        throw new Registrar_Exception('For your protection, domain locking is managed by the Quizontal Cloud team. Open a support ticket and we will review the lock for you right away.');
     }
 
     /**
@@ -423,7 +438,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function unlock(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Unlocking is only possible in the registrar control panel (toggle Registrar Lock off).');
+        throw new Registrar_Exception('For your protection, unlocking is handled by the Quizontal Cloud team. Open a support ticket and we will unlock the domain for you right away.');
     }
 
     /**
@@ -433,7 +448,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function getEpp(Registrar_Domain $domain)
     {
-        throw new Registrar_Exception('Transfer authorization codes are issued in the registrar control panel. Fetch it there and paste it for the customer.');
+        throw new Registrar_Exception('Transfer authorization (EPP) codes are issued by our support team on request. Open a support ticket and we will send the code to your account email address.');
     }
 
     // ---------------------------------------------------------------------
@@ -449,6 +464,23 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     public function supportsDnsRecords(): bool
     {
         return true;
+    }
+
+    /**
+     * Lock state has no API upstream (panel-only), so instead of dead-end
+     * buttons the client UI swaps in support guidance. Capability probes are
+     * read by the Quizontaldomains module; adapters that stay silent keep
+     * stock behavior.
+     */
+    public function supportsDomainLock(): bool
+    {
+        return false;
+    }
+
+    /** Transfer codes are panel-only upstream; our support assists instead. */
+    public function supportsEppCode(): bool
+    {
+        return false;
     }
 
     /**
