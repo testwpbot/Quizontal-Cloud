@@ -106,16 +106,24 @@ if "'security'" in src or '"security"' in src:
     def lifespan(match):
         return match.group(1) + str(max(int(match.group(2)), 86400))
     src = re.sub(r"(['\"]session_lifespan['\"]\s*=>\s*)(\d+)", lifespan, src, count=1)
+    if "'perform_session_fingerprinting'" in src or '"perform_session_fingerprinting"' in src:
+        src = re.sub(r"(['\"]perform_session_fingerprinting['\"]\s*=>\s*)true", r"\1false", src)
+    else:
+        # Toggle absent — add it right after the security section opener (handles both [] and array() styles).
+        src = re.sub(r"(['\"]security['\"]\s*=>\s*(?:array\s*\(|\[))",
+                     r"\1\n        'perform_session_fingerprinting' => false,", src, count=1)
 else:
-    block = "    'security' => ['mode' => 'lax', 'session_lifespan' => 86400],\n"
+    block = "    'security' => ['mode' => 'lax', 'session_lifespan' => 86400, 'perform_session_fingerprinting' => false],\n"
     src = re.sub(r"return\s*\[", "return [\n" + block, src, count=1)
 if src != orig:
     open(path, 'w').write(src)
 mode = re.search(r"['\"]mode['\"]\s*=>\s*['\"]([^'\"]+)['\"]", src)
 span = re.search(r"['\"]session_lifespan['\"]\s*=>\s*(\d+)", src)
-print("config.php: security.mode=%s, session_lifespan=%s%s" % (
+fp = re.search(r"['\"]perform_session_fingerprinting['\"]\s*=>\s*(true|false)", src)
+print("config.php: security.mode=%s, session_lifespan=%s, fingerprinting=%s%s" % (
     mode.group(1) if mode else "MISSING",
     span.group(1) if span else "MISSING",
+    ("OFF (good for mobile customers)" if fp and fp.group(1) == "false" else (fp.group(1).upper() + " (should be off)")) if fp else "MISSING",
     "" if src == orig else " (updated)"))
 PYEOF
 else
