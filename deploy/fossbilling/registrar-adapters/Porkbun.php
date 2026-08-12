@@ -112,7 +112,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             }
         }
 
-        $data = $this->call('POST', '/domain/checkDomain/' . rawurlencode($fqdn));
+        $data = $this->call('/domain/checkDomain/' . rawurlencode($fqdn));
         $response = $data['response'] ?? [];
 
         if ($this->truthy($response['isPremium'] ?? $response['premium'] ?? null) || $this->isPremiumPricing($response)) {
@@ -135,7 +135,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function isDomaincanBeTransferred(Registrar_Domain $domain)
     {
-        $details = $this->callQuiet('GET', '/domain/get/' . rawurlencode($this->fqdn($domain)));
+        $details = $this->callQuiet('/domain/get/' . rawurlencode($this->fqdn($domain)));
         if (is_array($details)) {
             throw new Registrar_Exception('This domain is already registered with us and cannot be transferred in.');
         }
@@ -165,7 +165,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $fqdn = $this->fqdn($domain);
         $tld = ltrim((string) $domain->getTld(), '.');
 
-        $requirements = $this->call('GET', '/domain/getRegistrationRequirements/' . rawurlencode($tld));
+        $requirements = $this->call('/domain/getRegistrationRequirements/' . rawurlencode($tld));
         if (array_key_exists('apiRegisterable', $requirements) && !$this->truthy($requirements['apiRegisterable'])) {
             $reason = (string) ($requirements['notApiRegisterableReason'] ?? 'this extension has registry rules that prevent API registration');
             throw new Registrar_Exception(sprintf('%s cannot be registered automatically: %s.', strtoupper($tld), $this->neutral($reason)));
@@ -178,8 +178,20 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             'agreeToTerms' => 'yes',
         ];
 
-        $preview = $this->call('POST', '/domain/create/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
-        if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
+        $preview = null;
+        $previewError = null;
+        try {
+            $preview = $this->call('/domain/create/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
+        } catch (Registrar_Exception $exception) {
+            // Some refusals arrive as SUCCESS+wouldSucceed=false, others as a
+            // hard ERROR ("domain unavailable"). Keep either form for the
+            // adoption probe below before surfacing anything to the customer.
+            $previewError = $exception;
+        }
+        $previewFailed = $previewError !== null
+            || empty($preview['dryRun'])
+            || !$this->truthy($preview['wouldSucceed'] ?? null);
+        if ($previewFailed) {
             // Phase-0 manual fulfillment: when prepaid registrar balance is not
             // an option, the store owner buys the domain on the registrar's own
             // website (card checkout) BEFORE marking the store invoice paid.
@@ -192,12 +204,15 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
                 $this->getLog()->info('Porkbun: %s already exists in the linked account (manual purchase) — adopted without charging', $fqdn);
                 return true;
             }
+            if ($previewError !== null) {
+                throw $previewError;
+            }
             $message = (string) ($preview['message'] ?? 'the registration preview was refused');
             $this->getLog()->err('Porkbun: registration preview for %s refused: %s', $fqdn, $message);
             throw new Registrar_Exception(sprintf('Registration of %s cannot be completed right now. Please try again or contact support.', $fqdn));
         }
 
-        $result = $this->call('POST', '/domain/create/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
+        $result = $this->call('/domain/create/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
 
         $this->getLog()->info('Porkbun: registered %s (charged %s cents, order %s%s)', $fqdn, $result['cost'] ?? $costCents, $result['orderId'] ?? 'n/a', !empty($result['sandbox']) ? ', sandbox' : '');
 
@@ -206,7 +221,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $nameservers = $this->nameserversFromDomain($domain);
         if ($nameservers !== []) {
             try {
-                $this->call('POST', '/domain/updateNs/' . rawurlencode($fqdn), ['ns' => $nameservers]);
+                $this->call('/domain/updateNs/' . rawurlencode($fqdn), ['ns' => $nameservers]);
             } catch (Registrar_Exception $e) {
                 $this->getLog()->err('Porkbun: nameserver update for the newly registered %s failed: %s', $fqdn, $e->getMessage());
             }
@@ -225,14 +240,19 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $fqdn = $this->fqdn($domain);
         $costCents = $this->quotePriceCents($domain, 'renewal');
 
-        $preview = $this->call('POST', '/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents, 'dryRun' => true]);
+        $preview = null;
+        try {
+            $preview = $this->call('/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents, 'dryRun' => true]);
+        } catch (Registrar_Exception $exception) {
+            $preview = ['message' => $exception->getMessage()];
+        }
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
             $message = (string) ($preview['message'] ?? 'the renewal preview was refused');
             $this->getLog()->err('Porkbun: renewal preview for %s refused: %s', $fqdn, $message);
             throw new Registrar_Exception(sprintf('Renewal of %s cannot be completed right now. Please try again or contact support.', $fqdn));
         }
 
-        $result = $this->call('POST', '/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents], $this->newIdempotencyKey());
+        $result = $this->call('/domain/renew/' . rawurlencode($fqdn), ['cost' => $costCents], $this->newIdempotencyKey());
         $this->getLog()->info('Porkbun: renewed %s until %s (charged %s cents)', $fqdn, $result['expirationDate'] ?? 'unknown', $result['cost'] ?? $costCents);
 
         return true;
@@ -255,14 +275,14 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $costCents = $this->quotePriceCents($domain, 'transfer');
 
         $payload = ['authCode' => $epp, 'cost' => $costCents];
-        $preview = $this->call('POST', '/domain/transfer/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
+        $preview = $this->call('/domain/transfer/' . rawurlencode($fqdn), $payload + ['dryRun' => true]);
         if (empty($preview['dryRun']) || !$this->truthy($preview['wouldSucceed'] ?? null)) {
             $message = (string) ($preview['message'] ?? 'the transfer preview was refused');
             $this->getLog()->err('Porkbun: transfer preview for %s refused: %s', $fqdn, $message);
             throw new Registrar_Exception(sprintf('Transfer of %s cannot be started right now. Please try again or contact support.', $fqdn));
         }
 
-        $result = $this->call('POST', '/domain/transfer/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
+        $result = $this->call('/domain/transfer/' . rawurlencode($fqdn), $payload, $this->newIdempotencyKey());
         $this->getLog()->info('Porkbun: transfer of %s started (transfer %s, charged %s cents)', $fqdn, $result['transferId'] ?? 'n/a', $result['cost'] ?? $costCents);
 
         return true;
@@ -277,7 +297,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function getDomainDetails(Registrar_Domain $domain)
     {
-        $data = $this->call('GET', '/domain/get/' . rawurlencode($this->fqdn($domain)));
+        $data = $this->call('/domain/get/' . rawurlencode($this->fqdn($domain)));
         $info = $data['domain'] ?? [];
 
         if (!empty($info['expireDate'])) {
@@ -290,7 +310,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         $domain->setPrivacyEnabled($this->truthy($info['whoisPrivacy'] ?? $info['privacy'] ?? null) ? 1 : 0);
 
         try {
-            $ns = $this->call('GET', '/domain/getNs/' . rawurlencode($this->fqdn($domain)));
+            $ns = $this->call('/domain/getNs/' . rawurlencode($this->fqdn($domain)));
             $list = array_values(array_filter((array) ($ns['ns'] ?? [])));
             $domain->setNs1($list[0] ?? null);
             $domain->setNs2($list[1] ?? null);
@@ -313,7 +333,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             throw new Registrar_Exception('At least one nameserver is required.');
         }
 
-        $this->call('POST', '/domain/updateNs/' . rawurlencode($this->fqdn($domain)), ['ns' => $nameservers]);
+        $this->call('/domain/updateNs/' . rawurlencode($this->fqdn($domain)), ['ns' => $nameservers]);
 
         return true;
     }
@@ -347,7 +367,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             ],
         ];
 
-        $this->call('POST', '/domain/updateContacts/' . rawurlencode($this->fqdn($domain)), $payload);
+        $this->call('/domain/updateContacts/' . rawurlencode($this->fqdn($domain)), $payload);
 
         return true;
     }
@@ -437,7 +457,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     public function dnsListRecords(string $fqdn): array
     {
-        $data = $this->call('POST', '/dns/retrieve/' . rawurlencode($fqdn));
+        $data = $this->call('/dns/retrieve/' . rawurlencode($fqdn));
         $rows = [];
         foreach ((array) ($data['records'] ?? []) as $row) {
             $rows[] = [
@@ -457,19 +477,19 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
     /** @return string the new record id */
     public function dnsCreateRecord(string $fqdn, array $record): string
     {
-        $result = $this->call('POST', '/dns/create/' . rawurlencode($fqdn), $record, $this->newIdempotencyKey());
+        $result = $this->call('/dns/create/' . rawurlencode($fqdn), $record, $this->newIdempotencyKey());
         return (string) ($result['id'] ?? '');
     }
 
     public function dnsEditRecord(string $fqdn, string $recordId, array $record): bool
     {
-        $this->call('POST', '/dns/edit/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), $record, $this->newIdempotencyKey());
+        $this->call('/dns/edit/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), $record, $this->newIdempotencyKey());
         return true;
     }
 
     public function dnsDeleteRecord(string $fqdn, string $recordId): bool
     {
-        $this->call('POST', '/dns/delete/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), [], $this->newIdempotencyKey());
+        $this->call('/dns/delete/' . rawurlencode($fqdn) . '/' . rawurlencode($recordId), [], $this->newIdempotencyKey());
         return true;
     }
 
@@ -614,7 +634,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
         if ($type !== 'registration') {
             $body['priceType'] = $type;
         }
-        $data = $this->call('POST', '/domain/checkDomain/' . rawurlencode($this->fqdn($domain)), $body);
+        $data = $this->call('/domain/checkDomain/' . rawurlencode($this->fqdn($domain)), $body);
         $response = (array) ($data['response'] ?? []);
 
         // The top-level "price" belongs to the response's own type, so only
@@ -653,7 +673,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     private function tldPrice(string $tld, string $component): ?string
     {
-        $data = $this->call('GET', '/pricing/get', ['tld' => $tld]);
+        $data = $this->call('/pricing/get', ['tld' => $tld]);
         $pricing = (array) ($data['pricing'] ?? $data['prices'] ?? []);
         $entry = $pricing[$tld] ?? null;
         if (is_array($entry) && isset($entry[$component])) {
@@ -695,10 +715,10 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      * Performs a call and RETURNS NULL instead of throwing on failure
      * (used for "is this domain in the account?" style probes).
      */
-    private function callQuiet(string $method, string $path, array $body = []): ?array
+    private function callQuiet(string $path, array $body = []): ?array
     {
         try {
-            return $this->call($method, $path, $body);
+            return $this->call($path, $body);
         } catch (Registrar_Exception) {
             return null;
         }
@@ -712,7 +732,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      */
     private function isDomainInOurAccount(string $fqdn): bool
     {
-        return is_array($this->callQuiet('GET', '/domain/get/' . rawurlencode($fqdn)));
+        return is_array($this->callQuiet('/domain/get/' . rawurlencode($fqdn)));
     }
 
     /**
@@ -721,7 +741,7 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
      *
      * @throws Registrar_Exception on transport errors, HTTP errors, or API errors
      */
-    private function call(string $method, string $path, array $body = [], ?string $idempotencyKey = null): array
+    private function call(string $path, array $body = [], ?string $idempotencyKey = null): array
     {
         $apiKey = (string) $this->config['api-key'];
         $secretKey = (string) $this->config['secret-api-key'];
@@ -738,28 +758,27 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
             throw new Registrar_Exception('Sandbox keys are configured while Test mode is disabled. Enable Test mode for sandbox keys, or enter the live keys.');
         }
 
+        // Every Porkbun v3 endpoint — reads included — accepts POST with a
+        // JSON body. Historic docs REQUIRED POST for everything; newer docs
+        // merely also allow GET for reads. Sending reads as POST keeps the
+        // adapter compatible with both.
         $headers = [
             'X-API-Key' => $apiKey,
             'X-Secret-API-Key' => $secretKey,
+            'Content-Type' => 'application/json',
         ];
         if ($idempotencyKey !== null) {
             $headers['Idempotency-Key'] = $idempotencyKey;
         }
 
-        $options = ['headers' => $headers, 'timeout' => 30];
-        if (strtoupper($method) === 'POST') {
-            $headers['Content-Type'] = 'application/json';
-            $options['json'] = (object) $body;
-        } elseif ($body !== []) {
-            $options['query'] = $body;
-        }
+        $options = ['headers' => $headers, 'json' => (object) $body, 'timeout' => 30];
 
         try {
-            $response = $this->getHttpClient()->request(strtoupper($method), $this->apiUrl . $path, $options);
+            $response = $this->getHttpClient()->request('POST', $this->apiUrl . $path, $options);
             $statusCode = $response->getStatusCode();
             $decoded = json_decode($response->getContent(false), true);
         } catch (\Symfony\Contracts\HttpClient\Exception\ExceptionInterface $e) {
-            $this->getLog()->err('Porkbun: transport failure on %s %s: %s', strtoupper($method), $path, $e->getMessage());
+            $this->getLog()->err('Porkbun: transport failure on POST %s: %s', $path, $e->getMessage());
             throw new Registrar_Exception('The domain service could not be reached. Please try again.');
         }
 
@@ -782,12 +801,12 @@ class Registrar_Adapter_Porkbun extends Registrar_AdapterAbstract
                     $retry = $match[1];
                 }
                 $retry = max(2, (int) ceil((float) ($retry ?: 6)));
-                $this->getLog()->err('Porkbun %s %s paced: %s%s', strtoupper($method), $path, $code !== '' ? '[' . $code . '] ' : '', $message);
+                $this->getLog()->err('Porkbun POST %s paced: %s%s', $path, $code !== '' ? '[' . $code . '] ' : '', $message);
 
                 throw new Registrar_Exception(sprintf('Our availability checker is cooling down. (retry in %ds)', $retry));
             }
 
-            $this->getLog()->err('Porkbun %s %s failed: %s%s', strtoupper($method), $path, $code !== '' ? '[' . $code . '] ' : '', $message);
+            $this->getLog()->err('Porkbun POST %s failed: %s%s', $path, $code !== '' ? '[' . $code . '] ' : '', $message);
 
             throw new Registrar_Exception($this->neutral($message));
         }
