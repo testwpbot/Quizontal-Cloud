@@ -95,6 +95,21 @@ if [[ -d "$REGISTRAR_ADAPTERS_DIR" ]]; then
     echo "Registrar adapter directory not found ($ADAPTER_TARGET); skipping registrar adapters." >&2
   fi
 fi
+
+# Quizontal: brand-safe server manager overrides (sanitized user-facing errors)
+SERVER_MANAGERS_DIR="$SCRIPT_DIR/fossbilling/server-managers"
+if [[ -d "$SERVER_MANAGERS_DIR" ]]; then
+  MANAGER_TARGET="$APP_ROOT/library/Server/Manager"
+  if [[ -d "$MANAGER_TARGET" ]]; then
+    for manager in "$SERVER_MANAGERS_DIR"/*.php; do
+      [[ -f "$manager" ]] || continue
+      install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$manager" "$MANAGER_TARGET/$(basename "$manager")"
+      echo "Installed server manager override: $(basename "$manager")"
+    done
+  else
+    echo "Server manager directory not found ($MANAGER_TARGET); skipping server managers." >&2
+  fi
+fi
 [[ -d "$APP_ROOT/data/cache" ]] && find "$APP_ROOT/data/cache" -type f ! -name '.gitignore' -delete
 
 # --- Quizontal site settings ------------------------------------------------
