@@ -569,6 +569,10 @@
         .qcd-promo-glow { position: absolute; border-radius: 50%; background: rgba(255,255,255,.16); filter: blur(2px); }
         .qcd-promo-glow.g1 { width: 120px; height: 120px; right: -40px; top: -44px; }
         .qcd-promo-glow.g2 { width: 80px; height: 80px; left: -30px; bottom: -34px; opacity: .6; }
+
+        /* Hide the guest top navbar (unauthenticated visitors only).
+           Guests still navigate via the side rail / page content. */
+        body:not(.qc-app) header { display: none !important; }
     </style>
     <style>
         /* =====================================================================
