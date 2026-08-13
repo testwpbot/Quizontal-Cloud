@@ -1,0 +1,164 @@
+{% if order.status == 'active' %}
+<style>
+    /* Quizontal Cloud — dark premium hosting-account panel. */
+    .qc-hosting-details{display:flex;flex-direction:column}
+    .qc-hosting-details .qc-details-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:12px 2px;border-bottom:1px solid var(--iq-line, rgba(255,255,255,.06))}
+    .qc-hosting-details .qc-details-row:last-child{border-bottom:0}
+    .qc-hosting-details .qc-details-label{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#7d8494;padding-top:3px;flex:none}
+    .qc-hosting-details .qc-details-value{font-weight:600;color:var(--iq-heading, #f5f6f8);text-align:right;min-width:0;word-break:break-word}
+    .qc-hosting-details .qc-details-value a{color:#f06b9d;text-decoration:none}
+    .qc-hosting-details .qc-details-value a:hover{color:var(--iq-primary-hover)}
+    @media (max-width:575.98px){
+        .qc-hosting-details .qc-details-row{flex-direction:column;gap:3px}
+        .qc-hosting-details .qc-details-value{text-align:left}
+    }
+</style>
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="header-title">
+            <h4 class="card-title">{{ 'Manage Hosting Account'|trans }}</h4>
+            <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Details, password, domain and username'|trans }}</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#details">{{ 'Details'|trans }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#password">{{ 'Password'|trans }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#domain">{{ 'Domain'|trans }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#username">{{ 'Username'|trans }}</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            {# Hosting details #}
+            <div class="tab-pane fade active show" role="tabpanel" id="details">
+                {% set server = service.server %}
+                {% set hp = service.hosting_plan %}
+                <div class="qc-hosting-details">
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Domain'|trans }}</span>
+                        <span class="qc-details-value"><a target="_blank" href="http://{{ service.domain }}">{{ service.domain }}</a></span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Server IP'|trans }}</span>
+                        <span class="qc-details-value">{{ server.ip }}</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Server Hostname'|trans }}</span>
+                        <span class="qc-details-value">{{ server.hostname }}</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Username'|trans }}</span>
+                        <span class="qc-details-value">{{ service.username }}</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Password'|trans }}</span>
+                        <span class="qc-details-value">******</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Hosting Plan'|trans }}</span>
+                        <span class="qc-details-value">{{ hp.name }}</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Bandwidth'|trans }}</span>
+                        <span class="qc-details-value">{{ hp.bandwidth }} MB / {{ 'per month'|trans }}</span>
+                    </div>
+                    <div class="qc-details-row">
+                        <span class="qc-details-label">{{ 'Disk Quota'|trans }}</span>
+                        <span class="qc-details-value">{{ hp.quota }} MB</span>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    {% if service.domain_order_id %}
+                        <a class="btn btn-primary btn-sm" href='{{ "order/service/manage/#{service.domain_order_id}"|url }}'>{{ 'Manage Domain'|trans }}</a>
+                    {% endif %}
+                    <a class="btn btn-outline-primary btn-sm" href="{{ 'servicehosting/get_login_url'|api_url(query: { 'order_id':  order.id }) }}" {{ fb_api_link({callback: 'onAfterLoginLinkCreated'}) }}>{{ 'Login to Control Panel'|trans }}</a>
+                </div>
+            </div>
+            {# Hosting password #}
+            <div class="tab-pane fade" role="tabpanel" id="password">
+                <h3 class="mb-3">{{ 'Change Your Control Panel/FTP/SSH Password'|trans }}</h3>
+                <form action="{{ 'servicehosting/change_password'|api_url }}" method="post" {{ fb_api_form({message: 'Password Changed'|trans}) }}>
+                    <fieldset>
+                        <div class="control-group mb-3">
+                            <label class="col-form-label">{{ 'Password'|trans }}: </label>
+                            <div class="controls">
+                                <input class="form-control" type="password" name="password" value="{{ request.password }}" required="required">
+                            </div>
+                        </div>
+                        <div class="control-group mb-3">
+                            <label class="col-form-label">{{ 'Password Confirm'|trans }}: </label>
+                            <div class="controls">
+                                <input class="form-control" type="password" name="password_confirm" value="{{ request.password_confirm }}" required="required">
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <div class="control-group mt-1">
+                            <div class="controls">
+                                <button class="btn btn-primary" type="submit" value="{{ 'Change Password'|trans }}">{{ 'Change Password'|trans }}</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            {# Hosting domain #}
+            <div class="tab-pane fade" role="tabpanel" id="domain">
+                <h3 class="mb-3">{{ 'Change Domain'|trans }}</h3>
+                <form action="{{ 'servicehosting/change_domain'|api_url }}" method="post" {{ fb_api_form({message: 'Domain Name Changed'|trans}) }}>
+                    <fieldset>
+                        <div class="control-group mb-3">
+                            <label class="col-form-label">{{ 'New Domain'|trans }}: </label>
+                            <div class="controls d-flex flex-wrap gap-2">
+                                <input class="form-control w-50" type="text" name="sld" value="{{ request.domain|default(service.sld) }}" required="required">
+                                <input class="form-control w-25" type="text" name="tld" value="{{ request.domain|default(service.tld) }}" required="required">
+                            </div>
+                        </div>
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <div class="control-group mt-1">
+                            <div class="controls">
+                                <button class="btn btn-primary" type="submit" value="{{ 'Change Domain'|trans }}">{{ 'Change Domain'|trans }}</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            {# Hosting username #}
+            <div class="tab-pane fade" role="tabpanel" id="username">
+                <h3 class="mb-3">{{ 'Change Username'|trans }}</h3>
+                <form method="post" action="{{ 'servicehosting/change_username'|api_url }}" {{ fb_api_form({message: 'Username Changed'|trans}) }}>
+                    <fieldset>
+                        <div class="control-group mb-3">
+                            <label class="col-form-label">{{ 'Username'|trans }}: </label>
+                            <div class="controls">
+                                <input class="form-control" type="text" name="username" value="{{ request.username|default(service.username) }}" required="required">
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <div class="control-group mt-1">
+                            <div class="controls">
+                                <button class="btn btn-primary" type="submit" value="{{ 'Change Username'|trans }}">{{ 'Change Username'|trans }}</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block js %}
+<script>
+    function onAfterLoginLinkCreated(url){
+        window.open(url, "_blank");
+    }
+</script>
+{% endblock %}
+{% endif %}
