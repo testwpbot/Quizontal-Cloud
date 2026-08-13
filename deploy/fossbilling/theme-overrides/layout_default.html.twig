@@ -108,7 +108,7 @@
     {# ---- page loader ---- #}
     <div id="loading">
         <div class="loader-box">
-            <img class="loader-logo" src="{{ qc_logo_url }}" alt="{{ company.name }}">
+            <div class="loader-spinner"><div class="loader-spinner-core"></div></div>
             <div class="loader-text">{{ company.name }}</div>
         </div>
     </div>
@@ -757,7 +757,7 @@
             box-shadow: 0 6px 14px rgba(227, 28, 100, 0.35);
         }
         .logo-img {
-            height: 40px; width: auto; flex: 0 0 auto;
+            height: 52px; width: auto; flex: 0 0 auto;
             object-fit: contain;
             display: block;
         }
@@ -1291,17 +1291,24 @@
         }
         #loading.hide { opacity: 0; visibility: hidden; }
         .loader-box { text-align: center; }
-        .loader-logo {
-            width: auto; height: 64px; margin: 0 auto 1rem;
-            object-fit: contain;
-            display: block;
-            animation: loaderPulse 1.4s ease-in-out infinite;
+        .loader-spinner {
+            background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
+            width: 92px; height: 92px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            filter: blur(1px);
+            box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+            animation: qcSpin 1.7s linear infinite;
+            display: flex; align-items: center; justify-content: center;
         }
-        @keyframes loaderPulse {
-            0%, 100% { transform: scale(1); opacity: .85; }
-            50% { transform: scale(1.06); opacity: 1; }
+        .loader-spinner-core {
+            background-color: rgb(36, 36, 36);
+            width: 92px; height: 92px;
+            border-radius: 50%;
+            filter: blur(10px);
         }
-        .loader-text { font-weight: 600; color: var(--iq-primary); letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; }
+        @keyframes qcSpin { to { transform: rotate(360deg); } }
+        .loader-text { font-weight: 600; color: #e6e8ec; font-size: 0.85rem; letter-spacing: 0.06em; }
 
         /* ---- responsive ---- */
         @media (max-width: 1399.98px) {
@@ -1345,7 +1352,7 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .iq-banner .iq-banner-art::before { animation: none; }
-            .loader-logo { animation: none; }
+            .loader-spinner { animation: none; }
         }
 
         /* ---- premium animated button (white -> pink, letter-swap on hover) ---- */
