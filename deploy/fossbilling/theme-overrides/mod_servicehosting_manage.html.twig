@@ -8,9 +8,32 @@
     .qc-hosting-details .qc-details-value{font-weight:600;color:var(--iq-heading, #f5f6f8);text-align:right;min-width:0;word-break:break-word}
     .qc-hosting-details .qc-details-value a{color:#f06b9d;text-decoration:none}
     .qc-hosting-details .qc-details-value a:hover{color:var(--iq-primary-hover)}
+    /* premium segmented tabs */
+    .qc-hosting-tabs{
+        display:inline-flex;flex-wrap:wrap;gap:6px;
+        padding:5px;
+        background:rgba(255,255,255,.03);
+        border:1px solid var(--iq-line, rgba(255,255,255,.06));
+        border-radius:14px;
+    }
+    .qc-hosting-tabs .nav-item{list-style:none}
+    .qc-hosting-tabs .nav-link{
+        border:1px solid transparent;border-radius:10px;
+        padding:8px 18px;font-size:.85rem;font-weight:600;
+        color:#8b93a3;background:transparent;
+        transition:background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease;
+    }
+    .qc-hosting-tabs .nav-link:hover{color:#fff;background:rgba(255,255,255,.05)}
+    .qc-hosting-tabs .nav-link.active{
+        background:linear-gradient(135deg,var(--iq-primary,#e31c64),var(--iq-primary-dark,#a51149));
+        border-color:transparent;color:#fff;
+        box-shadow:0 6px 16px rgba(227,28,100,.32);
+    }
     @media (max-width:575.98px){
         .qc-hosting-details .qc-details-row{flex-direction:column;gap:3px}
         .qc-hosting-details .qc-details-value{text-align:left}
+        .qc-hosting-tabs{display:flex;width:100%}
+        .qc-hosting-tabs .nav-link{flex:1;text-align:center;padding:9px 10px}
     }
 </style>
 <div class="card mb-3">
@@ -21,7 +44,7 @@
         </div>
     </div>
     <div class="card-body">
-        <ul class="nav nav-tabs mb-3">
+        <ul class="nav qc-hosting-tabs mb-3">
             <li class="nav-item">
                 <a class="nav-link active" data-bs-toggle="tab" href="#details">{{ 'Details'|trans }}</a>
             </li>
@@ -78,7 +101,7 @@
                     {% if service.domain_order_id %}
                         <a class="btn btn-primary btn-sm" href="{{ ('order/service/manage/' ~ service.domain_order_id)|link }}">{{ 'Manage Domain'|trans }}</a>
                     {% endif %}
-                    <a class="btn btn-outline-primary btn-sm api-link" href="{{ 'api/client/servicehosting/get_login_url'|link({ 'order_id': order.id }) }}" data-api-jsonp="onAfterLoginLinkCreated">{{ 'Login to Control Panel'|trans }}</a>
+                    <a class="btn btn-primary btn-sm api-link" href="{{ 'api/client/servicehosting/get_login_url'|link({ 'order_id': order.id }) }}" data-api-jsonp="onAfterLoginLinkCreated">{{ 'Login to Control Panel'|trans }}</a>
                 </div>
             </div>
             {# Hosting password #}
