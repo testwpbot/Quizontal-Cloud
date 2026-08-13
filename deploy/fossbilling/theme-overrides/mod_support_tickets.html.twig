@@ -1,0 +1,218 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+
+{% import "macro_functions.html.twig" as mf %}
+
+{% block meta_title %}{{ 'Support tickets'|trans }}{% endblock %}
+
+{% block body_class %}support-tickets qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block head %}
+    {{ mf.wysiwyg('.editor-textarea') }}
+{% endblock %}
+
+{% set tickets = client.support_ticket_get_list({"per_page":10, "page":request.page}) %}
+{% set qc_open = 0 %}{% set qc_closed = 0 %}
+{% set qc_all = client.support_ticket_get_list({"per_page":100}).list %}
+{% for t in qc_all %}
+    {% if t.status in ['open', 'on_hold'] %}{% set qc_open = qc_open + 1 %}{% else %}{% set qc_closed = qc_closed + 1 %}{% endif %}
+{% endfor %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Support tickets'|trans }}</h1>
+                    <p>{{ 'Need an answer? We are here to help!'|trans }}</p>
+                </div>
+                <div>
+                    <button type="button" class="premium-btn" data-bs-toggle="modal" data-bs-target="#open-ticket-modal">{{ 'New ticket'|trans }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% if client %}
+    {# ================= stat cards ================= #}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-info" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-chat"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Total tickets'|trans }}</p>
+                            <h4>{{ qc_all|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-success" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-folder"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Open'|trans }}</p>
+                            <h4>{{ qc_open }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-warning" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-star"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'On hold'|trans }}</p>
+                            <h4>{% set h = 0 %}{% for t in qc_all %}{% if t.status == 'on_hold' %}{% set h = h + 1 %}{% endif %}{% endfor %}{{ h }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-document"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Closed'|trans }}</p>
+                            <h4>{{ qc_closed }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="header-title">
+                <h4 class="card-title">{{ 'Your Tickets'|trans }}</h4>
+                <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Click a ticket to view the conversation.'|trans }}</p>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if tickets.list %}
+            <div class="table-responsive">
+                <table class="table table-layout-flat">
+                    <thead>
+                    <tr>
+                        <th>{{ 'Ticket'|trans }}</th>
+                        <th>{{ 'Subject'|trans }}</th>
+                        <th>{{ 'Help desk'|trans }}</th>
+                        <th>{{ 'Status'|trans }}</th>
+                        <th>{{ 'Submitted'|trans }}</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for i, ticket in tickets.list %}
+                        <tr>
+                            <td class="text-size-12">#{{ ticket.id }}</td>
+                            <td>
+                                <div class="service-name"><a href="{{ 'support/ticket'|link }}/{{ ticket.id }}" class="text-decoration-none" style="color:var(--iq-heading)">{{ ticket.subject|truncate(40) }}</a></div>
+                            </td>
+                            <td class="text-size-12">{{ ticket.helpdesk.name }}</td>
+                            <td>
+                                {% if ticket.status == 'open' %}
+                                    <span class="iq-badge bg-soft-success"><span class="iq-badge-dot"></span>{{ mf.status_name(ticket.status) }}</span>
+                                {% elseif ticket.status == 'on_hold' %}
+                                    <span class="iq-badge bg-soft-warning"><span class="iq-badge-dot"></span>{{ mf.status_name(ticket.status) }}</span>
+                                {% else %}
+                                    <span class="iq-badge" style="background:#1e1e24;color:#9aa3b2"><span class="iq-badge-dot"></span>{{ mf.status_name(ticket.status) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-size-12">{{ ticket.created_at|timeago }} {{ 'ago'|trans }}</td>
+                            <td>
+                                {% if ticket.status == 'closed' %}
+                                    <a href="{{ 'support/ticket'|link }}/{{ ticket.id }}" class="premium-btn premium-btn-sm">{{ 'View'|trans }}</a>
+                                {% else %}
+                                    <a href="{{ 'support/ticket'|link }}/{{ ticket.id }}#reply-to" class="premium-btn premium-btn-sm">{{ 'Reply'|trans }}</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {{ include('partial_pagination.html.twig', { 'list': tickets }) }}
+            {% else %}
+                <div class="text-center py-4">
+                    <div class="qc-slide-ico mx-auto mb-3" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--iq-primary-light);color:#f06b9d"><svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V9H13V7H11M11,11V17H13V11H11Z"/></svg></div>
+                    <h5 class="mb-2" style="color:var(--iq-heading)">{{ 'No support tickets'|trans }}</h5>
+                    <p class="text-muted mb-0">{{ 'Open a new ticket and we will get back to you.'|trans }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="modal modal-lg fade" id="open-ticket-modal" tabindex="-1" aria-labelledby="open-ticket-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="header-title"><h4 class="card-title">{{ 'Open new ticket'|trans }}</h4></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Close'|trans }}"></button>
+                </div>
+                <form action="" method="post" id="ticket-submit" class="form" style="background: none">
+                    <div class="modal-body">
+                        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
+                        <div class="mb-3">
+                            <label for="support-helpdesk-id" class="form-label">{{ 'Helpdesk'|trans }}</label>
+                            {{ mf.selectbox('support_helpdesk_id', client.support_helpdesk_get_pairs, request.support_helpdesk_id, 1) }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">{{ 'Subject'|trans }}</label>
+                            <input type="text" name="subject" class="form-control" id="subject" required aria-describedby="subject" value="{{ request.subject|e }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">{{ 'Message'|trans }}</label>
+                            <textarea name="content" class="editor-textarea form-control" id="message" aria-describedby="message" rows="5" required>{{ request.content|e }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="premium-btn">{{ 'Submit'|trans }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            let submitTicket = document.getElementById('ticket-submit');
+            submitTicket.addEventListener('submit', (e) => {
+                e.preventDefault();
+                API.client.post('support/ticket_create',
+                    new FormData(submitTicket).serializeObject(),
+                    (res) => bb.redirect("{{ 'support/ticket'|link }}" + '/' + res),
+                    (res) => FOSSBilling.message(`${res.message} (${res.code})`, 'error'),
+                )
+                return false;
+            });
+            {% if request.ticket %}
+            const ticketModal = new bootstrap.Modal('#open-ticket-modal')
+            ticketModal.show(submitTicket);
+            {% endif %}
+        });
+    </script>
+{% endblock %}
