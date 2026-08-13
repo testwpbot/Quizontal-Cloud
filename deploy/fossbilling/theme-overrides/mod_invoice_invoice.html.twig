@@ -131,7 +131,7 @@
                     <strong class="d-block" style="color:var(--iq-heading)">{{ 'Paying by bank transfer?'|trans }}</strong>
                     <span class="small text-muted">View our bank details, transfer {{ invoice.total|money(invoice.currency) }} and upload the slip — this invoice is then marked paid and your service activates automatically. Use <strong>{{ nr }}</strong> as the transfer reference where possible.</span>
                 </div>
-                <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">{{ 'Bank details &amp; slip upload'|trans }}</a>
+                <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">{{ 'Bank details & slip upload'|trans }}</a>
             </div>
             {% endif %}
         </div>
