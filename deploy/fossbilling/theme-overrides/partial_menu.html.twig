@@ -1,6 +1,12 @@
-<div class="offcanvas-md offcanvas-end" tabindex="-1" id="sidebarMenu">
+{% import "qc_storefront.html.twig" as qc_store %}
+{% set qc_company = guest.system_company %}
+{% set qc_rail_logo = settings.theme == 'dark' ? qc_company.logo_url_dark : qc_company.logo_url %}
+<div class="offcanvas-md offcanvas-end qcd-rail" tabindex="-1" id="sidebarMenu">
     <div class="offcanvas-body d-md-flex flex-column overflow-y-auto">
-        <ul class="nav flex-column">
+        {% if qc_rail_logo and settings.show_company_logo %}
+            <a class="qcd-rail-brand d-none d-md-block" href="{{ '/'|link }}"><img src="{{ qc_rail_logo }}" alt="{{ qc_company.name }}"></a>
+        {% endif %}
+        <ul class="nav flex-column qcd-rail-nav">
             {% if settings.side_menu_dashboard %}
                 <li class="nav-item offcanvas-item">
                     <a class="nav-link d-flex align-items-center gap-2" href="{{ '/'|link }}">
@@ -111,5 +117,11 @@
                 </li>
             {% endif %}
         </ul>
+        <div class="qcd-rail-promo d-none d-md-block">
+            <strong>{{ 'Power Your Online Journey'|trans }}</strong>
+            <p>{{ 'High-performance domains, hosting and cloud — built for you.'|trans }}</p>
+            <a class="qcd-promo-btn" href="{{ qc_store.url() }}/pricing">{{ 'View Plans'|trans }}</a>
+            <span class="qcd-promo-glow g1"></span><span class="qcd-promo-glow g2"></span>
+        </div>
     </div>
 </div>
