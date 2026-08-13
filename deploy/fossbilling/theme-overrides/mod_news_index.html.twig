@@ -1,0 +1,76 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'News'|trans }}{% endblock %}
+
+{% block body_class %}news-index qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'News & Announcements'|trans }}</h1>
+                    <p>{{ 'Track our latest information.'|trans }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <style>
+        .qc-news-card {
+            background: var(--iq-surface, #0b0b0e);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+            border-radius: .75rem;
+            margin-bottom: 14px;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+        .qc-news-card:hover { transform: translateY(-3px); border-color: rgba(227,28,100,.4); box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.55); }
+        .qc-news-card .card-body { padding: 20px 22px; }
+        .qc-news-card h3 { color: var(--iq-heading, #f5f6f8); font-size: 1.15rem; margin-bottom: 4px; }
+        .qc-news-date { display: inline-flex; align-items: center; gap: 6px; color: #7d8494; font-size: .78rem; font-weight: 600; margin-bottom: 10px; }
+        .qc-news-date svg { width: 14px; height: 14px; }
+        .qc-news-excerpt { color: var(--iq-body, #9aa3b2); font-size: .9rem; line-height: 1.6; margin-bottom: 14px; }
+        .qc-news-link { display: inline-flex; align-items: center; gap: 6px; color: #f06b9d; font-weight: 600; font-size: .85rem; text-decoration: none; transition: color .15s ease; }
+        .qc-news-link:hover { color: #ff7bac; }
+        .qc-news-link svg { width: 14px; height: 14px; transition: transform .15s ease; }
+        .qc-news-link:hover svg { transform: translateX(3px); }
+    </style>
+
+    {% set posts = guest.news_get_list({ "page": request.page, "per_page": 5 }) %}
+    {% if posts.list %}
+        {% for i, post in posts.list %}
+            <a href="{{ '/news'|link }}/{{ post.slug }}" class="qc-news-card card text-decoration-none d-block">
+                <div class="card-body">
+                    <h3>{{ post.title }}</h3>
+                    <span class="qc-news-date">
+                        <svg fill="currentColor"><use href="#i-calendar"/></svg>
+                        {{ post.updated_at|format_datetime }}
+                    </span>
+                    <p class="qc-news-excerpt mb-0">
+                        {% if post.excerpt %}
+                            {{ post.excerpt|truncate(200)|markdown }}
+                        {% else %}
+                            {{ post.content|truncate(200)|markdown }}
+                        {% endif %}
+                    </p>
+                    <span class="qc-news-link mt-2">{{ 'Continue reading'|trans }}
+                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+                    </span>
+                </div>
+            </a>
+        {% endfor %}
+        {{ include('partial_pagination.html.twig', { 'list': posts }) }}
+    {% else %}
+        <div class="qc-news-card card">
+            <div class="card-body text-center py-5">
+                <div class="qc-slide-ico mx-auto mb-3" style="width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--iq-primary-light);color:#f06b9d"><svg fill="currentColor" width="22" height="22" viewBox="0 0 24 24"><path d="M20.043 18.533h-2.585V8.487a5.465 5.465 0 0 0-4.583-5.397.55.55 0 0 1 0-1.09 6.564 6.564 0 0 1 6.166 6.488v10.045h3.88a.55.55 0 0 1 0 1.1H20.044l-.001-.1Zm-9.94 3.25h3.88a1.94 1.94 0 0 1-3.88 0Zm-7.14-4.35-.001.1H2.312a.55.55 0 1 1 0-1.1h3.88V7.92a6.563 6.563 0 0 1 6.165-6.486.55.55 0 1 1 0 1.09 5.463 5.463 0 0 0-4.583 5.395v10.155h.069Z"/></svg></div>
+                <h5 class="mb-2" style="color:var(--iq-heading)">{{ 'No news or announcements'|trans }}</h5>
+                <p class="text-muted mb-0">{{ 'Check back soon for updates.'|trans }}</p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
