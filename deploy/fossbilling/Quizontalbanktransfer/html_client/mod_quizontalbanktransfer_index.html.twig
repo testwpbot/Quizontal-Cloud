@@ -23,7 +23,7 @@
 
 {% block content %}
 <style>
-.qc-receipt-card{position:relative;overflow:hidden}#qc-receipt-loading{display:none;position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.88);padding:22px}#qc-receipt-loading.show{display:block}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:14px 0;background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}.qc-receipt-shimmer.field{height:42px}.qc-receipt-shimmer.notice{height:78px}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
+.qc-receipt-card{position:relative;overflow:hidden}#qc-receipt-loading{display:none;position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.88);padding:22px}#qc-receipt-loading.show{display:flex;align-items:center;justify-content:center}.qc-receipt-loading-box{width:min(420px,100%);text-align:center}.qc-receipt-loading-box .qc-receipt-shimmer{margin-left:auto;margin-right:auto}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:14px 0;background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}.qc-receipt-shimmer.field{height:42px}.qc-receipt-shimmer.notice{height:78px}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
 .qc-bank-logo-box { background: rgba(255,255,255,.04); border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: .75rem; }
 </style>
 {% if request.submitted %}<div class="alert alert-success">{% if invoice_kind|default('deposit') == 'service' %}Receipt submitted — we verify it and activate your service right after approval.{% else %}Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.{% endif %}</div>{% endif %}
@@ -77,9 +77,9 @@
           <div class="mb-3"><label class="form-label">Payment receipt</label><input class="form-control" type="file" name="receipt" accept="image/jpeg,image/png,application/pdf" required><small class="form-hint">JPG, PNG, or PDF. Maximum {{ config.max_file_mb }} MB.</small></div>
           <div class="alert alert-warning mb-0">A receipt does not guarantee approval. Funds are credited only after the payment appears in our bank account.</div>
         </div>
-        <div class="card-footer"><button class="premium-btn" type="submit">Submit transfer for verification</button></div>
+        <div class="card-footer"><button class="premium-btn-static" type="submit">Submit transfer for verification</button></div>
       </form>
-      <div id="qc-receipt-loading" aria-live="polite"><div class="d-flex align-items-center gap-2 mb-3"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong style="color:#fff">Submitting for verification…</strong></div><div class="qc-receipt-shimmer" style="width:42%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer" style="width:55%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer notice"></div><div class="qc-receipt-shimmer" style="width:48%"></div></div>
+      <div id="qc-receipt-loading" aria-live="polite"><div class="qc-receipt-loading-box"><div class="d-flex align-items-center justify-content-center gap-2 mb-3"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong style="color:#fff">Submitting for verification…</strong></div><div class="qc-receipt-shimmer" style="width:42%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer" style="width:55%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer notice"></div><div class="qc-receipt-shimmer" style="width:48%"></div></div></div>
     </div>
   </div>
 </div>
@@ -93,9 +93,10 @@
   </div>
   <div class="card-body">
     {% set status_classes = {'pending': 'bg-soft-warning', 'processing': 'bg-soft-info', 'approved': 'bg-soft-success', 'rejected': 'bg-soft-danger'} %}
+    {% set status_labels = {'pending': 'Pending review', 'processing': 'Processing', 'approved': 'Approved', 'rejected': 'Rejected'} %}
     <div class="table-responsive"><table class="table table-layout-flat"><thead><tr><th>ID</th><th>Invoice</th><th>Amount</th><th>Reference</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
     {% set submissions = client.quizontalbanktransfer_get_list({per_page: 50}) %}
-    {% for item in submissions.list %}<tr><td class="text-size-12">#{{ item.id }}</td><td><span class="service-name">{{ item.serie_nr }}</span></td><td class="fw-medium" style="color:var(--iq-heading)">{{ item.amount|money(item.currency) }}</td><td class="text-size-12">{{ item.reference }}</td><td><span class="iq-badge {{ status_classes[item.status]|default('') }}"{% if item.status not in ['pending','processing','approved','rejected'] %} style="background:#1e1e24;color:#9aa3b2"{% endif %}><span class="iq-badge-dot"></span>{{ item.status }}</span>{% if item.admin_note %}<div class="small text-muted">{{ item.admin_note }}</div>{% endif %}</td><td class="text-size-12">{{ item.created_at|format_date(pattern="MMM d, yyyy") }}</td><td><a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ ('quizontalbanktransfer/receipt/' ~ item.id)|link }}">{{ 'Receipt'|trans }}</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted py-4">No bank transfers submitted.</td></tr>{% endfor %}
+    {% for item in submissions.list %}<tr><td class="text-size-12">#{{ item.id }}</td><td><span class="service-name">{{ item.serie_nr }}</span></td><td class="fw-medium" style="color:var(--iq-heading)">{{ item.amount|money(item.currency) }}</td><td class="text-size-12">{{ item.reference }}</td><td><span class="iq-badge {{ status_classes[item.status]|default('') }}"{% if item.status not in ['pending','processing','approved','rejected'] %} style="background:#1e1e24;color:#9aa3b2"{% endif %}><span class="iq-badge-dot"></span>{{ status_labels[item.status]|default(item.status|capitalize) }}</span></td><td class="text-size-12">{{ item.created_at|format_date(pattern="MMM d, yyyy") }}</td><td><a class="premium-btn premium-btn-sm" target="_blank" href="{{ ('quizontalbanktransfer/receipt/' ~ item.id)|link }}">{{ 'Receipt'|trans }}</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted py-4">No bank transfers submitted.</td></tr>{% endfor %}
     </tbody></table></div>
   </div>
 </div>
