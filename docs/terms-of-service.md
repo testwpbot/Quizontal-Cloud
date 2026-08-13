@@ -1,6 +1,6 @@
 # Quizontal Cloud — Terms of Service
 
-**Last updated:** [Date]
+**Last updated:** August 13, 2026
 
 These Terms of Service ("Terms") govern your use of the products and services provided by **Quizontal Cloud** ("we", "us", "our" or "the Company") through our website and client area. By placing an order, creating an account, or using any of our services, you agree to be bound by these Terms.
 
@@ -115,9 +115,9 @@ These Terms are governed by the laws of Sri Lanka. Any disputes shall be subject
 
 If you have any questions about these Terms, please contact us:
 
-- **Company:** [Registered legal name]
-- **Email:** [support@yourdomain.com]
-- **Address:** [Registered business address]
+- **Company:** Quizontal
+- **Email:** support@quizontal.site
+- **Address:** Kegalle, Sri Lanka
 
 ---
 

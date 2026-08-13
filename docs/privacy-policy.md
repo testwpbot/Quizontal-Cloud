@@ -1,6 +1,6 @@
 # Quizontal Cloud — Privacy Policy
 
-**Last updated:** [Date]
+**Last updated:** August 13, 2026
 
 At **Quizontal Cloud** ("we", "us", "our"), we are committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have.
 
@@ -117,9 +117,9 @@ We may update this Privacy Policy from time to time. Material changes will be no
 
 If you have any questions about this Privacy Policy or how we handle your data, please contact us:
 
-- **Company:** [Registered legal name]
-- **Email:** [support@yourdomain.com]
-- **Address:** [Registered business address]
+- **Company:** Quizontal
+- **Email:** support@quizontal.site
+- **Address:** Kegalle, Sri Lanka
 
 ---
 
