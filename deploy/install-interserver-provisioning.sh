@@ -5,6 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SOURCE_DIR="$SCRIPT_DIR/fossbilling/Serviceinterserver"
 CUSTOMER_API_DIR="$SCRIPT_DIR/fossbilling/Cloudvps"
 DOMAINS_SOURCE="$SCRIPT_DIR/fossbilling/Quizontaldomains"
+AVATAR_SOURCE="$SCRIPT_DIR/fossbilling/Quizontalavatar"
 THEME_OVERRIDES_DIR="$SCRIPT_DIR/fossbilling/theme-overrides"
 [[ $EUID -eq 0 ]] || { echo 'Run with sudo -E.' >&2; exit 1; }
 [[ -d "$SOURCE_DIR" ]] || { echo "Module source missing: $SOURCE_DIR" >&2; exit 1; }
@@ -35,6 +36,15 @@ if [[ -d "$DOMAINS_SOURCE" ]]; then
   chown -R "$WEB_USER:$WEB_GROUP" "$DOMAINS_TARGET"
   find "$DOMAINS_TARGET" -type d -exec chmod 0755 {} +
   find "$DOMAINS_TARGET" -type f -exec chmod 0644 {} +
+fi
+# Client profile picture upload (replaces the Gravatar flow).
+if [[ -d "$AVATAR_SOURCE" ]]; then
+  AVATAR_TARGET="$MODULES_DIR/Quizontalavatar"
+  install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$AVATAR_TARGET"
+  cp -a "$AVATAR_SOURCE"/. "$AVATAR_TARGET"/
+  chown -R "$WEB_USER:$WEB_GROUP" "$AVATAR_TARGET"
+  find "$AVATAR_TARGET" -type d -exec chmod 0755 {} +
+  find "$AVATAR_TARGET" -type f -exec chmod 0644 {} +
 fi
 APP_ROOT=$(dirname "$MODULES_DIR")
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)

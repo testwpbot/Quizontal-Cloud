@@ -1,0 +1,261 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'Profile details'|trans }}{% endblock %}
+
+{% block body_class %}client-profile qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% set required = guest.client_required %}
+{% set qc_avatar_url = client.quizontalavatar_avatar_url|default('') %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Profile details'|trans }}</h1>
+                    <p>{{ 'Keep your personal data up to date.'|trans }}</p>
+                </div>
+                <div>
+                    <a href="{{ '/'|link }}" class="premium-btn">{{ 'Back to dashboard'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% if client %}
+    <style>
+        .qc-profile-tabs { gap: 6px; padding: 5px; background: rgba(255,255,255,.03); border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: 14px; display: inline-flex; flex-wrap: wrap; }
+        .qc-profile-tabs .nav-link { border: 1px solid transparent; border-radius: 10px; padding: 8px 18px; font-size: .85rem; font-weight: 600; color: #8b93a3; cursor: pointer; }
+        .qc-profile-tabs .nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
+        .qc-profile-tabs .nav-link.active { background: linear-gradient(135deg, var(--iq-primary, #e31c64), var(--iq-primary-dark, #a51149)); color: #fff; box-shadow: 0 6px 16px rgba(227,28,100,.32); }
+        .qc-avatar-preview { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid var(--iq-line, rgba(255,255,255,.1)); }
+        .qc-avatar-wrap { display: flex; align-items: center; gap: 20px; }
+        .qc-coming-soon {
+            text-align: center; padding: 40px 20px;
+            border: 1px dashed var(--iq-line, rgba(255,255,255,.14));
+            border-radius: .85rem;
+            color: var(--iq-body, #9aa3b2);
+        }
+        .qc-coming-soon .qc-soon-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 14px; background: var(--iq-primary-light, rgba(227,28,100,.16)); color: #f06b9d; }
+    </style>
+
+    {% if (guest.client_is_email_validation_required) and (not profile.email_approved) %}
+        <div class="alert alert-danger">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span>{{ 'You must verify your email address before you may access our services.'|trans }}</span>
+                <a href="{{ 'api/client/client/resend_email_verification'|link({ 'CSRFToken': CSRFToken }) }}"
+                   class="btn btn-primary api-link"
+                   data-api-msg="{{ 'Verification email has been resent'|trans }}">{{ 'Resend verification email'|trans }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if request.avatar_updated %}
+        <div class="alert alert-success">{{ 'Profile picture updated.'|trans }}</div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav qc-profile-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-tab-pane" href="#">{{ 'Details'|trans }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="pass-tab" data-bs-toggle="tab" data-bs-target="#pass-tab-pane" href="#">{{ 'Change Password'|trans }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="apikey-tab" data-bs-toggle="tab" data-bs-target="#apikey-tab-pane" href="#">{{ 'API Key'|trans }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="currency-tab" data-bs-toggle="tab" data-bs-target="#currency-tab-pane" href="#">{{ 'Currency'|trans }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content">
+            {# ---- Details ---- #}
+            <div class="card-body tab-pane active" id="details-tab-pane" role="tabpanel" tabindex="0">
+                <h5 class="card-title mb-1">{{ 'Update details'|trans }}</h5>
+                <p class="card-text fs-7 text-muted">{{ 'Keep your personal data up to date.'|trans }}</p>
+
+                {# profile picture upload #}
+                <div class="qc-avatar-wrap mb-4 p-3 rounded-3" style="background:rgba(255,255,255,.02);border:1px solid var(--iq-line, rgba(255,255,255,.06))">
+                    <img class="qc-avatar-preview" src="{{ qc_avatar_url ? (qc_avatar_url|link) : 'https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff' }}" alt="{{ 'Profile picture'|trans }}">
+                    <div class="flex-grow-1" style="min-width:220px">
+                        <strong class="d-block mb-1" style="color:var(--iq-heading)">{{ 'Profile picture'|trans }}</strong>
+                        <span class="small text-muted d-block mb-2">{{ 'Upload a JPG, PNG, WEBP or GIF (max 4 MB). It is used across the client area.'|trans }}</span>
+                        <form method="post" action="{{ 'quizontalavatar/upload'|link }}" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-center">
+                            <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+                            <input class="form-control" style="max-width:320px" type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" required>
+                            <button class="premium-btn premium-btn-sm" type="submit">{{ 'Upload'|trans }}</button>
+                        </form>
+                    </div>
+                </div>
+
+                <form method="post" action="client/profile/update" id="profile-update" class="api-form"
+                      data-api-msg="{{ 'Profile updated'|trans }}">
+                    <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="first_name">{{ 'First Name'|trans }}</label>
+                            <input type="text" class="form-control" name="first_name" id="first_name" value="{{ profile.first_name }}" required>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="last_name">{{ 'Last Name'|trans }}</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ profile.last_name }}" {% if "last_name" in required %} required {% endif %}>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-10">
+                            <label class="form-label" for="email">{{ 'Email Address'|trans }}</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ profile.email }}" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="birthday">{{ 'Birthdate'|trans }}</label>
+                            <input type="date" class="form-control" id="birthday" name="birthday" value="{{ profile.birthday }}" {% if "birthday" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="gender">{{ 'Gender'|trans }}</label>
+                            <select class="form-select" name="gender" id="gender" {% if "gender" in required %} required {% endif %}>
+                                <option value="male" {{ profile.gender == 'male' ? 'selected' : '' }}>Male</option>
+                                <option value="female" {{ profile.gender == 'female' ? 'selected' : '' }}>Female</option>
+                                <option value="nonbinary" {{ profile.gender == 'nonbinary' ? 'selected' : '' }}>Non-binary</option>
+                                <option value="other" {% if profile.gender not in ['male', 'female', 'nonbinary'] %} selected {% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-10">
+                            <label class="form-label" for="company">{{ 'Company Name'|trans }}</label>
+                            <input type="text" class="form-control" name="company" id="company" value="{{ profile.company }}" {% if "company" in required %} required {% endif %}>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="company_vat">{{ 'Company VAT'|trans }}</label>
+                            <input type="text" class="form-control" name="company_vat" id="company_vat" value="{{ profile.company_vat }}">
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="company_number">{{ 'Company Number'|trans }}</label>
+                            <input type="text" class="form-control" name="company_number" id="company_number" value="{{ profile.company_number }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="phone_cc">{{ 'Phone Country Code'|trans }}</label>
+                            <input type="text" class="form-control" name="phone_cc" id="phone_cc" value="{{ profile.phone_cc }}" {% if "phone" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="phone">{{ 'Phone Number'|trans }}</label>
+                            <input type="text" class="form-control" name="phone" id="phone" value="{{ profile.phone }}" {% if "phone" in required %} required {% endif %}>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="address_1">{{ 'Address'|trans }}</label>
+                            <input type="text" class="form-control" name="address_1" id="address_1" value="{{ profile.address_1 }}" {% if "address_1" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="address_2">{{ 'Address 2'|trans }}</label>
+                            <input type="text" class="form-control" name="address_2" id="address_2" value="{{ profile.address_2 }}" {% if "address_2" in required %} required {% endif %}>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="city">{{ 'City'|trans }}</label>
+                            <input type="text" class="form-control" name="city" id="city" value="{{ profile.city }}" {% if "city" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="country">{{ 'Country'|trans }}</label>
+                            <select class="form-select" id="country" name="country" {% if "country" in required %} required {% endif %}>
+                                <option value="">{{ '-- Select country --'|trans }}</option>
+                                {% for val,label in guest.system_countries %}
+                                    <option value="{{ val }}" label="{{ label|e }}" {% if val == profile.country %}selected="selected"{% endif %}>{{ label|e }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="state">{{ 'State'|trans }}</label>
+                            <input type="text" class="form-control" name="state" id="state" value="{{ profile.state }}" {% if "state" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="postcode">{{ 'Zip/Postal Code'|trans }}</label>
+                            <input type="text" class="form-control" id="postcode" name="postcode" value="{{ profile.postcode }}" {% if "postcode" in required %} required {% endif %}>
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <label class="form-label" for="document_nr">{{ 'Passport number'|trans }}</label>
+                            <input type="text" class="form-control" name="document_nr" id="document_nr" value="{{ profile.document_nr }}">
+                        </div>
+                    </div>
+                    {% for i in 1..10 %}
+                        {% set custom = 'custom_' ~ i %}
+                        {% set current = guest.client_custom_fields[custom] %}
+                        {% if current.active %}
+                            <div class="mb-3">
+                                <label class="form-label" for="{{ custom }}">{{ current.title }}</label>
+                                <input type="text" class="form-control" name="{{ custom }}" id="{{ custom }}" value="{{ profile[custom] }}" {% if current.required %} required {% endif %}>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <button class="premium-btn" type="submit">{{ 'Update profile'|trans }}</button>
+                </form>
+            </div>
+
+            {# ---- Change Password ---- #}
+            <div class="card-body tab-pane" id="pass-tab-pane" role="tabpanel" tabindex="0">
+                <h5 class="card-title mb-1">{{ 'Change Password'|trans }}</h5>
+                <p class="card-text fs-7 text-muted">{{ 'Enter your new password twice to avoid mistakes. '|trans }}</p>
+                <form method="post" action="{{ 'api/client/profile/change_password'|link }}" class="api-form">
+                    <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+                    <div class="mb-3">
+                        <label class="form-label" for="current_password">{{ 'Current Password'|trans }}</label>
+                        <input class="form-control" type="password" name="current_password" id="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="new_password">{{ 'New Password'|trans }}</label>
+                        <input class="form-control" type="password" name="new_password" id="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="confirm_password">{{ 'Confirm Password'|trans }}</label>
+                        <input class="form-control" type="password" name="confirm_password" id="confirm_password" required>
+                    </div>
+                    <button class="premium-btn" type="submit">{{ 'Change Password'|trans }}</button>
+                </form>
+            </div>
+
+            {# ---- API Key (coming soon) ---- #}
+            <div class="card-body tab-pane" id="apikey-tab-pane" role="tabpanel" tabindex="0">
+                <div class="qc-coming-soon">
+                    <div class="qc-soon-icon">
+                        <svg fill="currentColor" width="26" height="26" viewBox="0 0 24 24"><path d="M17.9184 14.32C17.6594 14.571 17.5404 14.934 17.5994 15.29L18.4884 20.21C18.5634 20.627 18.3874 21.049 18.0384 21.29C17.6964 21.54 17.2414 21.57 16.8684 21.37L12.4394 19.06C12.2854 18.978 12.1144 18.934 11.9394 18.929H11.6684C11.5744 18.943 11.4824 18.973 11.3984 19.019L6.96839 21.34C6.74939 21.45 6.50139 21.489 6.25839 21.45C5.66639 21.338 5.27139 20.774 5.36839 20.179L6.25839 15.259C6.31739 14.9 6.19839 14.535 5.93939 14.28L2.32839 10.78C2.02639 10.487 1.92139 10.047 2.05939 9.65C2.19339 9.254 2.53539 8.965 2.94839 8.9L7.91839 8.179C8.29639 8.14 8.62839 7.91 8.79839 7.57L10.9884 3.08C11.0404 2.98 11.1074 2.888 11.1884 2.81L11.2784 2.74C11.3254 2.688 11.3794 2.645 11.4394 2.61L11.5484 2.57L11.7184 2.5H12.1394C12.5154 2.539 12.8464 2.764 13.0194 3.1L15.2384 7.57C15.3984 7.897 15.7094 8.124 16.0684 8.179L21.0384 8.9C21.4584 8.96 21.8094 9.25 21.9484 9.65C22.0794 10.051 21.9664 10.491 21.6584 10.78L17.9184 14.32Z" fill="currentColor"/></svg>
+                    </div>
+                    <h5 class="mb-2" style="color:var(--iq-heading)">{{ 'API Key'|trans }}</h5>
+                    <p class="text-muted mb-0">{{ 'API keys are coming soon. This feature will let you integrate external applications with your account.'|trans }}</p>
+                </div>
+            </div>
+
+            {# ---- Currency ---- #}
+            <div class="card-body tab-pane" id="currency-tab-pane" role="tabpanel" tabindex="0">
+                <h5 class="card-title mb-1">{{ 'Currency'|trans }}</h5>
+                <p class="card-text fs-7 text-muted">{{ 'Your profile currency is defined after your first order. Once your currency is set, all your profile accounting will be managed in that currency and cannot be changed.'|trans }}</p>
+                {% if profile.currency %}
+                    <p>{{ 'Your profile currency is'|trans }} <strong style="color:var(--iq-heading)">{{ profile.currency }}</strong></p>
+                    <p>{{ 'You will need to create a new client profile to use an alternative currency.'|trans }}</p>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        {{ 'You do not yet have a currency associated with your profile. You can select the correct one when making your first order.'|trans }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

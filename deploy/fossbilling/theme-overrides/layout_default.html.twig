@@ -73,6 +73,7 @@
     {% import "qc_storefront.html.twig" as qc_store %}
     {% set qc_logo_url = 'https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png' %}
     {% set qc_cart_count = guest.cart_get.items|default([])|length %}
+    {% set qc_avatar_url = client.quizontalavatar_avatar_url|default('') %}
     {% set qc_news_on = guest.extension_is_on({ "mod": "news" }) %}
     {% if qc_news_on %}
         {% set qc_bell_posts = guest.news_get_list({ "per_page": 3 }).list %}
@@ -218,7 +219,7 @@
             {% endif %}
             <div class="dropdown">
                 <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto;padding:0 .35rem;gap:.65rem">
-                    <img class="avatar-user" src="https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff" alt="{{ 'Profile'|trans }}">
+                    <img class="avatar-user" src="{{ qc_avatar_url ? (qc_avatar_url|link) : 'https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff' }}" alt="{{ 'Profile'|trans }}">
                     <span class="user-info">
                         <strong>{{ profile.first_name }} {{ profile.last_name|first|upper }}{% if profile.last_name %}.{% endif %}</strong>
                         <small>{{ profile.email|truncate(30) }}</small>
@@ -227,7 +228,7 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:260px">
                     <div class="d-flex align-items-center gap-3 px-2 py-2 mb-1">
-                        <img class="avatar-user" src="https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff" alt="{{ 'Profile'|trans }}">
+                        <img class="avatar-user" src="{{ qc_avatar_url ? (qc_avatar_url|link) : 'https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff' }}" alt="{{ 'Profile'|trans }}">
                         <div class="user-info"><strong>{{ profile.first_name }} {{ profile.last_name }}</strong><small>{{ profile.email|truncate(30) }}</small></div>
                     </div>
                     <a href="{{ 'client/profile'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-profile"/></svg>{{ 'My Profile'|trans }}</a>

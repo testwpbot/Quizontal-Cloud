@@ -1,0 +1,10 @@
+{
+  "id": "quizontalavatar",
+  "type": "mod",
+  "name": "Quizontal Cloud Profile Avatar",
+  "description": "Customer self-service profile picture upload for the Quizontal Cloud client area, replacing the Gravatar flow.",
+  "icon_url": "icon.svg",
+  "author": "Quizontal Cloud",
+  "license": "Proprietary",
+  "version": "1.0.0"
+}
