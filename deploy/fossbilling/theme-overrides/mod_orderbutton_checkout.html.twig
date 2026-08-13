@@ -1,160 +1,160 @@
 {% set cart = guest.cart_get %}
 <style>
-#qc-cart{position:relative;overflow:hidden;--qc-accent:#e31c64;--qc-soft:#fff1f6;--qc-border:#dfe3e8;--qc-text:#20242b}
-#qc-cart .qc-summary{background:#fff;border:1px solid var(--qc-border);border-radius:12px;overflow:hidden}
-#qc-cart .qc-product-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:16px;border-bottom:1px solid #edf0f3}
-#qc-cart .qc-total{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:#f7f8fa;font-size:18px}
-#qc-cart .qc-wallet{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:#fff}
-#qc-cart .qc-wallet-ready{border-color:#34a853;background:#f0fff4}
-#qc-cart .qc-wallet-short{border-color:#e6a700;background:#fff9e8}
+#qc-cart{position:relative;overflow:hidden;--qc-accent:#e31c64;--qc-soft:var(--iq-primary-light, rgba(227,28,100,.16));--qc-border:var(--iq-line, rgba(255,255,255,.06));--qc-text:var(--iq-heading, #f5f6f8)}
+#qc-cart .qc-summary{background:rgba(255,255,255,.02);border:1px solid var(--qc-border);border-radius:12px;overflow:hidden}
+#qc-cart .qc-product-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:16px;border-bottom:1px solid var(--qc-border)}
+#qc-cart .qc-product-row strong{color:var(--qc-text)}
+#qc-cart .qc-total{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:rgba(255,255,255,.03);font-size:18px;color:var(--qc-text)}
+#qc-cart .qc-wallet{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:rgba(255,255,255,.02)}
+#qc-cart .qc-wallet-ready{border-color:rgba(32,201,151,.4);background:rgba(32,201,151,.06)}
+#qc-cart .qc-wallet-short{border-color:rgba(255,188,53,.4);background:rgba(255,188,53,.06)}
 #qc-cart .qc-wallet-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:var(--qc-soft)}
 #qc-cart .qc-promo{display:flex;gap:8px;max-width:420px}
 #qc-cart .qc-promo input{min-width:0}
-#qc-cart .qc-item-points{list-style:none;margin:7px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.8rem;color:#5c636a}
-#qc-cart .qc-item-points li::before{content:"✓";color:#34a853;font-weight:700;margin-right:5px}
+#qc-cart .qc-item-points{list-style:none;margin:7px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.8rem;color:#8b93a3}
+#qc-cart .qc-item-points li::before{content:"✓";color:#2fd9a8;font-weight:700;margin-right:5px}
 #qc-cart .qc-item-points li strong{color:var(--qc-text)}
-#qc-cart .qc-item-desc{font-size:.8rem;color:#5c636a;margin:5px 0 2px;max-width:56ch}
-#qc-cart .qc-bank{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:#fff}
-#qc-cart .qc-bank-steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;font-size:.85rem;color:#5c636a;counter-reset:qcstep}
+#qc-cart .qc-item-desc{font-size:.8rem;color:#8b93a3;margin:5px 0 2px;max-width:56ch}
+#qc-cart .qc-bank{border:1px solid var(--qc-border);border-radius:12px;padding:16px;background:rgba(255,255,255,.02)}
+#qc-cart .qc-bank-steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;font-size:.85rem;color:#8b93a3;counter-reset:qcstep}
 #qc-cart .qc-bank-steps li{display:flex;gap:9px;align-items:flex-start;counter-increment:qcstep}
-#qc-cart .qc-bank-steps li::before{content:counter(qcstep);flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:var(--qc-soft);color:var(--qc-accent);font-weight:700;font-size:.72rem;display:grid;place-items:center;margin-top:1px}
+#qc-cart .qc-bank-steps li::before{content:counter(qcstep);flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:var(--qc-soft);color:#f06b9d;font-weight:700;font-size:.72rem;display:grid;place-items:center;margin-top:1px}
 #qc-cart .qc-bank-steps li strong{color:var(--qc-text)}
 #qc-cart .btn-primary{background:var(--qc-accent);border-color:var(--qc-accent)}
-#qc-cart .btn-primary:hover{background:#c81758;border-color:#c81758}
-#qc-checkout-loading{display:none;position:absolute;inset:0;z-index:30;background:rgba(255,255,255,.97);place-items:center;padding:24px}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
+#qc-cart .btn-primary:hover{background:#ee3d80;border-color:#ee3d80}
+#qc-checkout-loading{display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.88);place-items:center;padding:24px}#qc-checkout-loading.show{display:grid}.qc-checkout-box{width:min(520px,88vw)}.qc-checkout-shimmer{height:18px;border-radius:7px;margin:13px 0;background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%);background-size:200% 100%;animation:qc-checkout-shimmer 1.15s infinite}@keyframes qc-checkout-shimmer{to{background-position:-200% 0}}
 /* The FOSSBilling API client also appends a centered spinner (and the order
    layer toggles a full-screen GIF) on every request. While this overlay is
    active it is the only loader shown. */
 body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:none!important}
 @media(max-width:600px){ #qc-cart .qc-product-row{grid-template-columns:1fr auto}.qc-product-row .qc-remove{grid-column:2}.qc-promo{flex-direction:column}}
 </style>
-<div class="accordion-item" id="qc-cart">
-  <h2 class="accordion-header">
-    <button class="accordion-button {% if not request.checkout %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#checkout">
-      <svg class="svg-icon me-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18a2 2 0 1 1 0 4 2 2 0 0 1 0-4M1 2h3.27l.94 2H20a1 1 0 0 1 .88 1.5l-3.58 6.47A2 2 0 0 1 15.55 13H8.1l-.9 1.63-.03.12a.25.25 0 0 0 .25.25H19v2H7a2 2 0 0 1-1.76-2.96L6.6 11.6 3 4H1V2m6 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4m9-7 2.78-5H6.14l2.36 5H16Z"/></svg>
-      <span>Review &amp; checkout</span>&nbsp;<span class="badge bg-success">{{ cart.items|length }}</span>
-    </button>
-  </h2>
-  {% if cart.items %}
-  <div id="checkout" class="accordion-collapse collapse {% if request.checkout and client %}show{% endif %}" data-bs-parent="#orderManager">
-    <div class="accordion-body"><div class="accordion-inner">
-      <div class="qc-summary mb-3">
-        {# Quizontal: index enabled products so each line can show its description,
-           and pull TLD rows so domain lines can quote the renewal price. #}
-        {% set qc_products = {} %}
-        {% for p in guest.product_get_list({"per_page": 200}).list|default([]) %}
-          {% set qc_products = qc_products|merge({ (p.id ~ ''): p }) %}
-        {% endfor %}
-        {% set qc_reg_tlds = guest.serviceDomain_tlds({"allow_register": 1}) %}
-        {% for item in cart.items %}
-        <div class="qc-product-row">
-          <div>
-          <strong class="d-block">{{ item.title }}</strong>
-          <small class="text-muted">{% if item.period %}{{ item.period|period_title }}{% endif %}{% if item.quantity > 1 %} · {{ 'Quantity'|trans }} {{ item.quantity }}{% endif %}</small>
-          {% if item.type == 'domain' %}
-            {% if item.action == 'transfer' %}
-              <ul class="qc-item-points">
-                <li><strong>{{ item.transfer_sld }}{{ item.transfer_tld }}</strong></li>
-                <li>{{ 'Domain transfer to Quizontal Cloud'|trans }}</li>
-                <li>{{ 'Full DNS & nameserver control'|trans }}</li>
-                <li>{{ 'Track progress from your dashboard'|trans }}</li>
-              </ul>
-            {% else %}
-              {% set qc_years = item.register_years|default(1) %}
-              <ul class="qc-item-points">
-                <li><strong>{{ item.register_sld }}{{ item.register_tld }}</strong></li>
-                <li>{{ qc_years }} {{ qc_years == 1 ? 'year'|trans : 'years'|trans }} {{ 'registration'|trans }}</li>
-                <li>{{ 'Free WHOIS privacy'|trans }}</li>
-                <li>{{ 'Registrar lock enabled by default'|trans }}</li>
-                <li>{{ 'Full DNS & nameserver control'|trans }}</li>
-              </ul>
-              {% set qc_tld_row = qc_reg_tlds|filter(t => t.tld == item.register_tld)|first %}
-              {% if qc_tld_row and qc_tld_row.price_renew > 0 %}
-              <div class="small text-muted mt-1">{{ 'Renews at'|trans }} {{ qc_tld_row.price_renew|money_convert }} / {{ 'yr'|trans }} · {{ 'reminders before expiry'|trans }}</div>
-              {% endif %}
-            {% endif %}
-          {% else %}
-            {% set qc_prod = qc_products[item.product_id ~ '']|default(null) %}
-            {% if item.hostname is defined and item.hostname %}<div class="small text-muted mt-1">{{ 'Hostname'|trans }}: {{ item.hostname }}</div>{% endif %}
-            {% if item.os is defined and item.os %}<div class="small text-muted">{{ 'OS template'|trans }}: {{ item.os }}</div>{% endif %}
-            {% if qc_prod and qc_prod.description %}
-              {% set qc_desc = qc_prod.description|striptags|trim %}
-              {% if qc_desc %}<p class="qc-item-desc">{{ qc_desc|slice(0, 180) }}{% if qc_desc|length > 180 %}…{% endif %}</p>{% endif %}
-            {% endif %}
-            <ul class="qc-item-points">
-              <li>{{ 'Provisioned automatically after payment'|trans }}</li>
-              <li>{{ 'Managed from your dashboard'|trans }}</li>
-            </ul>
-          {% endif %}
-          </div>
-          <div class="fw-bold">{% if item.discount_price %}<del class="text-muted">{{ item.total|money_convert }}</del><br><span class="text-success">{{ (item.total-item.discount_price)|money_convert }}</span>{% else %}{{ item.total|money_convert }}{% endif %}</div>
-          <button data-cart-item-id="{{ item.id }}" class="btn btn-outline-danger btn-sm remove-cart-item qc-remove" type="button" title="Remove">×</button>
-        </div>
-        {% if item.setup_price != 0 %}<div class="qc-product-row"><div>{{ item.title }} setup</div><div class="fw-bold">{{ (item.setup_price-item.discount_setup)|money_convert }}</div><span></span></div>{% endif %}
-        {% endfor %}
-        {% set tax_amount = 0 %}
-        {% if client.client_is_taxable %}{% set tax_rate = client.invoice_get_tax_rate %}{% set tax_amount = cart.total * tax_rate / 100 %}{% endif %}
-        {% if cart.discount > 0 %}<div class="px-3 pt-3 d-flex justify-content-between text-success"><span>Discount</span><strong>- {{ cart.discount|money_convert }}</strong></div>{% endif %}
-        {% if tax_amount > 0 %}<div class="px-3 pt-2 d-flex justify-content-between"><span>VAT ({{ tax_rate }}%)</span><strong>{{ tax_amount|money_convert }}</strong></div>{% endif %}
-        <div class="qc-total"><strong>Total due today</strong><strong>{{ (cart.total+tax_amount)|money_convert }}</strong></div>
-      </div>
-
-      {% if not cart.promocode %}
-      <div class="mb-3"><label class="form-label fw-bold" for="qc-promocode">Coupon code</label><div class="qc-promo"><input class="form-control" type="text" id="qc-promocode" placeholder="Enter your code"><button class="btn btn-outline-secondary" id="qc-apply-promo" type="button">Apply code</button></div><div class="small mt-1" id="qc-promo-message"></div></div>
-      {% else %}
-      <div class="alert alert-success d-flex justify-content-between align-items-center"><span>Coupon <strong>{{ cart.promocode }}</strong> is applied.</span><a class="btn btn-sm btn-outline-success api-link" href="{{ 'api/guest/cart/remove_promo'|link({'CSRFToken':CSRFToken}) }}" data-api-reload="1">Remove</a></div>
-      {% endif %}
-
-      {% set amount_due = cart.total + tax_amount %}
-      {% set wallet_balance = client.client_balance_get_total %}
-      {% set enough_in_balance = wallet_balance >= amount_due %}
-      <div class="qc-wallet {{ enough_in_balance ? 'qc-wallet-ready' : 'qc-wallet-short' }} mb-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="qc-wallet-icon"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Wallet"></div>
-          <div class="flex-grow-1"><strong class="d-block fs-5">Quizontal Cloud Wallet</strong><span class="text-muted">Available balance: {{ wallet_balance|money_convert }}</span></div>
-          <span class="badge {{ enough_in_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ enough_in_balance ? 'Ready to pay' : 'Not enough for this order' }}</span>
-        </div>
-      </div>
-
-      {% if enough_in_balance %}
-      <form class="api-form" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
-        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
-        <div class="alert alert-success">The full order total will be deducted from your Quizontal Cloud Wallet and provisioning starts right away.</div>
-        {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
-        <button class="btn btn-primary btn-lg qc-place-order" id="qc-place-order" type="submit">Pay with wallet &amp; place order</button>
-      </form>
-      {# Bank transfer cannot be offered beside this button: FOSSBilling always
-         settles a fully wallet-covered order from the balance at checkout, so a
-         bank button here would still charge the wallet. Set the expectation. #}
-      <div class="small text-muted mt-2">Paying from the wallet is instant. Bank transfer checkout appears automatically whenever an order total is larger than the wallet balance.</div>
-      {% else %}
-      {# Bank transfer path: checkout without a gateway leaves the order invoice
-         unpaid, onOrderCheckout forwards the customer to that invoice, and the
-         invoice page leads into the guided bank-details + slip-upload flow.
-         Approving the slip marks this exact invoice paid, so the service this
-         money belongs to is never ambiguous. #}
-      <div class="qc-bank mb-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="qc-wallet-icon"><img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Bank transfer"></div>
-          <div class="flex-grow-1"><strong class="d-block fs-5">Pay by bank transfer</strong><span class="text-muted">Order now and pay from any Sri Lankan bank app or branch.</span></div>
-        </div>
-        <ul class="qc-bank-steps">
-          <li>Place the order now — it is reserved under your account</li>
-          <li>Transfer <strong>{{ amount_due|money_convert }}</strong> with the bank details shown on the next page</li>
-          <li>Upload the transfer slip — we verify it and activate your service automatically</li>
-        </ul>
-        <form class="api-form mt-3" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
-          <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
-          {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos-bank" required><label class="form-check-label" for="qc-tos-bank">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
-          <button class="btn btn-primary btn-lg qc-place-order" id="qc-place-order-bank" type="submit">Place order &amp; get payment instructions</button>
-        </form>
-        <div class="small text-muted mt-2">Want instant activation instead? <a href="{{ 'client/balance'|link }}">Add {{ (amount_due-wallet_balance)|money_convert }} to your wallet</a> — wallet orders start provisioning immediately.</div>
-      </div>
-      {% endif %}
-    </div></div>
+<div class="qc-slide-card" id="qc-cart">
+  <div class="qc-slide-head">
+    <span class="qc-slide-ico">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M17 18a2 2 0 1 1 0 4 2 2 0 0 1 0-4M1 2h3.27l.94 2H20a1 1 0 0 1 .88 1.5l-3.58 6.47A2 2 0 0 1 15.55 13H8.1l-.9 1.63-.03.12a.25.25 0 0 0 .25.25H19v2H7a2 2 0 0 1-1.76-2.96L6.6 11.6 3 4H1V2m6 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4m9-7 2.78-5H6.14l2.36 5H16Z"/></svg>
+    </span>
+    <div>
+      <h2>{{ 'Review & Checkout'|trans }}</h2>
+      <p>{{ 'Review your order and complete payment.'|trans }}</p>
+    </div>
   </div>
+
+  {% if cart.items %}
+    <div class="qc-summary mb-3">
+      {# Quizontal: index enabled products so each line can show its description,
+         and pull TLD rows so domain lines can quote the renewal price. #}
+      {% set qc_products = {} %}
+      {% for p in guest.product_get_list({"per_page": 200}).list|default([]) %}
+        {% set qc_products = qc_products|merge({ (p.id ~ ''): p }) %}
+      {% endfor %}
+      {% set qc_reg_tlds = guest.serviceDomain_tlds({"allow_register": 1}) %}
+      {% for item in cart.items %}
+      <div class="qc-product-row">
+        <div>
+        <strong class="d-block">{{ item.title }}</strong>
+        <small class="text-muted">{% if item.period %}{{ item.period|period_title }}{% endif %}{% if item.quantity > 1 %} · {{ 'Quantity'|trans }} {{ item.quantity }}{% endif %}</small>
+        {% if item.type == 'domain' %}
+          {% if item.action == 'transfer' %}
+            <ul class="qc-item-points">
+              <li><strong>{{ item.transfer_sld }}{{ item.transfer_tld }}</strong></li>
+              <li>{{ 'Domain transfer to Quizontal Cloud'|trans }}</li>
+              <li>{{ 'Full DNS & nameserver control'|trans }}</li>
+              <li>{{ 'Track progress from your dashboard'|trans }}</li>
+            </ul>
+          {% else %}
+            {% set qc_years = item.register_years|default(1) %}
+            <ul class="qc-item-points">
+              <li><strong>{{ item.register_sld }}{{ item.register_tld }}</strong></li>
+              <li>{{ qc_years }} {{ qc_years == 1 ? 'year'|trans : 'years'|trans }} {{ 'registration'|trans }}</li>
+              <li>{{ 'Free WHOIS privacy'|trans }}</li>
+              <li>{{ 'Registrar lock enabled by default'|trans }}</li>
+              <li>{{ 'Full DNS & nameserver control'|trans }}</li>
+            </ul>
+            {% set qc_tld_row = qc_reg_tlds|filter(t => t.tld == item.register_tld)|first %}
+            {% if qc_tld_row and qc_tld_row.price_renew > 0 %}
+            <div class="small text-muted mt-1">{{ 'Renews at'|trans }} {{ qc_tld_row.price_renew|money_convert }} / {{ 'yr'|trans }} · {{ 'reminders before expiry'|trans }}</div>
+            {% endif %}
+          {% endif %}
+        {% else %}
+          {% set qc_prod = qc_products[item.product_id ~ '']|default(null) %}
+          {% if item.hostname is defined and item.hostname %}<div class="small text-muted mt-1">{{ 'Hostname'|trans }}: {{ item.hostname }}</div>{% endif %}
+          {% if item.os is defined and item.os %}<div class="small text-muted">{{ 'OS template'|trans }}: {{ item.os }}</div>{% endif %}
+          {% if qc_prod and qc_prod.description %}
+            {% set qc_desc = qc_prod.description|striptags|trim %}
+            {% if qc_desc %}<p class="qc-item-desc">{{ qc_desc|slice(0, 180) }}{% if qc_desc|length > 180 %}…{% endif %}</p>{% endif %}
+          {% endif %}
+          <ul class="qc-item-points">
+            <li>{{ 'Provisioned automatically after payment'|trans }}</li>
+            <li>{{ 'Managed from your dashboard'|trans }}</li>
+          </ul>
+        {% endif %}
+        </div>
+        <div class="fw-bold">{% if item.discount_price %}<del class="text-muted">{{ item.total|money_convert }}</del><br><span class="text-success">{{ (item.total-item.discount_price)|money_convert }}</span>{% else %}{{ item.total|money_convert }}{% endif %}</div>
+        <button data-cart-item-id="{{ item.id }}" class="btn btn-outline-danger btn-sm remove-cart-item qc-remove" type="button" title="Remove">×</button>
+      </div>
+      {% if item.setup_price != 0 %}<div class="qc-product-row"><div>{{ item.title }} setup</div><div class="fw-bold">{{ (item.setup_price-item.discount_setup)|money_convert }}</div><span></span></div>{% endif %}
+      {% endfor %}
+      {% set tax_amount = 0 %}
+      {% if client.client_is_taxable %}{% set tax_rate = client.invoice_get_tax_rate %}{% set tax_amount = cart.total * tax_rate / 100 %}{% endif %}
+      {% if cart.discount > 0 %}<div class="px-3 pt-3 d-flex justify-content-between text-success"><span>Discount</span><strong>- {{ cart.discount|money_convert }}</strong></div>{% endif %}
+      {% if tax_amount > 0 %}<div class="px-3 pt-2 d-flex justify-content-between"><span>VAT ({{ tax_rate }}%)</span><strong>{{ tax_amount|money_convert }}</strong></div>{% endif %}
+      <div class="qc-total"><strong>Total due today</strong><strong>{{ (cart.total+tax_amount)|money_convert }}</strong></div>
+    </div>
+
+    {% if not cart.promocode %}
+    <div class="mb-3"><label class="form-label fw-bold" for="qc-promocode" style="color:var(--qc-text)">{{ 'Coupon code'|trans }}</label><div class="qc-promo"><input class="form-control" type="text" id="qc-promocode" placeholder="{{ 'Enter your code'|trans }}"><button class="btn btn-outline-secondary" id="qc-apply-promo" type="button">{{ 'Apply code'|trans }}</button></div><div class="small mt-1" id="qc-promo-message"></div></div>
+    {% else %}
+    <div class="alert alert-success d-flex justify-content-between align-items-center"><span>Coupon <strong>{{ cart.promocode }}</strong> is applied.</span><a class="btn btn-sm btn-outline-success api-link" href="{{ 'api/guest/cart/remove_promo'|link({'CSRFToken':CSRFToken}) }}" data-api-reload="1">Remove</a></div>
+    {% endif %}
+
+    {% set amount_due = cart.total + tax_amount %}
+    {% set wallet_balance = client.client_balance_get_total %}
+    {% set enough_in_balance = wallet_balance >= amount_due %}
+    <div class="qc-wallet {{ enough_in_balance ? 'qc-wallet-ready' : 'qc-wallet-short' }} mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="qc-wallet-icon"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Wallet"></div>
+        <div class="flex-grow-1"><strong class="d-block fs-5" style="color:var(--qc-text)">Quizontal Cloud Wallet</strong><span class="text-muted">{{ 'Available balance'|trans }}: {{ wallet_balance|money_convert }}</span></div>
+        <span class="badge {{ enough_in_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ enough_in_balance ? 'Ready to pay' : 'Not enough for this order' }}</span>
+      </div>
+    </div>
+
+    {% if enough_in_balance %}
+    <form class="api-form" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
+      <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+      <div class="alert alert-success">{{ 'The full order total will be deducted from your Quizontal Cloud Wallet and provisioning starts right away.'|trans }}</div>
+      {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos" required><label class="form-check-label" for="qc-tos">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
+      <button class="premium-btn qc-place-order" id="qc-place-order" type="submit">Pay &amp; place order</button>
+    </form>
+    <div class="small text-muted mt-2">Paying from the wallet is instant. Bank transfer checkout appears automatically whenever an order total is larger than the wallet balance.</div>
+    {% else %}
+    <div class="qc-bank mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="qc-wallet-icon"><img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="34" height="34" alt="Bank transfer"></div>
+        <div class="flex-grow-1"><strong class="d-block fs-5" style="color:var(--qc-text)">{{ 'Pay by bank transfer'|trans }}</strong><span class="text-muted">Order now and pay from any Sri Lankan bank app or branch.</span></div>
+      </div>
+      <ul class="qc-bank-steps">
+        <li>Place the order now — it is reserved under your account</li>
+        <li>Transfer <strong>{{ amount_due|money_convert }}</strong> with the bank details shown on the next page</li>
+        <li>Upload the transfer slip — we verify it and activate your service automatically</li>
+      </ul>
+      <form class="api-form mt-3" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
+        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+        {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos-bank" required><label class="form-check-label" for="qc-tos-bank">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
+        <button class="premium-btn qc-place-order" id="qc-place-order-bank" type="submit">Place order &amp; get payment instructions</button>
+      </form>
+      <div class="small text-muted mt-2">Want instant activation instead? <a href="{{ 'client/balance'|link }}">Add {{ (amount_due-wallet_balance)|money_convert }} to your wallet</a> — wallet orders start provisioning immediately.</div>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="text-center py-5">
+      <div class="qc-slide-ico mx-auto mb-3"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M17 18a2 2 0 1 1 0 4 2 2 0 0 1 0-4M1 2h3.27l.94 2H20a1 1 0 0 1 .88 1.5l-3.58 6.47A2 2 0 0 1 15.55 13H8.1l-.9 1.63-.03.12a.25.25 0 0 0 .25.25H19v2H7a2 2 0 0 1-1.76-2.96L6.6 11.6 3 4H1V2m6 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4m9-7 2.78-5H6.14l2.36 5H16Z"/></svg></div>
+      <h5 class="mb-2" style="color:var(--qc-text)">{{ 'Your cart is empty'|trans }}</h5>
+      <p class="text-muted mb-0">{{ 'Pick a plan from the VPS or Domains pages first.'|trans }}</p>
+    </div>
   {% endif %}
-  <div id="qc-checkout-loading"><div class="qc-checkout-box text-center" id="qc-checkout-box"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3 id="qc-checkout-title">Placing your order securely…</h3><p class="text-muted" id="qc-checkout-text">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
+
+  <div id="qc-checkout-loading"><div class="qc-checkout-box text-center" id="qc-checkout-box"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3 id="qc-checkout-title" style="color:#fff">Placing your order securely…</h3><p class="text-muted" id="qc-checkout-text">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
 </div>
 <script>
 $('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).attr('data-cart-item-id');if(confirm('Remove this item from your cart?')){bb.post('guest/cart/remove_item',{id:id,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});}});

@@ -2,7 +2,7 @@
 {% set active_menu = 'order' %}
 
 {% block meta_title %}{{ 'Order'|trans }}{% endblock %}
-{% block meta_description %}{{ 'Browse available products and services, compare options, and place your order online.'|trans }}{% endblock %}
+{% block meta_description %}{{ 'Configure and place your order online.'|trans }}{% endblock %}
 
 {% set loader_nr = request.loader|default("8")%}
 {% set loader_url = ('img/assets/loaders/loader'~loader_nr~'.gif') %}
@@ -10,13 +10,11 @@
 {% block body_class %}order-index{% if client %} qc-has-banner{% endif %}{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 
-{# current step for the checkout stepper:
-   1 = products · 2 = configuration · 3 = account (guest) or checkout (client)
-   4 = checkout (guest) #}
-{% set qc_step = 1 %}
-{% if request.product %}{% set qc_step = 2 %}{% endif %}
-{% if request.checkout %}{% set qc_step = 3 %}{% endif %}
-{% set qc_last = client ? 3 : 4 %}
+{# active slide: config -> account (guest) -> checkout #}
+{% set qc_active = 'config' %}
+{% if request.checkout %}
+    {% set qc_active = client ? 'checkout' : 'account' %}
+{% endif %}
 
 {% block banner %}
     <div class="iq-banner">
@@ -25,7 +23,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
                 <div>
                     <h1>{{ 'Order'|trans }}</h1>
-                    <p>{{ 'Browse available products and services, compare options, and place your order online.'|trans }}</p>
+                    <p>{{ 'Configure your service and check out in a few steps.'|trans }}</p>
                 </div>
                 <div class="qc-currency-wrap">
                     {{ include('mod_orderbutton_currency.html.twig') }}
@@ -37,41 +35,33 @@
 
 {% block content %}
     {# ================= checkout stepper ================= #}
-    <div class="qc-stepper mb-3">
-        <div class="qc-stepper-step {{ qc_step == 1 ? 'active' : (qc_step > 1 ? 'done' : '') }}">
-            <span class="qc-stepper-dot">{% if qc_step > 1 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}1{% endif %}</span>
-            <span class="qc-stepper-label">{{ 'Products'|trans }}</span>
-        </div>
-        <span class="qc-stepper-line {{ qc_step > 1 ? 'done' : '' }}"></span>
-
-        <div class="qc-stepper-step {{ qc_step == 2 ? 'active' : (qc_step > 2 ? 'done' : '') }}">
-            <span class="qc-stepper-dot">{% if qc_step > 2 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}2{% endif %}</span>
+    <div class="qc-stepper mb-3" id="qc-stepper">
+        <div class="qc-stepper-step {{ qc_active == 'config' ? 'active' : (qc_active in ['account','checkout'] ? 'done' : '') }}" data-qc-step="config">
+            <span class="qc-stepper-dot">{% if qc_active in ['account','checkout'] %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}1{% endif %}</span>
             <span class="qc-stepper-label">{{ 'Configuration'|trans }}</span>
         </div>
-        <span class="qc-stepper-line {{ qc_step > 2 ? 'done' : '' }}"></span>
+        <span class="qc-stepper-line {{ qc_active in ['account','checkout'] ? 'done' : '' }}"></span>
 
         {% if not client %}
-        <div class="qc-stepper-step {{ qc_step == 3 ? 'active' : (qc_step > 3 ? 'done' : '') }}">
-            <span class="qc-stepper-dot">{% if qc_step > 3 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}3{% endif %}</span>
+        <div class="qc-stepper-step {{ qc_active == 'account' ? 'active' : (qc_active == 'checkout' ? 'done' : '') }}" data-qc-step="account">
+            <span class="qc-stepper-dot">{% if qc_active == 'checkout' %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}2{% endif %}</span>
             <span class="qc-stepper-label">{{ 'Account'|trans }}</span>
         </div>
-        <span class="qc-stepper-line {{ qc_step > 3 ? 'done' : '' }}"></span>
+        <span class="qc-stepper-line {{ qc_active == 'checkout' ? 'done' : '' }}"></span>
         {% endif %}
 
-        <div class="qc-stepper-step {{ qc_step == qc_last ? 'active' : '' }}">
-            <span class="qc-stepper-dot">{{ qc_last }}</span>
+        <div class="qc-stepper-step {{ qc_active == 'checkout' ? 'active' : '' }}" data-qc-step="checkout">
+            <span class="qc-stepper-dot">{{ client ? 2 : 3 }}</span>
             <span class="qc-stepper-label">{{ 'Checkout'|trans }}</span>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body overflow-hidden">
-            {{ include('mod_orderbutton_index.html.twig') }}
-        </div>
+    <div class="qc-order-shell">
+        {{ include('mod_orderbutton_index.html.twig') }}
     </div>
 
     <style>
-        /* ---- checkout stepper (modern slider progress) ---- */
+        /* ---- checkout stepper ---- */
         .qc-stepper { display: flex; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
         .qc-stepper-step { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 74px; }
         .qc-stepper-dot {
@@ -100,36 +90,45 @@
             .qc-stepper-line { max-width: 40px; }
         }
 
-        /* ---- dark slide panels (accordion restyle) ---- */
-        .order-index .accordion-item { background: transparent; border: 0; margin-bottom: 12px; }
-        .order-index .accordion-item:last-child { margin-bottom: 0; }
-        .order-index .accordion-header { margin: 0; }
-        .order-index .accordion-button {
-            background: transparent; color: var(--iq-heading, #f5f6f8);
-            padding: 4px 0 12px; font-size: .98rem; font-weight: 700;
-        }
-        .order-index .accordion-button:not(.collapsed) { background: transparent; color: var(--iq-heading, #f5f6f8); box-shadow: none; }
-        .order-index .accordion-button:focus { box-shadow: none; }
-        .order-index .accordion-button::after { filter: invert(.55) sepia(0) saturate(0); }
-        .order-index .accordion-button .svg-icon { color: #f06b9d; }
-        .order-index .accordion-collapse { border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: .85rem; background: var(--iq-surface, #0b0b0e); }
-        .order-index .accordion-body { padding: 20px; }
-        .order-index .accordion-collapse.collapsing { transition: height .3s ease; }
-        .order-index .accordion-collapse.show .accordion-body { animation: qcSlideIn .35s ease; }
-        @keyframes qcSlideIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+        /* ---- slide deck ---- */
+        .qc-order-shell { position: relative; }
+        .qc-slide { display: none; }
+        .qc-slide.qc-slide-active { display: block; animation: qcSlideIn .4s cubic-bezier(.22,.72,.24,1); }
+        @keyframes qcSlideIn { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .qc-slide.qc-slide-active { animation: none; } }
 
-        /* currency selector in the banner */
-        .qc-currency-wrap { color: rgba(255,255,255,.9); }
-        .qc-currency-wrap form, .qc-currency-wrap label { color: rgba(255,255,255,.85); }
-
-        /* product details "well" panel in configuration */
-        .order-index .well {
+        /* slide card wrapper */
+        .qc-slide-card {
             background: var(--iq-surface, #0b0b0e);
             border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+            border-radius: .85rem;
+            padding: 24px;
+            color: var(--iq-body, #9aa3b2);
+        }
+        .qc-slide-card h2, .qc-slide-card h3, .qc-slide-card h5 { color: var(--iq-heading, #f5f6f8); }
+        .qc-slide-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--iq-line, rgba(255,255,255,.06)); }
+        .qc-slide-head .qc-slide-ico {
+            width: 42px; height: 42px; border-radius: 50%; flex: none;
+            display: grid; place-items: center;
+            background: var(--iq-primary-light, rgba(227,28,100,.16)); color: #f06b9d;
+        }
+        .qc-slide-head .qc-slide-ico svg { width: 20px; height: 20px; }
+        .qc-slide-head h2 { font-size: 1.2rem; margin: 0; }
+        .qc-slide-head p { margin: 2px 0 0; font-size: .8rem; color: #7d8494; }
+
+        /* product details well in configuration */
+        .order-index .well {
+            background: rgba(255,255,255,.02);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
             border-radius: .75rem; color: var(--iq-body, #9aa3b2);
+            padding: 18px;
         }
         .order-index .well h3 { color: var(--iq-heading, #f5f6f8); }
         .order-index .well hr { border-color: var(--iq-line, rgba(255,255,255,.08)); }
+
+        /* currency selector in banner */
+        .qc-currency-wrap { color: rgba(255,255,255,.9); }
+        .qc-currency-wrap form, .qc-currency-wrap label, .qc-currency-wrap select { color: rgba(255,255,255,.85); }
     </style>
 {% endblock %}
 
@@ -142,8 +141,23 @@
 <script>
     function resizeIframe(obj) {
         obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
-        document.getElementById('loader-image').style.display = 'none';
+        var loader = document.getElementById('loader-image');
+        if (loader) loader.style.display = 'none';
     }
+    /* slide transition helper (used after login/register advances to checkout) */
+    window.qcGoToSlide = function (id) {
+        document.querySelectorAll('.qc-slide').forEach(function (s) { s.classList.remove('qc-slide-active'); });
+        var el = document.getElementById(id);
+        if (el) el.classList.add('qc-slide-active');
+        var stepper = document.getElementById('qc-stepper');
+        if (stepper) {
+            stepper.querySelectorAll('.qc-stepper-step').forEach(function (st) {
+                st.classList.remove('active');
+                if (st.getAttribute('data-qc-step') === id.replace('qc-slide-', '')) st.classList.add('active');
+            });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 </script>
 {% endautoescape %}
 {% endblock %}

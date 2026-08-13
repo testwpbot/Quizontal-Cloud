@@ -1,0 +1,61 @@
+{# Quizontal Cloud — slide-based order wizard (0.7.x partial, included from mod_order_index). #}
+{% set products = guest.product_get_list %}
+{% set categories = guest.product_category_get_list.list %}
+{% set register_tlds = guest.serviceDomain_tlds({"allow_register": 1})|default([]) %}
+{% set domain_category = categories|filter(c => c.type == 'domain' and c.products is not empty)|first %}
+{% set domain_product = domain_category ? domain_category.products|first : null %}
+{% set qc_no_selection = not ((product is defined and product) or request.product or request.checkout) %}
+{% set has_domain_intent = request.register_sld|default('') != '' or request.transfer_sld|default('') != '' %}
+
+{# Legacy/short links (/order?register_sld=x&register_tld=.com&auto=1) -> straight into the domain product. #}
+{% if domain_product and has_domain_intent and qc_no_selection %}
+    {% if request.register_sld|default('') != '' %}
+        {% set forward_query = {'product': domain_product.id, 'register_sld': request.register_sld, 'register_tld': request.register_tld|default(''), 'auto': request.auto|default('')} %}
+    {% else %}
+        {% set forward_query = {'product': domain_product.id, 'transfer_sld': request.transfer_sld, 'transfer_tld': request.transfer_tld|default(''), 'transfer_code': request.transfer_code|default('')} %}
+    {% endif %}
+<script>
+    window.location.replace({{ 'order'|link(forward_query)|json_encode|raw }});
+</script>
+{% endif %}
+
+{# Bare /order with nothing selected: shoppers browse on the VPS/Domains pages. #}
+{% if qc_no_selection and not has_domain_intent and guest.extension_is_on({"mod": "custompages"}) %}
+<script>
+    window.location.replace({{ 'custompages/vps'|link|json_encode|raw }});
+</script>
+{% endif %}
+
+{# ================= slide deck ================= #}
+<div class="qc-slide {% if qc_active == 'config' %}qc-slide-active{% endif %}" id="qc-slide-config">
+    {{ include('mod_orderbutton_product_configuration.html.twig') }}
+</div>
+
+{% if not client %}
+<div class="qc-slide {% if qc_active == 'account' %}qc-slide-active{% endif %}" id="qc-slide-account">
+    {{ include('mod_orderbutton_client.html.twig') }}
+</div>
+{% endif %}
+
+<div class="qc-slide {% if qc_active == 'checkout' %}qc-slide-active{% endif %}" id="qc-slide-checkout">
+    {{ include('mod_orderbutton_checkout.html.twig') }}
+</div>
+
+<script>
+/* After login/registration on the order page, advance to the checkout slide
+   (the cart is already present — it was rendered server-side). */
+function onLogin() {
+    FOSSBilling.message("{{ 'You logged in successfully'|trans }}");
+    setTimeout(function () { if (window.qcGoToSlide) window.qcGoToSlide('qc-slide-checkout'); }, 400);
+}
+function onAccountCreate() {
+    var login_details = {
+        email: document.getElementById('reg-email') ? document.getElementById('reg-email').value : '',
+        password: document.getElementById('reg-password') ? document.getElementById('reg-password').value : ''
+    };
+    bb.post('guest/client/login', login_details, function () {
+        FOSSBilling.message("{{ 'You logged in successfully'|trans }}");
+        setTimeout(function () { if (window.qcGoToSlide) window.qcGoToSlide('qc-slide-checkout'); }, 400);
+    });
+}
+</script>
