@@ -1317,6 +1317,59 @@
             .iq-banner .iq-banner-art::before { animation: none; }
             .loader-logo { animation: none; }
         }
+
+        /* ---- premium animated button (white -> pink, letter-swap on hover) ---- */
+        .premium-btn {
+            position: relative;
+            height: 50px;
+            padding: 0 26px;
+            min-width: 125px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 12px;
+            border: 1px solid #fff;
+            background: #fff;
+            color: #111;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.1px;
+            cursor: pointer;
+            overflow: hidden;
+            text-decoration: none;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+        }
+        .premium-btn-sm { height: 40px; min-width: 96px; padding: 0 18px; border-radius: 10px; font-size: 12.5px; }
+        .premium-btn:hover { background: var(--iq-primary); border-color: var(--iq-primary); color: #fff; }
+        .premium-btn:active { transform: none; }
+
+        .premium-btn .span-mother,
+        .premium-btn .span-mother2 {
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; height: 1.3em; line-height: 1.3em;
+        }
+        .premium-btn .span-mother span,
+        .premium-btn .span-mother2 span {
+            display: inline-block; transform: translateY(0);
+            transition: transform .2s ease;
+        }
+        .premium-btn .span-mother2 {
+            position: absolute;
+            left: 26px; right: 42px; top: 50%;
+            transform: translateY(-50%);
+        }
+        .premium-btn-sm .span-mother2 { left: 18px; right: 32px; }
+        .premium-btn .span-mother2 span { transform: translateY(-1.3em); }
+        .premium-btn:hover .span-mother span { transform: translateY(1.3em); }
+        .premium-btn:hover .span-mother2 span { transform: translateY(0); }
+
+        .premium-btn .premium-arrow {
+            color: var(--iq-primary); flex-shrink: 0; display: inline-flex;
+            transition: color .2s ease;
+        }
+        .premium-btn .premium-arrow svg { width: 13px; height: 13px; }
+        .premium-btn:hover .premium-arrow { color: #fff; }
     </style>
     {% if client %}
     <script>
@@ -1401,6 +1454,40 @@
         refreshCartCount();
         window.addEventListener('focus', refreshCartCount);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshCartCount(); });
+    });
+    </script>
+
+    {# Quizontal: premium animated buttons — split the label into two layers of
+       per-letter spans and append the arrow, so the white->pink letter-swap
+       animation works on any button text without hand-writing spans. #}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.premium-btn').forEach(function (btn) {
+            var label = btn.textContent.replace(/\s+/g, ' ').trim();
+            btn.textContent = '';
+            var layer1 = document.createElement('span');
+            var layer2 = document.createElement('span');
+            layer1.className = 'span-mother';
+            layer2.className = 'span-mother2';
+            for (var i = 0; i < label.length; i++) {
+                var ch = label[i];
+                var s1 = document.createElement('span');
+                var s2 = document.createElement('span');
+                s1.textContent = ch === ' ' ? '\u00A0' : ch;
+                s2.textContent = ch === ' ' ? '\u00A0' : ch;
+                s1.style.transitionDelay = (i * 0.05) + 's';
+                s2.style.transitionDelay = (i * 0.05) + 's';
+                layer1.appendChild(s1);
+                layer2.appendChild(s2);
+            }
+            var arrow = document.createElement('span');
+            arrow.className = 'premium-arrow';
+            arrow.setAttribute('aria-hidden', 'true');
+            arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            btn.appendChild(layer1);
+            btn.appendChild(layer2);
+            btn.appendChild(arrow);
+        });
     });
     </script>
 

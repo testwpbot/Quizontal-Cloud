@@ -27,10 +27,7 @@
                     </div>
                     {% if guest.extension_is_on({ "mod": "news" }) %}
                         <div>
-                            <a href="{{ '/news'|link }}" class="btn btn-soft-light d-inline-flex gap-2 align-items-center">
-                                <svg width="16" height="16" fill="currentColor"><use href="#i-bell"/></svg>
-                                {{ 'Announcements'|trans }}
-                            </a>
+                            <a href="{{ '/news'|link }}" class="premium-btn">{{ 'Announcements'|trans }}</a>
                         </div>
                     {% endif %}
                 </div>
