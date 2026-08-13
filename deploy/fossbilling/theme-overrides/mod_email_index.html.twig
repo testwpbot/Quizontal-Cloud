@@ -93,8 +93,9 @@
                                     <iframe class="ratio ratio-1x1 email" id="email-content-{{ i }}" src="about:blank" style="height: 30em"></iframe>
                                     <script>
                                         (function () {
-                                            frame = document.getElementById("email-content-{{ i }}");
-                                            frame.srcdoc = `{{ email.content_html|raw }}`;
+                                            var frame = document.getElementById("email-content-{{ i }}");
+                                            var doc = {{ email.content_html|json_encode|raw }};
+                                            frame.srcdoc = '<style>html,body{margin:0;padding:0;background:#fff !important;}</style>' + doc;
                                         })();
                                     </script>
                                 </div>
