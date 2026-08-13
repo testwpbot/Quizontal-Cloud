@@ -202,6 +202,14 @@
   }
 </style>
 <script>
+// Reset the loading overlay whenever the page is shown again — including when
+// the browser restores it from the back/forward cache (bfcache), which keeps
+// the DOM in its last state (spinner visible) without re-running scripts.
+window.addEventListener('pageshow', function () {
+  var loading = document.getElementById('qcLoading');
+  if (loading) loading.hidden = true;
+});
+
 (function () {
   var api = (typeof API !== 'undefined' && API.guest) ? API.guest
       : (typeof bb !== 'undefined' ? { get: bb.get.bind(bb), post: bb.post.bind(bb), prefix: 'guest/' } : null);
