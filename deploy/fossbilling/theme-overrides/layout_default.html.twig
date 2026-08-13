@@ -1537,6 +1537,13 @@
             arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
             btn.appendChild(arrow);
         });
+
+        // Bootstrap modals rendered inside .content-inner (which has position:relative;
+        // z-index:2) get trapped below the body-level backdrop, locking the page.
+        // Move every modal to <body> so it escapes that stacking context.
+        document.querySelectorAll('.modal').forEach(function (modal) {
+            document.body.appendChild(modal);
+        });
     });
     </script>
 

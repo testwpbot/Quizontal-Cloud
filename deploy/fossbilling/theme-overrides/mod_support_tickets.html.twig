@@ -7,6 +7,10 @@
 {% block body_class %}support-tickets qc-has-banner{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 
+{% block head %}
+    {{ mf.wysiwyg('.editor-textarea') }}
+{% endblock %}
+
 {% set tickets = client.support_ticket_get_list({"per_page":10, "page":request.page}) %}
 {% set qc_open = 0 %}{% set qc_closed = 0 %}
 {% set qc_all = client.support_ticket_get_list({"per_page":100}).list %}
@@ -179,7 +183,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="message" class="form-label">{{ 'Message'|trans }}</label>
-                            <textarea name="content" class="form-control" id="message" aria-describedby="message" rows="6" required>{{ request.content|e }}</textarea>
+                            <textarea name="content" class="editor-textarea form-control" id="message" aria-describedby="message" rows="6" required>{{ request.content|e }}</textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
