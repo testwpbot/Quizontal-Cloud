@@ -966,7 +966,10 @@
             min-height: 215px;
             color: #fff;
             margin: 0;
-            background: linear-gradient(120deg, #8f1046 0%, var(--iq-primary) 55%, #f2578f 130%);
+            background:
+                radial-gradient(90rem 34rem at 85% -20%, rgba(168, 85, 247, .55), transparent 55%),
+                radial-gradient(60rem 30rem at -10% 130%, rgba(227, 28, 100, .5), transparent 55%),
+                linear-gradient(120deg, #2a0a1e 0%, #4a0f38 40%, #23104a 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .iq-banner .iq-banner-art {
@@ -975,18 +978,21 @@
         .iq-banner .iq-banner-art::before {
             content: ""; position: absolute; inset: -30% -10% -30% 30%;
             background:
-                radial-gradient(28rem 14rem at 78% 18%, rgba(34, 211, 238, .35), transparent 62%),
-                radial-gradient(30rem 18rem at 92% 78%, rgba(168, 85, 247, .4), transparent 60%),
-                radial-gradient(24rem 20rem at 60% 90%, rgba(255, 255, 255, .28), transparent 58%);
-            filter: blur(2px);
+                radial-gradient(26rem 15rem at 76% 22%, rgba(255, 255, 255, .22), transparent 60%),
+                radial-gradient(30rem 18rem at 90% 76%, rgba(168, 85, 247, .5), transparent 60%),
+                radial-gradient(24rem 20rem at 58% 88%, rgba(227, 28, 100, .42), transparent 58%),
+                radial-gradient(20rem 14rem at 18% 12%, rgba(34, 211, 238, .18), transparent 60%);
+            filter: blur(3px);
             animation: qcBannerDrift 26s ease-in-out infinite;
         }
         .iq-banner .iq-banner-art::after {
             content: ""; position: absolute; inset: 0;
             background:
-                linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.32) 100%),
-                repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 2px, transparent 2px 26px);
+                linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.48) 55%, rgba(0, 0, 0, 0.3) 100%),
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 22px),
+                radial-gradient(circle at 50% 120%, rgba(255, 255, 255, .1), transparent 55%);
         }
+        .iq-banner .iq-banner-art::marker { display: none; }
         @keyframes qcBannerDrift {
             0%, 100% { transform: translateX(0) scale(1); }
             50% { transform: translateX(-4%) scale(1.08); }
