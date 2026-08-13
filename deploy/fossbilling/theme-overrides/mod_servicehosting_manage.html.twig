@@ -76,7 +76,7 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     {% if service.domain_order_id %}
-                        <a class="btn btn-primary btn-sm" href='{{ "order/service/manage/#{service.domain_order_id}"|url }}'>{{ 'Manage Domain'|trans }}</a>
+                        <a class="btn btn-primary btn-sm" href="{{ ('order/service/manage/' ~ service.domain_order_id)|link }}">{{ 'Manage Domain'|trans }}</a>
                     {% endif %}
                     <a class="btn btn-outline-primary btn-sm" href="{{ 'servicehosting/get_login_url'|api_url(query: { 'order_id':  order.id }) }}" {{ fb_api_link({callback: 'onAfterLoginLinkCreated'}) }}>{{ 'Login to Control Panel'|trans }}</a>
                 </div>
