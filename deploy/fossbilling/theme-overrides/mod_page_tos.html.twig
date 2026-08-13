@@ -4,7 +4,7 @@
 
 {% set company = guest.system_company %}
 
-{% block body_class %}tos qc-has-banner{% endblock %}
+{% block body_class %}tos qc-legal-page{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 
 {% block banner %}
@@ -22,30 +22,51 @@
 {% endblock %}
 
 {% block content %}
+    {% if not client %}
+        <h1 class="qc-legal-page-title">{{ 'Terms and Conditions'|trans }}</h1>
+    {% endif %}
+    <div class="qc-legal">
+        {{ company.tos|markdown }}
+    </div>
     <style>
+        /* Shared dark legal card (client + guest). */
         .qc-legal {
-            background: var(--iq-surface, #0b0b0e);
-            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
-            border-radius: .85rem;
+            background: #0b0b0e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
             padding: 30px 32px;
-            color: var(--iq-body, #9aa3b2);
+            color: #9aa3b2;
             line-height: 1.7;
             font-size: .92rem;
         }
-        .qc-legal h1, .qc-legal h2, .qc-legal h3, .qc-legal h4 { color: var(--iq-heading, #f5f6f8); margin: 1.4em 0 .5em; }
+        .qc-legal h1, .qc-legal h2, .qc-legal h3, .qc-legal h4 { color: #f5f6f8; margin: 1.4em 0 .5em; }
         .qc-legal h1:first-child, .qc-legal h2:first-child, .qc-legal h3:first-child { margin-top: 0; }
         .qc-legal p { margin: 0 0 1em; }
         .qc-legal ul, .qc-legal ol { margin: 0 0 1em; padding-left: 1.5em; }
         .qc-legal li { margin-bottom: .4em; }
         .qc-legal a { color: #f06b9d; }
-        .qc-legal strong { color: var(--iq-heading, #f5f6f8); }
-        .qc-legal hr { border-color: var(--iq-line, rgba(255,255,255,.08)); margin: 1.5em 0; }
-        @media (max-width: 575.98px) {
-            .qc-legal { padding: 22px 18px; }
-        }
-    </style>
+        .qc-legal strong { color: #f5f6f8; }
+        .qc-legal hr { border-color: rgba(255, 255, 255, 0.08); margin: 1.5em 0; }
 
-    <div class="qc-legal">
-        {{ company.tos|markdown }}
-    </div>
+        /* Guest (unauthenticated) dark chrome — the public pages use the light
+           theme, so darken the whole frame to match the authenticated shell. */
+        body.qc-legal-page:not(.qc-app) { background: #050508; color: #9aa3b2; }
+        body.qc-legal-page:not(.qc-app) .content-block { padding: 1rem 0 2rem; }
+        body.qc-legal-page:not(.qc-app) .qc-legal-page-title {
+            color: #f5f6f8; font-size: 1.6rem; font-weight: 700;
+            letter-spacing: -0.02em; margin: 1rem 0 1.25rem;
+        }
+        body.qc-legal-page:not(.qc-app) header .navbar { padding: 1rem 0; }
+        body.qc-legal-page:not(.qc-app) header a,
+        body.qc-legal-page:not(.qc-app) .navbar-nav .nav-link { color: #9aa3b2; }
+        body.qc-legal-page:not(.qc-app) header a:hover,
+        body.qc-legal-page:not(.qc-app) .navbar-nav .nav-link:hover { color: #ee3d80; }
+        body.qc-legal-page:not(.qc-app) .qcd-rail .offcanvas-body {
+            background: #0b0b0e; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
+        }
+        body.qc-legal-page:not(.qc-app) .qcd-rail-nav .nav-link { color: #9aa3b2; }
+        body.qc-legal-page:not(.qc-app) .qcd-rail-nav .nav-link:hover { background: rgba(227, 28, 100, 0.12); color: #ee3d80; }
+        body.qc-legal-page:not(.qc-app) .qcd-rail-nav .nav-link.qcd-active { background: linear-gradient(135deg, #e31c64, #a51149); color: #fff; }
+        @media (max-width: 575.98px) { .qc-legal { padding: 22px 18px; } }
+    </style>
 {% endblock %}
