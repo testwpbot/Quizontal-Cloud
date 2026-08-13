@@ -85,9 +85,7 @@
   <div id="qcVpsPlans" hidden>
     <div class="card">
       <div class="card-header d-flex flex-wrap align-items-center gap-2">
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="qcVpsBack">
-          <span aria-hidden="true">&larr;</span> All lines
-        </button>
+        <button type="button" class="premium-btn premium-btn-sm" id="qcVpsBack">All lines</button>
         <h4 class="card-title mb-0 me-auto" id="qcVpsTitle"></h4>
         <div class="d-flex align-items-center gap-2 flex-grow-1 flex-sm-grow-0">
           <div class="qc-vps-search">
@@ -173,6 +171,19 @@
   .qc-vps-page .qc-plan-row .qc-plan-name { color: var(--iq-heading, #f5f6f8); font-weight: 600; }
   .qc-vps-page .qc-plan-row .qc-plan-price { color: var(--iq-heading, #f5f6f8); font-weight: 700; white-space: nowrap; }
   .qc-vps-page .qc-plan-row .qc-plan-price small { color: #7d8494; font-weight: 500; }
+  /* prevent horizontal overflow on narrow screens: let the name/desc column
+     shrink and truncate, and keep the plan grid cell from forcing width */
+  .qc-vps-page { max-width: 100%; }
+  .qc-vps-page #qcVpsList { grid-template-columns: minmax(0, 1fr); }
+  .qc-vps-page .qc-plan-row { min-width: 0; }
+  .qc-vps-page .qc-plan-row > span:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .qc-vps-page .qc-vps-search { max-width: 100%; }
+  @media (max-width: 575.98px) {
+    .qc-vps-page .qc-vps-search { min-width: 0; flex: 1 1 auto; }
+    .qc-vps-page .qc-plan-row { flex-wrap: wrap; }
+    .qc-vps-page .qc-plan-row > span:first-child { flex-basis: 100%; }
+    .qc-vps-page .qc-plan-row > span.text-nowrap { text-align: left !important; }
+  }
 </style>
 <script>
 (function () {
