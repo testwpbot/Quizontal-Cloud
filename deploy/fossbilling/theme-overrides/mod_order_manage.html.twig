@@ -6,11 +6,8 @@
 
 {% set addons = client.order_addons({ "id": order.id }) %}
 
-{% block body_class %}order-manage{% endblock %}
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{{ 'service' | link}}">{{ 'Services'|trans }}</a></li>
-<li class="breadcrumb-item active" aria-current="page">{{ order.title }}</li>
-{% endblock %}
+{% block body_class %}order-manage qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
 
 {% set service_partial = "mod_service" ~ order.service_type ~ "_manage.html.twig" %}
 {% set upgradables = client.order_upgradables({ 'id': order.id }) %}
@@ -25,70 +22,134 @@
     {% endif %}
 {% endif %}
 
+{# status ring colour (matches the dashboard accent system) #}
+{% set qc_status_ring = '#20c997' %}
+{% if qc_setup or order.status == 'pending_setup' %}
+    {% set qc_status_ring = '#ffbc35' %}
+{% elseif order.status in ['suspended', 'failed_setup', 'failed_renew'] %}
+    {% set qc_status_ring = '#f4113c' %}
+{% elseif order.status == 'canceled' %}
+    {% set qc_status_ring = '#6b7280' %}
+{% endif %}
+
 {% block head %}
     {{ mf.wysiwyg('.editor-textarea') }}
 {% endblock %}
 
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ order.title }}</h1>
+                    <p>{{ 'Service details — everything about this service in one place.'|trans }}</p>
+                    <span class="banner-date">
+                        <svg fill="currentColor"><use href="#i-document"/></svg>
+                        {{ 'Order'|trans }} #{{ order.id }}
+                    </span>
+                </div>
+                <div>
+                    <a href="{{ 'service'|link }}" class="premium-btn">{{ 'Back to services'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
 {% block content %}
+{% if client %}
     <style>
-    .qc-badge-setup{background:#fff8e8;color:#92600a;border:1px solid rgba(230,167,0,.35)}
-    /* Quizontal Cloud: modern service-details presentation (mobile-first) */
-    .qc-details{display:flex;flex-direction:column}
-    .qc-details-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:11px 2px;border-bottom:1px solid #eef1f5}
-    .qc-details-row:last-child{border-bottom:0}
-    .qc-details-label{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a93a6;padding-top:3px;flex:none}
-    .qc-details-value{font-weight:600;color:#242a35;text-align:right;min-width:0;word-break:break-word}
-    @media (max-width:575.98px){
-        .qc-details-row{flex-direction:column;gap:3px}
-        .qc-details-value{text-align:left}
-    }
+        .qc-details{display:flex;flex-direction:column}
+        .qc-details-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:12px 2px;border-bottom:1px solid var(--iq-line, rgba(255,255,255,.06))}
+        .qc-details-row:last-child{border-bottom:0}
+        .qc-details-label{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#7d8494;padding-top:3px;flex:none}
+        .qc-details-value{font-weight:600;color:var(--iq-heading, #f5f6f8);text-align:right;min-width:0;word-break:break-word}
+        @media (max-width:575.98px){
+            .qc-details-row{flex-direction:column;gap:3px}
+            .qc-details-value{text-align:left}
+        }
     </style>
+
+    {# ================= key stat cards ================= #}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Payment amount'|trans }}</p>
+                            <h4>{{ order.total|money(order.currency) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-info" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-activity"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Billing cycle'|trans }}</p>
+                            <h4>{% if order.period %}{{ order.period|period_title }}{% else %}{{ 'One-time'|trans }}{% endif %}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-warning" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-calendar"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Next renewal'|trans }}</p>
+                            <h4>{% if order.expires_at %}{{ order.expires_at|format_date(pattern="MMM d, yyyy") }}{% else %}—{% endif %}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress" style="--val:100;--ring:{{ qc_status_ring }}">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-folder"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Status'|trans }}</p>
+                            <h4>{% if qc_setup %}{{ 'Setting up'|trans }}{% else %}{{ mf.status_name(order.status) }}{% endif %}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
-            {# Order info #}
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="mb-1">{{ 'Service details'|trans }}</h1>
-                            <span class="small text-secondary">{{ 'All information about your service'|trans }}</span>
-                        </div>
+            {# Order details #}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Service details'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'All information about your service'|trans }}</p>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="qc-details">
                         <div class="qc-details-row">
-                            <span class="qc-details-label">{{ 'Order'|trans }}</span>
-                            <span class="qc-details-value">#{{ order.id }}</span>
-                        </div>
-
-                        <div class="qc-details-row">
                             <span class="qc-details-label">{{ 'Product name'|trans }}</span>
                             <span class="qc-details-value"><strong>{{ order.title }}</strong></span>
-                        </div>
-
-                        <div class="qc-details-row">
-                            <span class="qc-details-label">{{ 'Payment amount'|trans }}</span>
-                            <span class="qc-details-value">{{ order.total|money(order.currency) }}</span>
-                        </div>
-
-                        {% if order.period %}
-                            <div class="qc-details-row">
-                                <span class="qc-details-label">{{ 'Billing cycle'|trans }}</span>
-                                <span class="qc-details-value">{{ order.period|period_title }}</span>
-                            </div>
-                        {% endif %}
-
-                        <div class="qc-details-row">
-                            <span class="qc-details-label">{{ 'Order status'|trans }}</span>
-                            <span class="qc-details-value">
-                                {% if qc_setup %}
-                                    <span class="badge qc-badge-setup">{{ 'Setting up'|trans }}</span>
-                                    <div class="small text-muted mt-1">{{ 'Payment confirmed — your server is being created. Most servers are ready within 30 minutes of payment.' }}</div>
-                                {% else %}
-                                <span class="badge {% if order.status == 'active' %}bg-success{% elseif order.status == 'pending_setup' %}bg-warning{% elseif order.status == 'failed_setup' or order.status == 'suspended' or order.status == 'failed_renew' %}bg-danger{% elseif order.status == 'canceled' %}bg-secondary{% endif %}">{{ mf.status_name(order.status) }}</span>
-                                {% endif %}
-                            </span>
                         </div>
 
                         <div class="qc-details-row">
@@ -103,8 +164,12 @@
 
                         {% if order.period %}
                             <div class="qc-details-row">
-                                <span class="qc-details-label">{{ 'Renewal date'|trans }} {% if order.expires_at %} in {{ order.expires_at|daysleft }} day(s) {% endif %}</span>
-                                <span class="qc-details-value">{% if order.expires_at %}{{ order.expires_at|format_date }}{% else %}-{% endif %}</span>
+                                <span class="qc-details-label">{{ 'Renewal date'|trans }}</span>
+                                <span class="qc-details-value">
+                                    {% if order.expires_at %}
+                                        {{ order.expires_at|format_date }} <span class="text-size-12" style="color:#98a1b3">· {{ order.expires_at|daysleft }} {{ 'day(s)'|trans }}</span>
+                                    {% else %}-{% endif %}
+                                </span>
                             </div>
                         {% endif %}
 
@@ -119,22 +184,28 @@
                             <div class="qc-details-row">
                                 <span class="qc-details-label">{{ 'Active support tickets'|trans }}</span>
                                 <span class="qc-details-value">
-                                    <a href="{{ 'support'|link }}" class="badge bg-danger text-decoration-none">{{ order.active_tickets }}</a>
+                                    <a href="{{ 'support'|link }}" class="iq-badge bg-soft-danger text-decoration-none">{{ order.active_tickets }}</a>
                                 </span>
                             </div>
                         {% endif %}
                     </div>
+
+                    {% if qc_setup %}
+                        <div class="alert alert-warning mt-3 mb-0">
+                            {{ 'Payment confirmed — your server is being created. Most servers are ready within 30 minutes of payment.'|trans }}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer d-flex flex-wrap gap-2">
                     {% if order.period and order.status != 'failed_renew' %}
                         <button class="btn btn-primary btn-sm" type="button" id="renewal-button">{{ 'Renew now'|trans }}</button>
                     {% endif %}
                     {% if upgradables %}
-                        <button class="btn btn-success btn-sm" type="button" id="request-upgrade" data-bs-toggle="modal" data-bs-target="#upgrade-request-modal">{{ 'Request Upgrade'|trans }}</button>
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="request-upgrade" data-bs-toggle="modal" data-bs-target="#upgrade-request-modal">{{ 'Request Upgrade'|trans }}</button>
                     {% endif %}
-                    <button class="btn btn-info btn-sm" type="button" id="open-ticket" data-bs-toggle="modal" data-bs-target="#open-ticket-modal">{{ 'Open ticket'|trans }}</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" id="open-ticket" data-bs-toggle="modal" data-bs-target="#open-ticket-modal">{{ 'Open ticket'|trans }}</button>
                     {% if order.status == 'active' %}
-                        <button class="btn btn-danger btn-sm" type="button" id="request-cancel" data-bs-toggle="modal" data-bs-target="#cancel-request-modal">{{ 'Request cancellation'|trans }}</button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" id="request-cancel" data-bs-toggle="modal" data-bs-target="#cancel-request-modal">{{ 'Request cancellation'|trans }}</button>
                     {% endif %}
                 </div>
             </div>
@@ -147,17 +218,16 @@
 
             {# Order addons #}
             {% if order.group_master == 1 and addons|length > 0 %}
-            <div class="card mb-4">
-                <div class="card-header py-3 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="mb-1">{{ 'Addons'|trans }}</h1>
-                            <span class="small text-secondary">{{ 'Addons you have ordered with this service'|trans }}</span>
-                        </div>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Addons'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Addons you have ordered with this service'|trans }}</p>
                     </div>
                 </div>
                 <div class="card-body">
-                        <table class="table table-hover table-bordered table-sm">
+                    <div class="table-responsive">
+                        <table class="table table-layout-flat">
                             <thead>
                             <tr>
                                 <th>{{ 'Product/Service'|trans }}</th>
@@ -165,21 +235,35 @@
                                 <th>{{ 'Billing Cycle'|trans }}</th>
                                 <th>{{ 'Next due date'|trans }}</th>
                                 <th>{{ 'Status'|trans }}</th>
-                                <th>{{ 'Actions'|trans }}</th>
+                                <th></th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for i, addon in addons %}
                                 <tr>
-                                    <td>{{ addon.title }}</td>
-                                    <td>{{ addon.total|money(addon.currency) }}</td>
-                                    <td>{{ addon.period|period_title }}</td>
-                                    <td>{% if addon.expires_at %}{{ addon.expires_at|format_date }}{% else %}-{% endif %}</td>
                                     <td>
-                                        <span class="badge {% if addon.status == 'active' %}bg-success{% elseif addon.status == 'pending_setup' %}bg-warning{% endif %}">{{ mf.status_name(addon.status) }}</span>
+                                        <div class="service-cell">
+                                            <span class="service-ico bg-soft-primary"><svg fill="currentColor"><use href="#i-folder"/></svg></span>
+                                            <div>
+                                                <div class="service-name">{{ addon.title }}</div>
+                                                <div class="service-sub">#{{ addon.id }}</div>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="actions">
-                                        <a class="btn btn-outline-primary btn-sm" href="{{ '/order/service/manage'|link }}/{{ addon.id }}">{{ 'Manage'|trans }}</a>
+                                    <td class="fw-medium" style="color:var(--iq-heading)">{{ addon.total|money(addon.currency) }}</td>
+                                    <td class="text-size-12">{{ addon.period|period_title }}</td>
+                                    <td class="text-size-12">{% if addon.expires_at %}{{ addon.expires_at|format_date(pattern="MMM d, yyyy") }}{% else %}—{% endif %}</td>
+                                    <td>
+                                        {% if addon.status == 'active' %}
+                                            <span class="iq-badge bg-soft-success"><span class="iq-badge-dot"></span>{{ mf.status_name(addon.status) }}</span>
+                                        {% elseif addon.status == 'pending_setup' %}
+                                            <span class="iq-badge bg-soft-warning"><span class="iq-badge-dot"></span>{{ mf.status_name(addon.status) }}</span>
+                                        {% else %}
+                                            <span class="iq-badge" style="background:#1e1e24;color:#9aa3b2"><span class="iq-badge-dot"></span>{{ mf.status_name(addon.status) }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a class="premium-btn premium-btn-sm" href="{{ '/order/service/manage'|link }}/{{ addon.id }}">{{ 'Manage'|trans }}</a>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -187,6 +271,7 @@
                         </table>
                     </div>
                 </div>
+            </div>
             {% endif %}
 
             <div class="modal fade" id="cancel-request-modal" tabindex="-1" role="dialog" aria-labelledby="cancel-modal" aria-hidden="true">
@@ -293,6 +378,7 @@
         </div>
     </div>
 
+{% endif %}
 {% endblock %}
 
 {% block js %}
