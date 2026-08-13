@@ -41,6 +41,14 @@
             color: var(--iq-body, #9aa3b2);
         }
         .qc-coming-soon .qc-soon-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 14px; background: var(--iq-primary-light, rgba(227,28,100,.16)); color: #f06b9d; }
+        @media (max-width: 767.98px) {
+            .qc-profile-tabs { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; }
+            .qc-profile-tabs .nav-item { width: 100%; }
+            .qc-profile-tabs .nav-link { text-align: center; justify-content: center; width: 100%; padding: 10px 8px; }
+        }
+        @media (max-width: 380px) {
+            .qc-profile-tabs { grid-template-columns: 1fr; }
+        }
     </style>
 
     {% if (guest.client_is_email_validation_required) and (not profile.email_approved) %}
@@ -258,4 +266,23 @@
         </div>
     </div>
 {% endif %}
+{% endblock %}
+
+{% block js %}
+<script>
+// FOSSBilling's profile update passes an empty string for an untouched date
+// field, which Doctrine rejects as an invalid datetime (SQLSTATE 22007).
+// Strip empty date inputs before the api-form handler serializes the form.
+document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (form && form.id === 'profile-update') {
+        ['birthday'].forEach(function (name) {
+            var field = form.querySelector('[name="' + name + '"]');
+            if (field && field.value === '') {
+                field.disabled = true; // disabled inputs are excluded from FormData
+            }
+        });
+    }
+}, true);
+</script>
 {% endblock %}
