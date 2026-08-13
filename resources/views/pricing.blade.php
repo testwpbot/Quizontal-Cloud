@@ -46,6 +46,7 @@
   <div class="table-wrap reveal">
     <table class="compare-table" id="pricingTldTable"><thead><tr><th>Extension</th><th>Registration / year</th><th>Renewal / year</th><th>Transfer / year</th><th></th></tr></thead><tbody><tr><td colspan="5">Loading domain prices…</td></tr></tbody></table>
   </div>
+  <div id="pricingTldMore" style="text-align:center;margin-top:18px"></div>
   <p class="hosting-note reveal">Searching for a name? Live availability and smart suggestions are on the <a href="{{ route('domains') }}">domains page</a>.</p>
 </section>
 

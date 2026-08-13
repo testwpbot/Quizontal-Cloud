@@ -87,7 +87,7 @@
           io.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
     items.forEach(el => {
       const delay = el.getAttribute('data-reveal-delay');
       if (delay) el.style.transitionDelay = `${Number(delay) || 0}ms`;

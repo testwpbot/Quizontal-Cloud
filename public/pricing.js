@@ -3,7 +3,8 @@
 (function () {
   const $ = s => document.querySelector(s);
   const storage = gb => Number(gb) >= 1000 ? `${(Number(gb) / 1000).toFixed(Number(gb) % 1000 ? 1 : 0)} TB` : `${Number(gb)} GB`;
-  const state = { catalog: [], category: 'general', tlds: [], filter: '', sort: 'price-asc', orderUrl: '' };
+  const state = { catalog: [], category: 'general', tlds: [], filter: '', sort: 'price-asc', orderUrl: '', expanded: false };
+  const TLD_PAGE = 24;
 
   /* ---------- VPS table ---------- */
   function vpsRows() {
@@ -33,15 +34,19 @@
   }
 
   /* ---------- Domain TLD table ---------- */
-  function tldRows() {
-    let rows = state.tlds.filter(t => t.tld.toLowerCase().includes(state.filter));
-    rows = rows.sort((a, b) => {
+  function tldFiltered() {
+    const rows = state.tlds.filter(t => t.tld.toLowerCase().includes(state.filter));
+    return rows.sort((a, b) => {
       if (state.sort === 'name') return a.tld.localeCompare(b.tld);
       if (state.sort === 'price-desc') return Number(b.register) - Number(a.register);
       return Number(a.register) - Number(b.register);
     });
+  }
+  function tldRows() {
+    const rows = tldFiltered();
     if (!rows.length) return `<tr><td colspan="5">No extensions match “${QC.escape(state.filter)}”.</td></tr>`;
-    return rows.map(t => `<tr>
+    const shown = (state.expanded || state.filter) ? rows : rows.slice(0, TLD_PAGE);
+    return shown.map(t => `<tr>
       <td><strong>${QC.escape(t.tld)}</strong></td>
       <td class="price-cell">${t.register != null ? QC.money(t.register) : '—'}</td>
       <td>${t.renew != null ? QC.money(t.renew) : '—'}</td>
@@ -52,10 +57,17 @@
   function renderTlds() {
     const body = $('#pricingTldTable tbody');
     if (body) body.innerHTML = tldRows();
+    const all = tldFiltered();
     const count = $('#pricingTldCount');
-    if (count) {
-      const shown = state.tlds.filter(t => t.tld.toLowerCase().includes(state.filter)).length;
-      count.textContent = `${shown} extension${shown === 1 ? '' : 's'}`;
+    if (count) count.textContent = `${all.length} extension${all.length === 1 ? '' : 's'}`;
+    const more = $('#pricingTldMore');
+    if (more) {
+      if (!state.filter && all.length > TLD_PAGE) {
+        more.innerHTML = `<button type="button" class="text-button" id="pricingTldToggle">${state.expanded ? 'Show less ↑' : `Show all ${all.length} extensions <span>↓</span>`}</button>`;
+        $('#pricingTldToggle').addEventListener('click', () => { state.expanded = !state.expanded; renderTlds(); });
+      } else {
+        more.innerHTML = '';
+      }
     }
   }
 
