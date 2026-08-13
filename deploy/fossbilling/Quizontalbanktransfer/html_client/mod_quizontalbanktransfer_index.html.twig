@@ -1,35 +1,64 @@
 {% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
 {% set active_menu = 'payments' %}
 {% block meta_title %}{{ 'Manual Bank Transfer'|trans }}{% endblock %}
-{% block breadcrumb %}<li class="breadcrumb-item active">{{ 'Manual Bank Transfer'|trans }}</li>{% endblock %}
+{% block body_class %}bank-transfer qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Manual Bank Transfer'|trans }}</h1>
+                    <p>{{ 'Pay from any Sri Lankan bank app or branch.'|trans }}</p>
+                </div>
+                <div>
+                    <a href="{{ 'client/balance'|link }}" class="premium-btn">{{ 'Back to wallet'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
 
 {% block content %}
 <style>
-.qc-receipt-card{position:relative;overflow:hidden}#qc-receipt-loading{display:none;position:absolute;inset:0;z-index:20;background:rgba(255,255,255,.97);padding:22px}#qc-receipt-loading.show{display:block}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:14px 0;background:linear-gradient(90deg,#f0f1f3 25%,#fff 50%,#f0f1f3 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}.qc-receipt-shimmer.field{height:42px}.qc-receipt-shimmer.notice{height:78px}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
+.qc-receipt-card{position:relative;overflow:hidden}#qc-receipt-loading{display:none;position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.88);padding:22px}#qc-receipt-loading.show{display:block}.qc-receipt-shimmer{height:18px;border-radius:7px;margin:14px 0;background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%);background-size:200% 100%;animation:qc-receipt-shimmer 1.15s infinite}.qc-receipt-shimmer.field{height:42px}.qc-receipt-shimmer.notice{height:78px}@keyframes qc-receipt-shimmer{to{background-position:-200% 0}}
+.qc-bank-logo-box { background: rgba(255,255,255,.04); border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: .75rem; }
 </style>
 {% if request.submitted %}<div class="alert alert-success">{% if invoice_kind|default('deposit') == 'service' %}Receipt submitted — we verify it and activate your service right after approval.{% else %}Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.{% endif %}</div>{% endif %}
-<div class="row g-4">
+<div class="row g-3">
   <div class="col-lg-6">
     <div class="card h-100">
-      <div class="card-header"><h2 class="card-title">Quizontal Cloud bank details</h2></div>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="header-title">
+          <h4 class="card-title">{{ 'Quizontal Cloud bank details'|trans }}</h4>
+          <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Transfer the exact amount to this account.'|trans }}</p>
+        </div>
+      </div>
       <div class="card-body">
-        <div class="text-center mb-4 p-3 bg-white rounded border">
+        <div class="text-center mb-4 p-3 rounded qc-bank-logo-box">
           <img src="{{ 'sampath-bank.png'|mod_asset_url('quizontalbanktransfer') }}" alt="Sampath Bank" style="display:block;max-width:260px;width:100%;height:auto;margin:0 auto">
         </div>
         <dl class="row mb-0">
-          <dt class="col-sm-5">Bank</dt><dd class="col-sm-7">{{ config.bank_name }}</dd>
-          <dt class="col-sm-5">Account name</dt><dd class="col-sm-7">{{ config.account_name }}</dd>
-          <dt class="col-sm-5">Account number</dt><dd class="col-sm-7"><strong>{{ config.account_number }}</strong></dd>
-          <dt class="col-sm-5">Branch</dt><dd class="col-sm-7">{{ config.branch }}</dd>
-          {% if config.swift_code %}<dt class="col-sm-5">SWIFT</dt><dd class="col-sm-7">{{ config.swift_code }}</dd>{% endif %}
+          <dt class="col-sm-5" style="color:#7d8494">Bank</dt><dd class="col-sm-5 offset-sm-2">{{ config.bank_name }}</dd>
+          <dt class="col-sm-5" style="color:#7d8494">Account name</dt><dd class="col-sm-5 offset-sm-2">{{ config.account_name }}</dd>
+          <dt class="col-sm-5" style="color:#7d8494">Account number</dt><dd class="col-sm-5 offset-sm-2"><strong style="color:var(--iq-heading)">{{ config.account_number }}</strong></dd>
+          <dt class="col-sm-5" style="color:#7d8494">Branch</dt><dd class="col-sm-5 offset-sm-2">{{ config.branch }}</dd>
+          {% if config.swift_code %}<dt class="col-sm-5" style="color:#7d8494">SWIFT</dt><dd class="col-sm-5 offset-sm-2">{{ config.swift_code }}</dd>{% endif %}
         </dl>
-        {% if config.instructions %}<hr><p class="text-muted mb-0">{{ config.instructions }}</p>{% endif %}
+        {% if config.instructions %}<hr style="border-color:var(--iq-line)"><p class="text-muted mb-0">{{ config.instructions }}</p>{% endif %}
       </div>
     </div>
   </div>
   <div class="col-lg-6">
     <div class="card h-100 qc-receipt-card">
-      <div class="card-header"><h2 class="card-title">{% if invoice_kind|default('deposit') == 'service' %}{{ 'Upload your payment slip'|trans }}{% else %}{{ 'Add funds to your wallet'|trans }}{% endif %}</h2></div>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="header-title">
+          <h4 class="card-title">{% if invoice_kind|default('deposit') == 'service' %}{{ 'Upload your payment slip'|trans }}{% else %}{{ 'Add funds to your wallet'|trans }}{% endif %}</h4>
+          <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Attach your transfer receipt for verification.'|trans }}</p>
+        </div>
+      </div>
       <form id="qc-receipt-form" method="post" action="{{ 'quizontalbanktransfer/submit'|link }}" enctype="multipart/form-data">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
         {% if deposit_invoice %}<input type="hidden" name="invoice_hash" value="{{ deposit_invoice.hash }}">{% endif %}
@@ -48,19 +77,27 @@
           <div class="mb-3"><label class="form-label">Payment receipt</label><input class="form-control" type="file" name="receipt" accept="image/jpeg,image/png,application/pdf" required><small class="form-hint">JPG, PNG, or PDF. Maximum {{ config.max_file_mb }} MB.</small></div>
           <div class="alert alert-warning mb-0">A receipt does not guarantee approval. Funds are credited only after the payment appears in our bank account.</div>
         </div>
-        <div class="card-footer"><button class="btn btn-primary" type="submit">Submit transfer for verification</button></div>
+        <div class="card-footer"><button class="premium-btn" type="submit">Submit transfer for verification</button></div>
       </form>
-      <div id="qc-receipt-loading" aria-live="polite"><div class="d-flex align-items-center gap-2 mb-3"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong>Submitting for verification…</strong></div><div class="qc-receipt-shimmer" style="width:42%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer" style="width:55%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer notice"></div><div class="qc-receipt-shimmer" style="width:48%"></div></div>
+      <div id="qc-receipt-loading" aria-live="polite"><div class="d-flex align-items-center gap-2 mb-3"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong style="color:#fff">Submitting for verification…</strong></div><div class="qc-receipt-shimmer" style="width:42%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer" style="width:55%"></div><div class="qc-receipt-shimmer field"></div><div class="qc-receipt-shimmer notice"></div><div class="qc-receipt-shimmer" style="width:48%"></div></div>
     </div>
   </div>
 </div>
 
-<div class="card mt-4">
-  <div class="card-header"><h2 class="card-title">Your submissions</h2></div>
-  <div class="table-responsive"><table class="table table-vcenter"><thead><tr><th>ID</th><th>Invoice</th><th>Amount</th><th>Reference</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
-  {% set submissions = client.quizontalbanktransfer_get_list({per_page: 50}) %}
-  {% for item in submissions.list %}<tr><td>#{{ item.id }}</td><td>{{ item.serie_nr }}</td><td>{{ item.amount|money(item.currency) }}</td><td>{{ item.reference }}</td><td><span class="badge">{{ item.status }}</span>{% if item.admin_note %}<div class="small text-muted">{{ item.admin_note }}</div>{% endif %}</td><td>{{ item.created_at|format_date }}</td><td><a class="btn btn-sm" target="_blank" href="{{ ('quizontalbanktransfer/receipt/' ~ item.id)|link }}">Receipt</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted">No bank transfers submitted.</td></tr>{% endfor %}
-  </tbody></table></div>
+<div class="card mt-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="header-title">
+      <h4 class="card-title">{{ 'Your submissions'|trans }}</h4>
+      <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Every receipt you have submitted.'|trans }}</p>
+    </div>
+  </div>
+  <div class="card-body">
+    {% set status_classes = {'pending': 'bg-soft-warning', 'processing': 'bg-soft-info', 'approved': 'bg-soft-success', 'rejected': 'bg-soft-danger'} %}
+    <div class="table-responsive"><table class="table table-layout-flat"><thead><tr><th>ID</th><th>Invoice</th><th>Amount</th><th>Reference</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
+    {% set submissions = client.quizontalbanktransfer_get_list({per_page: 50}) %}
+    {% for item in submissions.list %}<tr><td class="text-size-12">#{{ item.id }}</td><td><span class="service-name">{{ item.serie_nr }}</span></td><td class="fw-medium" style="color:var(--iq-heading)">{{ item.amount|money(item.currency) }}</td><td class="text-size-12">{{ item.reference }}</td><td><span class="iq-badge {{ status_classes[item.status]|default('') }}"{% if item.status not in ['pending','processing','approved','rejected'] %} style="background:#1e1e24;color:#9aa3b2"{% endif %}><span class="iq-badge-dot"></span>{{ item.status }}</span>{% if item.admin_note %}<div class="small text-muted">{{ item.admin_note }}</div>{% endif %}</td><td class="text-size-12">{{ item.created_at|format_date(pattern="MMM d, yyyy") }}</td><td><a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ ('quizontalbanktransfer/receipt/' ~ item.id)|link }}">{{ 'Receipt'|trans }}</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted py-4">No bank transfers submitted.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
 </div>
 <script>
 var qcReceiptForm=document.getElementById('qc-receipt-form');if(qcReceiptForm)qcReceiptForm.addEventListener('submit',function(){if(this.checkValidity()){var overlay=document.getElementById('qc-receipt-loading');overlay.classList.add('show');setTimeout(function(){overlay.classList.remove('show');},30000);}});
