@@ -199,9 +199,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a class="iq-menu-bt" style="width:28px;height:28px" href="{{ '/order/service/manage'|link }}/{{ order.id }}" title="{{ 'Manage'|trans }}" aria-label="{{ 'Manage'|trans }}">
-                                        <svg width="14" height="14" fill="currentColor"><use href="#i-chevron"/></svg>
-                                    </a>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ '/order/service/manage'|link }}/{{ order.id }}">{{ 'Manage'|trans }}</a>
                                 </td>
                             </tr>
                         {% endfor %}
