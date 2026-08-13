@@ -54,6 +54,10 @@
             transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
         }
         .qc-gateway-card:hover { border-color: rgba(227,28,100,.45); transform: translateY(-2px); }
+        .qc-gateway-link { color: var(--iq-body, #9aa3b2); }
+        .qc-gateway-link:hover { color: var(--iq-body, #9aa3b2); }
+        .qc-gateway-arrow { color: #f06b9d; font-size: 1.3rem; font-weight: 700; transition: transform .18s ease; }
+        .qc-gateway-link:hover .qc-gateway-arrow { transform: translateX(4px); }
         .qc-gateway-card .btn { border: 0; background: transparent; color: var(--iq-heading, #f5f6f8); }
         .qc-gateway-card .btn:focus, .qc-gateway-card .btn:active { box-shadow: none; }
         .qc-gateway-card .btn-check:checked + .btn {
@@ -103,37 +107,35 @@
                             {% set is_bank = gtw.code == 'Custom' %}
                             {% set gateway_icon = is_wallet ? ('wallet.svg'|mod_asset_url('quizontalbanktransfer')) : (is_bank ? ('bank-transfer.svg'|mod_asset_url('quizontalbanktransfer')) : gtw.logo.logo) %}
                             <div class="col-12 col-md-6 col-xl-5">
+                                {% if is_bank %}
+                                    {# Bank transfer needs no gateway redirect — go straight to the slip upload page. #}
+                                    <a class="qc-gateway-card qc-gateway-link d-flex align-items-center gap-3 p-3 h-100 text-decoration-none" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">
+                                        <img src="{{ gateway_icon }}" alt="" width="52" height="52" style="object-fit:contain;flex:0 0 52px">
+                                        <span class="d-flex flex-column">
+                                            <strong class="fs-5" style="color:var(--iq-heading)">{{ 'Manual Bank Transfer'|trans }}</strong>
+                                            <small class="text-muted mt-1">Transfer funds to our bank and upload your payment receipt.</small>
+                                        </span>
+                                        <span class="qc-gateway-arrow ms-auto" aria-hidden="true">→</span>
+                                    </a>
+                                {% else %}
                                 <div class="qc-gateway-card h-100 position-relative">
                                     <input type="radio" class="btn-check" name="gateway_id" id="gateway-choice-{{ gtw.id }}" autocomplete="off">
                                     <label class="btn w-100 h-100 p-3 d-flex align-items-center gap-3 text-start position-relative" for="gateway-choice-{{ gtw.id }}"
                                         onclick="paymentPrompt('{{ gtw.id }}', {{ gtw.allow_recurrent ? 'true' : 'false' }}, `{{ gtw.title }}`)">
                                         <img src="{{ gateway_icon }}" alt="" width="52" height="52" style="object-fit:contain;flex:0 0 52px">
                                         <span class="d-flex flex-column">
-                                            <strong class="fs-5" style="color:var(--iq-heading)">{{ is_wallet ? 'Quizontal Cloud Wallet' : (is_bank ? 'Manual Bank Transfer' : gtw.title) }}</strong>
-                                            <small class="text-muted mt-1">
-                                                {% if is_wallet %}Pay this invoice instantly from your available wallet balance.
-                                                {% elseif is_bank %}Transfer funds to our bank and upload your payment receipt.
-                                                {% else %}Continue securely with {{ gtw.title }}.{% endif %}
-                                            </small>
+                                            <strong class="fs-5" style="color:var(--iq-heading)">{{ 'Quizontal Cloud Wallet'|trans }}</strong>
+                                            <small class="text-muted mt-1">Pay this invoice instantly from your available wallet balance.</small>
                                         </span>
                                     </label>
                                 </div>
+                                {% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
                 </div>
                 <input type="hidden" name="gateway_id" id="gateway_id">
             </form>
-            {% if not is_deposit %}
-            <div class="d-flex flex-wrap align-items-center gap-3 mt-4 p-3 rounded-3 qc-bank-panel">
-                <img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="44" height="44" alt="" style="flex:0 0 44px">
-                <div class="flex-grow-1" style="min-width:220px">
-                    <strong class="d-block" style="color:var(--iq-heading)">{{ 'Paying by bank transfer?'|trans }}</strong>
-                    <span class="small text-muted">View our bank details, transfer {{ invoice.total|money(invoice.currency) }} and upload the slip — this invoice is then marked paid and your service activates automatically. Use <strong>{{ nr }}</strong> as the transfer reference where possible.</span>
-                </div>
-                <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">{{ 'Bank details & slip upload'|trans }}</a>
-            </div>
-            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -260,20 +262,24 @@
     </div>
 
     <div class="modal modal-lg fade" id="paymentPrompt" tabindex="-1" aria-labelledby="paymentPromptLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="paymentPromptLabel"></h4>
+                    <div class="header-title">
+                        <h4 class="card-title" id="paymentPromptLabel"></h4>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Close'|trans }}"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="bodyText"></p>
-                    <a href="#" class="btn btn-primary" id="single">{{ "Pay now with a one-time payment"|trans }}</a>
-                    <a href="#" class="btn btn-primary" id="subscription" hidden="true">{{ "Pay now and create a subscription"|trans }}</a>
-                    <a href="#" class="btn btn-primary" id="pay-nondescript" hidden="true">{{ "Pay now"|trans }}</a>
+                    <p id="bodyText" class="mb-4" style="color:var(--iq-body)"></p>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#" class="premium-btn w-100 justify-content-center" id="single">{{ "Pay now with a one-time payment"|trans }}</a>
+                        <a href="#" class="premium-btn w-100 justify-content-center" id="subscription" hidden="true">{{ "Pay now and create a subscription"|trans }}</a>
+                        <a href="#" class="premium-btn w-100 justify-content-center" id="pay-nondescript" hidden="true">{{ "Pay now"|trans }}</a>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
                 </div>
             </div>
         </div>
