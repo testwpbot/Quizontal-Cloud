@@ -67,23 +67,27 @@
   </div>
 
   <!-- search card -->
-  <div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <div class="header-title">
-        <h4 class="card-title">Find your domain</h4>
-        <p class="mb-0 text-size-12" style="color:#98a1b3">Live availability and honest LKR pricing across every extension we sell.</p>
-      </div>
-    </div>
-    <div class="card-body">
-      <form id="qcDomSearch" class="d-flex flex-wrap gap-2" autocomplete="off">
-        <div class="input-group flex-grow-1" style="min-width:220px">
-          <span class="input-group-text"><svg width="16" height="16" fill="currentColor"><use href="#i-search"/></svg></span>
+  <div class="card mb-3 qc-search-card">
+    <div class="card-body text-center">
+      <h4 class="card-title mb-1">Find your domain</h4>
+      <p class="mb-4 text-size-12" style="color:#98a1b3">Live availability and honest LKR pricing across every extension we sell.</p>
+      <form id="qcDomSearch" class="qc-search-form" autocomplete="off">
+        <div class="qc-search-input">
+          <span class="qc-search-icon"><svg width="18" height="18" fill="currentColor"><use href="#i-search"/></svg></span>
           <input id="qcDomInput" type="text" class="form-control" placeholder="myshop.com" aria-label="Domain name" spellcheck="false">
         </div>
         <select id="qcDomTld" class="form-select flex-grow-0" style="width:auto" aria-label="Extension" hidden></select>
-        <button type="submit" class="btn btn-primary px-4">Search</button>
+        <button type="submit" class="btn btn-primary qc-search-btn">Search</button>
       </form>
       <div id="qcDomError" class="alert alert-warning mt-3 mb-0" hidden></div>
+    </div>
+  </div>
+
+  <!-- loading overlay (gradient spinner) -->
+  <div class="qc-loading" id="qcLoading" hidden>
+    <div class="qc-loader">
+      <div class="qc-spinner"><div class="qc-spinner-core"></div></div>
+      <p>Finding your domain…</p>
     </div>
   </div>
 
@@ -120,6 +124,82 @@
   .qc-domains-page .qc-tld strong { color: var(--iq-heading, #f5f6f8); }
   .qc-domains-page .qc-tld .text-muted { color: #7d8494 !important; }
   .qc-domains-page .qc-tld-loading { border: 1px dashed var(--iq-line, rgba(255, 255, 255, .14)); border-radius: .5rem; }
+
+  /* ---- centered search bar (taller, narrower, border on focus, no heavy shadow) ---- */
+  .qc-domains-page .qc-search-card .card-body { padding: 2.25rem 1.5rem; }
+  .qc-domains-page .qc-search-form {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .qc-domains-page .qc-search-input {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--iq-line, rgba(255, 255, 255, .06));
+    border-radius: .75rem;
+    padding: 0 15px;
+    transition: border-color .18s ease, background .18s ease;
+  }
+  .qc-domains-page .qc-search-input:focus-within {
+    border-color: #f1719f;
+    background: rgba(255, 255, 255, .05);
+  }
+  .qc-domains-page .qc-search-icon { color: #7e8594; display: flex; flex: none; }
+  .qc-domains-page .qc-search-input .form-control {
+    flex: 1; min-width: 0;
+    height: 50px;
+    border: 0; background: transparent;
+    padding: 0; font-size: .95rem;
+    color: #e6e8ec;
+    box-shadow: none;
+  }
+  .qc-domains-page .qc-search-input .form-control:focus {
+    background: transparent; border: 0; box-shadow: none; color: #e6e8ec;
+  }
+  .qc-domains-page .qc-search-input .form-control::placeholder { color: #5f6673; }
+  .qc-domains-page .qc-search-btn {
+    height: 50px;
+    padding: 0 1.5rem;
+    border-radius: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ---- loading overlay + gradient spinner ---- */
+  .qc-domains-page .qc-loading {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .qc-domains-page .qc-loading[hidden] { display: none !important; }
+  .qc-domains-page .qc-loader { text-align: center; }
+  .qc-domains-page .qc-spinner {
+    background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
+    width: 92px; height: 92px;
+    margin: 0 auto 1.5rem;
+    animation: qcSpin 1.7s linear infinite;
+    border-radius: 50%;
+    filter: blur(1px);
+    box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qc-domains-page .qc-spinner-core {
+    background-color: rgb(36, 36, 36);
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    filter: blur(10px);
+  }
+  .qc-domains-page .qc-loader p { color: #e6e8ec; font-weight: 600; font-size: .9rem; margin: 0; }
+  @keyframes qcSpin { to { transform: rotate(360deg); } }
+  @media (max-width: 575.98px) {
+    .qc-domains-page .qc-search-form { flex-wrap: wrap; }
+    .qc-domains-page .qc-search-btn { flex: 1; }
+  }
 </style>
 <script>
 (function () {
@@ -199,10 +279,19 @@
     return (raw || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].replace(/\.+$/, '');
   }
 
+  function showLoading() {
+    var loading = document.getElementById('qcLoading');
+    if (loading) loading.hidden = false;
+  }
+  function redirectAfterSpinner(url) {
+    showLoading();
+    setTimeout(function () { window.location.href = url; }, 900);
+  }
+
   function goFallback(sld, tld) {
     var url = '/order' + (domainProductId ? '?product=' + encodeURIComponent(domainProductId) : '') +
       '&register_sld=' + encodeURIComponent(sld) + '&register_tld=' + encodeURIComponent(tld || '') + '&auto=1';
-    window.location.href = url;
+    redirectAfterSpinner(url);
   }
 
   document.getElementById('qcDomSearch').addEventListener('submit', function (event) {
@@ -210,7 +299,7 @@
     var raw = cleanInput(document.getElementById('qcDomInput').value);
     if (raw === '') { document.getElementById('qcDomInput').focus(); return; }
     if (STOREFRONT !== '') {
-      window.location.href = STOREFRONT + '/domains?q=' + encodeURIComponent(raw);
+      redirectAfterSpinner(STOREFRONT + '/domains?q=' + encodeURIComponent(raw));
       return;
     }
     var options = tlds.map(function (row) { return row.tld; });
