@@ -17,61 +17,56 @@
         action="{{ 'api/guest/cart/add_item'|link }}" data-api-msg="{{ 'Product was added to shopping cart'|trans }}"
         data-api-redirect="{{ 'order'|link({ 'checkout' : 1 }) }}" + "{% if request.show_custom_form_values %}&show_custom_form_values=1{% endif %}">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
-        {% set product_details %}
-            <div class="well">
-                <h3>{{ product.title }}</h3>
-                {% if product.description %}
-                    {{ product.description | markdown }}
-                {% endif %}
 
-                <hr>
-
-                <h5 class="mt-4 mb-1"><strong>{{ 'Billing'|trans }}</strong></h5>
-
-                <div class="row">
-                    <div class="col-12 col-md-4 col-xl-3">
-                        {% if product.pricing.type == 'recurrent' %}
-                        <span>{{ 'Billing cycle'|trans }}</span>
-                        {% else %}
-                        <span>{{ 'One-time payment'|trans }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="col">
-                        {% if product.pricing.type == 'recurrent' %}
-                        {% set periods = guest.system_periods %}
-                        <select class="form-select" name="period" id="period-selector">
-                            {% for code,prices in product.pricing.recurrent %}
-                                {% if prices.enabled %}
-                                    <option value="{{code}}" data-bb-price="{{ prices.price | money_convert }}" name="period">{{ prices.price | money_convert }} ({{ periods[code] }})</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                        {% elseif product.pricing.type == 'free' %}
-                        <span class="badge bg-success">{{ 0 | money_convert }}</span>
-                        {% else %}
-                        <span class="badge bg-success">{{ product.pricing.once.price | money_convert }}</span>
-                        {% endif %}
-                    </div>
+        {# ---- premium product summary ---- #}
+        <div class="qc-product-summary mb-4">
+            <div class="d-flex align-items-start gap-3">
+                <span class="qc-product-summary-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-3 10H8v-2h8v2Z"/></svg>
+                </span>
+                <div class="flex-grow-1" style="min-width:0">
+                    <h3 class="mb-1" style="color:var(--iq-heading)">{{ product.title }}</h3>
+                    {% if product.description %}
+                        <div class="qc-product-desc">{{ product.description | markdown }}</div>
+                    {% endif %}
                 </div>
             </div>
-        {% endset %}
 
+            <div class="qc-product-billing mt-3">
+                <span class="qc-billing-label">
+                    {% if product.pricing.type == 'recurrent' %}{{ 'Billing cycle'|trans }}{% else %}{{ 'One-time payment'|trans }}{% endif %}
+                </span>
+                {% if product.pricing.type == 'recurrent' %}
+                    {% set periods = guest.system_periods %}
+                    <select class="form-select" name="period" id="period-selector">
+                        {% for code,prices in product.pricing.recurrent %}
+                            {% if prices.enabled %}
+                                <option value="{{code}}" data-bb-price="{{ prices.price | money_convert }}" name="period">{{ prices.price | money_convert }} ({{ periods[code] }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                {% elseif product.pricing.type == 'free' %}
+                    <span class="badge bg-success">{{ 0 | money_convert }}</span>
+                {% else %}
+                    <span class="badge bg-success">{{ product.pricing.once.price | money_convert }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ---- service-specific form (VPS location/OS, domain name, etc.) ---- #}
         {% set tpl = "mod_service"~product.type~"_order_form.html.twig" %}
         {% if guest.system_template_exists({"file":tpl}) %}
             {{ include(tpl, product) }}
         {% elseif product.form_id and guest.extension_is_on({"mod":"formbuilder"}) %}
-            {{ product_details }}
             {% set form = guest.formbuilder_get({"id":product.form_id}) %}
             {{ include('mod_formbuilder_build.html.twig', product) }}
-        {% else %}
-            {{ product_details }}
         {% endif %}
 
         {{ include('mod_orderbutton_addons.html.twig', product) }}
 
         <input type="hidden" name="multiple" value="1" />
         <input type="hidden" name="id" value="{{ product.id }}" />
-        <div class="mt-3 mb-0 d-flex flex-wrap align-items-center gap-3">
+        <div class="mt-4 mb-0 d-flex flex-wrap align-items-center gap-3">
             <button type="submit" class="premium-btn" id="config-next">{{ 'Continue'|trans }}</button>
             <span class="small text-muted">{{ 'Added to your cart, then straight to checkout.'|trans }}</span>
         </div>
@@ -84,3 +79,28 @@
         </div>
     {% endif %}
 </div>
+
+<style>
+    .qc-product-summary {
+        background: var(--iq-surface, #0b0b0e);
+        border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+        border-radius: .85rem;
+        padding: 20px;
+    }
+    .qc-product-summary-icon {
+        width: 46px; height: 46px; border-radius: 50%; flex: none;
+        display: grid; place-items: center;
+        background: var(--iq-primary-light, rgba(227,28,100,.16));
+        color: #f06b9d;
+    }
+    .qc-product-summary-icon svg { width: 22px; height: 22px; }
+    .qc-product-summary h3 { color: var(--iq-heading, #f5f6f8); }
+    .qc-product-desc { color: var(--iq-body, #9aa3b2); font-size: .88rem; line-height: 1.6; }
+    .qc-product-desc p { margin: 6px 0 0; }
+    .qc-product-billing {
+        display: flex; align-items: center; gap: 14px;
+        padding-top: 14px; border-top: 1px solid var(--iq-line, rgba(255,255,255,.06));
+    }
+    .qc-billing-label { color: #7d8494; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .qc-product-billing .form-select { max-width: 320px; }
+</style>

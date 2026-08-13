@@ -1,0 +1,61 @@
+{% if product.addons|length > 0 %}
+<h5 class="mt-4 mb-3" style="color:var(--iq-heading)"><strong>{{ 'Addons & extras'|trans }}</strong></h5>
+<div class="d-flex flex-column gap-3">
+  {% for addon in product.addons %}
+  <div class="qc-addon-card d-flex flex-wrap align-items-center gap-3">
+    {% if addon.icon_url %}
+    <div class="qc-addon-icon">
+      <img src="{{ addon.icon_url }}" alt="" width="28">
+    </div>
+    {% endif %}
+    <div class="flex-grow-1" style="min-width:200px">
+      <h6 class="mb-1" style="color:var(--iq-heading)"><strong>{{ addon.title }}</strong></h6>
+      {% if addon.description %}<div class="qc-addon-desc">{{ addon.description|markdown }}</div>{% endif %}
+    </div>
+    <div class="qc-addon-price">
+      {% if addon.pricing.type is same as('recurrent') %}
+      {% set periods = guest.system_periods %}
+      <select class="form-select form-select-sm" name="addons[{{ addon.id }}][period]" rel="addon-periods-{{ addon.id }}">
+        {% for code, prices in addon.pricing.recurrent %}
+        {% if prices.enabled %}
+        <option value="{{ code }}">{{ prices.price | money_convert }} {% if prices.setup != '0.00' %}{{ 'Setup:'|trans }} {{ prices.setup | money_convert }}{% endif %} ({{ periods[code] }})</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+      {% elseif addon.pricing.type is same as('once') %}
+      <span class="badge bg-success">{{ (addon.pricing.once.price + addon.pricing.once.setup) | money_convert }}</span>
+      {% elseif addon.pricing.type is same as('free') %}
+      <span class="badge bg-success">{{ 0 | money_convert }}</span>
+      {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+      <input type="radio" class="btn-check" name="addons[{{ addon.id }}][selected]" value="1" id="addon_{{ addon.id }}" autocomplete="off">
+      <label class="btn btn-outline-success btn-sm" for="addon_{{ addon.id }}" data-bs-toggle="tooltip" data-bs-title="{{ 'Add to cart'|trans }}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" width="1.25em"><path d="M3.11 7.17L.048 4.106l1.144-1.144 3.062 3.062z"/><path d="M8.063 2.208L3.735 6.536l-1.22-1.22L6.843.988z"/></svg>
+      </label>
+      <input type="radio" class="btn-check" name="addons[{{ addon.id }}][selected]" value="0" id="addon_{{ addon.id }}_decline" autocomplete="off" checked>
+      <label class="btn btn-outline-danger btn-sm" for="addon_{{ addon.id }}_decline" data-bs-toggle="tooltip" data-bs-title="{{ 'Remove from cart'|trans }}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" width="1.25em"><g fill-rule="evenodd"><path d="M2.048.77l5.18 5.182L5.953 7.23.77 2.048 2.048.77z"/><path d="M5.952.77L7.23 2.05 2.048 7.23.77 5.952 5.953.772z"/></g></svg>
+      </label>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<style>
+    .qc-addon-card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+        border-radius: .75rem;
+        padding: 14px 16px;
+    }
+    .qc-addon-icon {
+        width: 46px; height: 46px; border-radius: 12px; flex: none;
+        display: grid; place-items: center;
+        background: var(--iq-primary-light, rgba(227,28,100,.16));
+    }
+    .qc-addon-desc { color: var(--iq-body, #9aa3b2); font-size: .82rem; line-height: 1.55; }
+    .qc-addon-desc p { margin: 4px 0 0; }
+    .qc-addon-price .form-select { min-width: 220px; }
+</style>
+{% endif %}
