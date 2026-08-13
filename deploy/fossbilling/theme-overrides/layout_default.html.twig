@@ -23,7 +23,7 @@
     <link rel='stylesheet' type='text/css' href="{{ 'css/font-awesome.css' | asset_url }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     {{ encore_entry_link_tags(qc_encore_entry) }}
     <link rel="shortcut icon" href="{{ guest.system_company.favicon_url }}">
 
@@ -36,7 +36,7 @@
     {% block js %}{% endblock %}
 </head>
 
-<body class="{% block body_class %}{% endblock %}{{ client ? ' qc-authed' : '' }}">
+<body class="{% block body_class %}{% endblock %}{{ client ? ' qc-authed qc-app' : '' }}">
 
 {% block body %}
 {% if not client and settings.require_login %}
@@ -67,6 +67,180 @@
 {% else %}
     {% set logo_url =  company.logo_url %}
 {% endif %}
+
+{% if client %}
+    {# ==================== QUIZONTAL APP SHELL (authenticated client area) ==================== #}
+    {% import "qc_storefront.html.twig" as qc_store %}
+    {% set qc_cart_count = guest.cart_get.items|default([])|length %}
+    {% set qc_news_on = guest.extension_is_on({ "mod": "news" }) %}
+    {% if qc_news_on %}
+        {% set qc_bell_posts = guest.news_get_list({ "per_page": 3 }).list %}
+        {% set qc_bell_count = guest.news_get_list({ "per_page": 1 }).total %}
+    {% endif %}
+
+    {# ---- shared icon set ---- #}
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-category" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.54 2H7.92C9.33 2 10.46 3.15 10.46 4.561V7.97C10.46 9.39 9.33 10.53 7.92 10.53H4.54C3.14 10.53 2 9.39 2 7.97V4.561C2 3.15 3.14 2 4.54 2ZM4.54 13.4697H7.92C9.33 13.4697 10.46 14.6107 10.46 16.0307V19.4397C10.46 20.8497 9.33 21.9997 7.92 21.9997H4.54C3.14 21.9997 2 20.8497 2 19.4397V16.0307C2 14.6107 3.14 13.4697 4.54 13.4697ZM19.4601 2H16.0801C14.6701 2 13.5401 3.15 13.5401 4.561V7.97C13.5401 9.39 14.6701 10.53 16.0801 10.53H19.4601C20.8601 10.53 22.0001 9.39 22.0001 7.97V4.561C22.0001 3.15 20.8601 2 19.4601 2ZM16.0801 13.4697H19.4601C20.8601 13.4697 22.0001 14.6107 22.0001 16.0307V19.4397C22.0001 20.8497 20.8601 21.9997 19.4601 21.9997H16.0801C14.6701 21.9997 13.5401 20.8497 13.5401 19.4397V16.0307C13.5401 14.6107 14.6701 13.4697 16.0801 13.4697Z" fill="currentColor"/></symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.45 4.88017H16.52C20.21 4.88017 22.01 6.85017 22 10.8902V15.7602C22 19.6202 19.62 22.0002 15.75 22.0002H8.24C4.39 22.0002 2 19.6202 2 15.7502V8.24017C2 4.10017 3.84 2.00017 7.47 2.00017H9.05C9.981 1.99017 10.85 2.42017 11.42 3.15017L12.3 4.32017C12.58 4.67017 13 4.88017 13.45 4.88017ZM7.37 15.2902H16.63C17.04 15.2902 17.37 14.9502 17.37 14.5402C17.37 14.1202 17.04 13.7902 16.63 13.7902H7.37C6.95 13.7902 6.62 14.1202 6.62 14.5402C6.62 14.9502 6.95 15.2902 7.37 15.2902Z" fill="currentColor"/></symbol>
+        <symbol id="i-document" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.81 2H16.191C19.28 2 21 3.78 21 6.83V17.16C21 20.26 19.28 22 16.191 22H7.81C4.77 22 3 20.26 3 17.16V6.83C3 3.78 4.77 2 7.81 2ZM8.08 6.66V6.65H11.069C11.5 6.65 11.85 7 11.85 7.429C11.85 7.87 11.5 8.22 11.069 8.22H8.08C7.649 8.22 7.3 7.87 7.3 7.44C7.3 7.01 7.649 6.66 8.08 6.66ZM8.08 12.74H15.92C16.35 12.74 16.7 12.39 16.7 11.96C16.7 11.53 16.35 11.179 15.92 11.179H8.08C7.649 11.179 7.3 11.53 7.3 11.96C7.3 12.39 7.649 12.74 8.08 12.74ZM8.08 17.31H15.92C16.319 17.27 16.62 16.929 16.62 16.53C16.62 16.12 16.319 15.78 15.92 15.74H8.08C7.78 15.71 7.49 15.85 7.33 16.11C7.17 16.36 7.17 16.69 7.33 16.95C7.49 17.2 7.78 17.35 8.08 17.31Z" fill="currentColor"/></symbol>
+        <symbol id="i-buy" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.1213 11.2331H16.8891C17.3088 11.2331 17.6386 10.8861 17.6386 10.4677C17.6386 10.0391 17.3088 9.70236 16.8891 9.70236H14.1213C13.7016 9.70236 13.3719 10.0391 13.3719 10.4677C13.3719 10.8861 13.7016 11.2331 14.1213 11.2331ZM20.1766 5.92749C20.7861 5.92749 21.1858 6.1418 21.5855 6.61123C21.9852 7.08067 22.0551 7.7542 21.9652 8.36549L21.0159 15.06C20.8361 16.3469 19.7569 17.2949 18.4879 17.2949H7.58639C6.25742 17.2949 5.15828 16.255 5.04837 14.908L4.12908 3.7834L2.62026 3.51807C2.22057 3.44664 1.94079 3.04864 2.01073 2.64043C2.08068 2.22305 2.47038 1.94649 2.88006 2.00874L5.2632 2.3751C5.60293 2.43735 5.85274 2.72207 5.88272 3.06905L6.07257 5.35499C6.10254 5.68257 6.36234 5.92749 6.68209 5.92749H20.1766ZM7.42631 18.9079C6.58697 18.9079 5.9075 19.6018 5.9075 20.459C5.9075 21.3061 6.58697 22 7.42631 22C8.25567 22 8.93514 21.3061 8.93514 20.459C8.93514 19.6018 8.25567 18.9079 7.42631 18.9079ZM18.6676 18.9079C17.8282 18.9079 17.1487 19.6018 17.1487 20.459C17.1487 21.3061 17.8282 22 18.6676 22C19.4969 22 20.1764 21.3061 20.1764 20.459C20.1764 19.6018 19.4969 18.9079 18.6676 18.9079Z" fill="currentColor"/></symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 12.015C2 6.74712 6.21 2 12.02 2C17.7 2 22 6.65699 22 11.985C22 18.1642 16.96 22 12 22C10.36 22 8.54 21.5593 7.08 20.698C6.57 20.3876 6.14 20.1572 5.59 20.3375L3.57 20.9384C3.06 21.0986 2.6 20.698 2.75 20.1572L3.42 17.9139C3.53 17.6034 3.51 17.2729 3.35 17.0125C2.49 15.4301 2 13.6975 2 12.015ZM10.7 12.015C10.7 12.7261 11.27 13.2969 11.98 13.307C12.69 13.307 13.26 12.7261 13.26 12.025C13.26 11.314 12.69 10.7431 11.98 10.7431C11.28 10.7331 10.7 11.314 10.7 12.015ZM15.31 12.025C15.31 12.7261 15.88 13.307 16.59 13.307C17.3 13.307 17.87 12.7261 17.87 12.025C17.87 11.314 17.3 10.7431 16.59 10.7431C15.88 10.7431 15.31 11.314 15.31 12.025ZM7.37 13.307C6.67 13.307 6.09 12.7261 6.09 12.025C6.09 11.314 6.66 10.7431 7.37 10.7431C8.08 10.7431 8.65 11.314 8.65 12.025C8.65 12.7261 8.08 13.2969 7.37 13.307Z" fill="currentColor"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.2124 7.76241C14.2124 10.4062 12.0489 12.5248 9.34933 12.5248C6.6507 12.5248 4.48631 10.4062 4.48631 7.76241C4.48631 5.11865 6.6507 3 9.34933 3C12.0489 3 14.2124 5.11865 14.2124 7.76241ZM2 17.9174C2 15.47 5.38553 14.8577 9.34933 14.8577C13.3347 14.8577 16.6987 15.4911 16.6987 17.9404C16.6987 20.3877 13.3131 21 9.34933 21C5.364 21 2 20.3666 2 17.9174ZM16.1734 7.84875C16.1734 9.19506 15.7605 10.4513 15.0364 11.4948C14.9611 11.6021 15.0276 11.7468 15.1587 11.7698C15.3407 11.7995 15.5276 11.8177 15.7184 11.8216C17.6167 11.8704 19.3202 10.6736 19.7908 8.87118C20.4885 6.19676 18.4415 3.79543 15.8339 3.79543C15.5511 3.79543 15.2801 3.82418 15.0159 3.87688C14.9797 3.88454 14.9405 3.90179 14.921 3.93246C14.8955 3.97174 14.9141 4.02253 14.9396 4.05607C15.7233 5.13216 16.1734 6.44206 16.1734 7.84875ZM19.3173 13.7023C20.5932 13.9466 21.4317 14.444 21.7791 15.1694C22.0736 15.7635 22.0736 16.4534 21.7791 17.0475C21.2478 18.1705 19.5335 18.5318 18.8672 18.6247C18.7292 18.6439 18.6186 18.5289 18.6333 18.3928C18.9738 15.2805 16.2664 13.8048 15.5658 13.4656C15.5364 13.4493 15.5296 13.4263 15.5325 13.411C15.5345 13.4014 15.5472 13.3861 15.5697 13.3832C17.0854 13.3545 18.7155 13.5586 19.3173 13.7023Z" fill="currentColor"/></symbol>
+        <symbol id="i-setting" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M20.4023 13.58C20.76 13.77 21.036 14.07 21.2301 14.37C21.6083 14.99 21.5776 15.75 21.2097 16.42L20.4943 17.62C20.1162 18.26 19.411 18.66 18.6855 18.66C18.3278 18.66 17.9292 18.56 17.6022 18.36C17.3365 18.19 17.0299 18.13 16.7029 18.13C15.6911 18.13 14.8429 18.96 14.8122 19.95C14.8122 21.1 13.872 22 12.6968 22H11.3069C10.1215 22 9.18125 21.1 9.18125 19.95C9.16081 18.96 8.31259 18.13 7.30085 18.13C6.96361 18.13 6.65702 18.19 6.40153 18.36C6.0745 18.56 5.66572 18.66 5.31825 18.66C4.58245 18.66 3.87729 18.26 3.49917 17.62L2.79402 16.42C2.4159 15.77 2.39546 14.99 2.77358 14.37C2.93709 14.07 3.24368 13.77 3.59115 13.58C3.87729 13.44 4.06125 13.21 4.23498 12.94C4.74596 12.08 4.43937 10.95 3.57071 10.44C2.55897 9.87 2.23194 8.6 2.81446 7.61L3.49917 6.43C4.09191 5.44 5.35913 5.09 6.38109 5.67C7.27019 6.15 8.425 5.83 8.9462 4.98C9.10972 4.7 9.20169 4.4 9.18125 4.1C9.16081 3.71 9.27323 3.34 9.4674 3.04C9.84553 2.42 10.5302 2.02 11.2763 2H12.7172C13.4735 2 14.1582 2.42 14.5363 3.04C14.7203 3.34 14.8429 3.71 14.8122 4.1C14.7918 4.4 14.8838 4.7 15.0473 4.98C15.5685 5.83 16.7233 6.15 17.6226 5.67C18.6344 5.09 19.9118 5.44 20.4943 6.43L21.179 7.61C21.7718 8.6 21.4447 9.87 20.4228 10.44C19.5541 10.95 19.2475 12.08 19.7687 12.94C19.9322 13.21 20.1162 13.44 20.4023 13.58ZM9.10972 12.01C9.10972 13.58 10.4076 14.83 12.0121 14.83C13.6165 14.83 14.8838 13.58 14.8838 12.01C14.8838 10.44 13.6165 9.18 12.0121 9.18C10.4076 9.18 9.10972 10.44 9.10972 12.01Z" fill="currentColor"/></symbol>
+        <symbol id="i-wallet" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.7689 8.3818H22C22 4.98459 19.9644 3 16.5156 3H7.48444C4.03556 3 2 4.98459 2 8.33847V15.6615C2 19.0154 4.03556 21 7.48444 21H16.5156C19.9644 21 22 19.0154 22 15.6615V15.3495H17.7689C15.8052 15.3495 14.2133 13.7975 14.2133 11.883C14.2133 9.96849 15.8052 8.41647 17.7689 8.41647V8.3818ZM17.7689 9.87241H21.2533C21.6657 9.87241 22 10.1983 22 10.6004V13.131C21.9952 13.5311 21.6637 13.8543 21.2533 13.8589H17.8489C16.8548 13.872 15.9855 13.2084 15.76 12.2643C15.6471 11.6783 15.8056 11.0736 16.1931 10.6122C16.5805 10.1509 17.1573 9.88007 17.7689 9.87241ZM17.92 12.533H18.2489C18.6711 12.533 19.0133 12.1993 19.0133 11.7877C19.0133 11.3761 18.6711 11.0424 18.2489 11.0424H17.92C17.7181 11.0401 17.5236 11.1166 17.38 11.255C17.2364 11.3934 17.1555 11.5821 17.1556 11.779C17.1555 12.1921 17.4964 12.5282 17.92 12.533ZM6.73778 8.3818H12.3822C12.8044 8.3818 13.1467 8.04812 13.1467 7.63649C13.1467 7.22487 12.8044 6.89119 12.3822 6.89119H6.73778C6.31903 6.89116 5.9782 7.2196 5.97333 7.62783C5.97331 8.04087 6.31415 8.37705 6.73778 8.3818Z" fill="currentColor"/></symbol>
+        <symbol id="i-profile" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.294 7.29105C17.294 10.2281 14.9391 12.5831 12 12.5831C9.0619 12.5831 6.70601 10.2281 6.70601 7.29105C6.70601 4.35402 9.0619 2 12 2C14.9391 2 17.294 4.35402 17.294 7.29105ZM12 22C7.66237 22 4 21.295 4 18.575C4 15.8539 7.68538 15.1739 12 15.1739C16.3386 15.1739 20 15.8789 20 18.599C20 21.32 16.3146 22 12 22Z" fill="currentColor"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.5227 7.39601V8.92935C19.2451 9.46696 20.5 11.0261 20.5 12.8884V17.8253C20.5 20.1308 18.5886 22 16.2322 22H7.7688C5.41136 22 3.5 20.1308 3.5 17.8253V12.8884C3.5 11.0261 4.75595 9.46696 6.47729 8.92935V7.39601C6.48745 4.41479 8.95667 2 11.9848 2C15.0535 2 17.5227 4.41479 17.5227 7.39601ZM12.0051 3.73904C14.0678 3.73904 15.7445 5.37871 15.7445 7.39601V8.7137H8.25553V7.37613C8.26569 5.36878 9.94232 3.73904 12.0051 3.73904ZM12.8891 16.4549C12.8891 16.9419 12.4928 17.3294 11.9949 17.3294C11.5072 17.3294 11.1109 16.9419 11.1109 16.4549V14.2488C11.1109 13.7718 11.5072 13.3843 11.9949 13.3843C12.4928 13.3843 12.8891 13.7718 12.8891 14.2488V16.4549Z" fill="currentColor"/></symbol>
+        <symbol id="i-star" viewBox="0 0 24 24"><path d="M17.9184 14.32C17.6594 14.571 17.5404 14.934 17.5994 15.29L18.4884 20.21C18.5634 20.627 18.3874 21.049 18.0384 21.29C17.6964 21.54 17.2414 21.57 16.8684 21.37L12.4394 19.06C12.2854 18.978 12.1144 18.934 11.9394 18.929H11.6684C11.5744 18.943 11.4824 18.973 11.3984 19.019L6.96839 21.34C6.74939 21.45 6.50139 21.489 6.25839 21.45C5.66639 21.338 5.27139 20.774 5.36839 20.179L6.25839 15.259C6.31739 14.9 6.19839 14.535 5.93939 14.28L2.32839 10.78C2.02639 10.487 1.92139 10.047 2.05939 9.65C2.19339 9.254 2.53539 8.965 2.94839 8.9L7.91839 8.179C8.29639 8.14 8.62839 7.91 8.79839 7.57L10.9884 3.08C11.0404 2.98 11.1074 2.888 11.1884 2.81L11.2784 2.74C11.3254 2.688 11.3794 2.645 11.4394 2.61L11.5484 2.57L11.7184 2.5H12.1394C12.5154 2.539 12.8464 2.764 13.0194 3.1L15.2384 7.57C15.3984 7.897 15.7094 8.124 16.0684 8.179L21.0384 8.9C21.4584 8.96 21.8094 9.25 21.9484 9.65C22.0794 10.051 21.9664 10.491 21.6584 10.78L17.9184 14.32Z" fill="currentColor"/></symbol>
+        <symbol id="i-activity" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.1801 4.41C17.1801 3.08 18.2601 2 19.5901 2C20.9201 2 22.0001 3.08 22.0001 4.41C22.0001 5.74 20.9201 6.82 19.5901 6.82C18.2601 6.82 17.1801 5.74 17.1801 4.41ZM13.33 14.7593L16.22 11.0303L16.18 11.0503C16.34 10.8303 16.37 10.5503 16.26 10.3003C16.151 10.0503 15.91 9.8803 15.651 9.8603C15.38 9.8303 15.111 9.9503 14.95 10.1703L12.531 13.3003L9.76 11.1203C9.59 10.9903 9.39 10.9393 9.19 10.9603C8.991 10.9903 8.811 11.0993 8.69 11.2593L5.731 15.1103L5.67 15.2003C5.5 15.5193 5.58 15.9293 5.88 16.1503C6.02 16.2403 6.17 16.3003 6.34 16.3003C6.571 16.3103 6.79 16.1893 6.93 16.0003L9.44 12.7693L12.29 14.9103L12.38 14.9693C12.7 15.1393 13.1 15.0603 13.33 14.7593ZM15.45 3.7803C15.41 4.0303 15.39 4.2803 15.39 4.5303C15.39 6.7803 17.21 8.5993 19.45 8.5993C19.7 8.5993 19.94 8.5703 20.19 8.5303V16.5993C20.19 19.9903 18.19 22.0003 14.79 22.0003H7.401C4 22.0003 2 19.9903 2 16.5993V9.2003C2 5.8003 4 3.7803 7.401 3.7803H15.45Z" fill="currentColor"/></symbol>
+        <symbol id="i-calendar" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.4109 2.76862L16.4119 3.51824C19.1665 3.73413 20.9862 5.61119 20.9891 8.48975L21 16.9155C21.0039 20.054 19.0322 21.985 15.8718 21.99L8.15188 22C5.01119 22.004 3.01482 20.027 3.01087 16.8795L3.00001 8.55272C2.99606 5.65517 4.75153 3.78311 7.50617 3.53024L7.50518 2.78061C7.5042 2.34083 7.83001 2.01 8.26444 2.01C8.69886 2.009 9.02468 2.33883 9.02567 2.77861L9.02666 3.47826L14.8914 3.47027L14.8904 2.77062C14.8894 2.33084 15.2152 2.001 15.6497 2C16.0742 1.999 16.4099 2.32884 16.4109 2.76862ZM4.52148 8.86157L19.4696 8.84158V8.49175C19.4272 6.34283 18.349 5.21539 16.4138 5.04748L16.4148 5.81709C16.4148 6.24688 16.0801 6.5877 15.6556 6.5877C15.2212 6.5887 14.8943 6.24887 14.8943 5.81909L14.8934 5.0095L9.02863 5.01749L9.02962 5.82609C9.02962 6.25687 8.70479 6.5967 8.27036 6.5967C7.83594 6.5977 7.50913 6.25887 7.50913 5.82809L7.50815 5.05847C5.58286 5.25137 4.51753 6.38281 4.52049 8.55072L4.52148 8.86157ZM15.2399 13.4043V13.4153C15.2498 13.8751 15.625 14.2239 16.0801 14.2139C16.5244 14.2029 16.8789 13.8221 16.869 13.3623C16.8483 12.9225 16.4918 12.5637 16.0485 12.5647C15.5944 12.5747 15.2389 12.9445 15.2399 13.4043ZM16.0554 17.892C15.6013 17.882 15.235 17.5032 15.234 17.0435C15.2241 16.5837 15.5884 16.2029 16.0426 16.1919H16.0525C16.5165 16.1919 16.8927 16.5707 16.8927 17.0405C16.8937 17.5102 16.5185 17.891 16.0554 17.892ZM11.1721 13.4203C11.1919 13.8801 11.568 14.2389 12.0222 14.2189C12.4665 14.1979 12.821 13.8181 12.8012 13.3583C12.7903 12.9085 12.425 12.5587 11.9807 12.5597C11.5266 12.5797 11.1711 12.9605 11.1721 13.4203ZM12.0262 17.8471C11.572 17.8671 11.1968 17.5082 11.1761 17.0485C11.1761 16.5887 11.5305 16.2089 11.9847 16.1879C12.429 16.1869 12.7953 16.5367 12.8052 16.9855C12.8259 17.4463 12.4705 17.8261 12.0262 17.8471ZM7.10433 13.4553C7.12408 13.915 7.50025 14.2749 7.95442 14.2539C8.39872 14.2339 8.75317 13.8531 8.73243 13.3933C8.72256 12.9435 8.35725 12.5937 7.91196 12.5947C7.45779 12.6147 7.10334 12.9955 7.10433 13.4553ZM7.95837 17.8521C7.5042 17.8731 7.12901 17.5132 7.10828 17.0535C7.10729 16.5937 7.46273 16.2129 7.9169 16.1929C8.3612 16.1919 8.7275 16.5417 8.73737 16.9915C8.7581 17.4513 8.40365 17.8321 7.95837 17.8521Z" fill="currentColor"/></symbol>
+        <symbol id="i-up-arrow" viewBox="0 0 24 24"><path fill="currentColor" d="M16.417 4.583a.75.75 0 1 0 1.061 1.061l-6.041-6.041a.749.749 0 0 0-.53-.22.75.75 0 0 0-.531.22L4.335 5.644a.75.75 0 1 0 1.06 1.06L10.15 1.95v18.5a.75.75 0 0 0 1.5 0V1.95l4.705 4.704.062-2.071Z"/></symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24"><path fill="currentColor" d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08c.95-1.66 2.49-2.94 4.32-3.56C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56-1.83-.63-3.37-1.9-4.32-3.56M4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38a8.26 8.26 0 0 0-.14 2c0 .68.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.57 1.91 3.97h-3.82C10.5 6.6 11.17 5.23 12 4.03M18.92 8h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24"><path fill="currentColor" d="M20.043 18.533h-2.585V8.487a5.465 5.465 0 0 0-4.583-5.397.55.55 0 0 1 0-1.09 6.564 6.564 0 0 1 6.166 6.488v10.045h3.88a.55.55 0 0 1 0 1.1H20.044l-.001-.1Zm-9.94 3.25h3.88a1.94 1.94 0 0 1-3.88 0Zm-7.14-4.35-.001.1H2.312a.55.55 0 1 1 0-1.1h3.88V7.92a6.563 6.563 0 0 1 6.165-6.486.55.55 0 1 1 0 1.09 5.463 5.463 0 0 0-4.583 5.395v10.155h.069Z" opacity=".98"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><g fill="currentColor" opacity=".98"><path d="M16.633 16.3247H7.367a.915.915 0 0 1-.913-.913V8.57a.913.913 0 0 1 .913-.913h9.266a.913.913 0 0 1 .913.913v6.84a.915.915 0 0 1-.913.914Zm-9.266-7.57a.182.182 0 0 0-.183.182v6.475a.183.183 0 0 0 .183.183h9.266a.183.183 0 0 0 .182-.183V8.936a.183.183 0 0 0-.182-.182H7.367Zm1.738 1.459a.457.457 0 0 1 .647 0l.214.214 3.305 3.304-2.472 2.473H7.5v-5.447l.297-.297h.162l.746-.246v-.001Zm6 2.315.747.744-1.333 1.333a.602.602 0 0 1-.851-.852l1.341-1.25h.096v.025Z"/><path d="M12 16.3247H7.095l2.755-2.754.652.652a.915.915 0 0 0 1.293 0l.652-.652 2.837 2.837V16.3247H12Zm6.782-10.415L12 3.114a.913.913 0 0 0-.579.835v.224c0 .397.258.894.865 1.105l6.452 2.343.044-3.712Z"/></g></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><path fill="currentColor" d="M15.57 14.115 11.742 10.344c.378-.461.593-1.054.593-1.712A3.122 3.122 0 0 0 9.214 5.5 3.122 3.122 0 0 0 6.1 8.632a3.122 3.122 0 0 0 3.114 3.132c.658 0 1.251-.215 1.713-.594l3.828 3.77.815-.825Zm-6.456-2.578a2.316 2.316 0 0 1-2.31-2.314 2.316 2.316 0 0 1 2.31-2.313c1.274 0 2.31 1.037 2.31 2.313a2.316 2.316 0 0 1-2.31 2.314Z" opacity=".98"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path fill="currentColor" d="M11.175 15.544 3.96 8.33a.625.625 0 1 1 .884-.884l6.328 6.328V2.018a.625.625 0 0 1 1.25 0v11.756l6.328-6.328a.625.625 0 1 1 .884.884l-7.215 7.214a.625.625 0 0 1-.308.166l-.014.003h-.002a.625.625 0 0 1-.042.003h-.002c-.354-.001-.693-.141-.944-.392Zm-6.3 3.026a.625.625 0 0 1 0-1.25h14.25a.625.625 0 0 1 0 1.25H4.875Z"/></symbol>
+        <symbol id="i-dots" viewBox="0 0 16 16"><path fill="currentColor" d="M9.5 13a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0-5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0-5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
+        <symbol id="i-chevron" viewBox="0 0 16 16"><path fill="currentColor" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path fill="currentColor" d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.41z"/></symbol>
+    </svg>
+
+    {# ---- page loader ---- #}
+    <div id="loading">
+        <div class="loader-box">
+            <div class="loader-logo">Q</div>
+            <div class="loader-text">{{ company.name }}</div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    {# ---- sidebar ---- #}
+    <aside class="iq-sidebar" id="iq-sidebar">
+        <div class="iq-sidebar-logo">
+            <a href="{{ '/'|link }}" class="header-logo">
+                <span class="logo-icon">Q</span>
+                <span class="logo-title">Quizontal<small>{{ 'Client Area'|trans }}</small></span>
+            </a>
+            <div class="iq-menu-bt-sidebar">
+                <button class="sidebar-close" id="sidebar-close" type="button" aria-label="{{ 'Close menu'|trans }}">
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-close"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="iq-sidebar-scroll">
+            {{ include('partial_menu.html.twig') }}
+            <div class="sidebar-upgrade">
+                <div class="upgrade-icon"><svg fill="currentColor"><use href="#i-star"/></svg></div>
+                <h6>{{ 'Power Your Online Journey'|trans }}</h6>
+                <p>{{ 'High-performance domains, hosting and cloud — built for you.'|trans }}</p>
+                <a class="btn btn-sm btn-light w-100" href="{{ qc_store.url() }}/pricing">{{ 'View Plans'|trans }}</a>
+            </div>
+            <div class="text-center text-size-12" style="color:#5b6270; padding-bottom:.5rem">{{ company.name }} · {{ 'now'|date('Y') }}</div>
+        </div>
+    </aside>
+
+    {# ---- top navbar ---- #}
+    <nav class="iq-navbar">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="{{ 'Toggle sidebar'|trans }}">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="navbar-crumb">
+            <div class="page-label">{{ 'Control Panel'|trans }}</div>
+            <strong>{{ block('meta_title') }}</strong>
+        </div>
+        <div class="search-box">
+            <div class="input-group">
+                <span class="input-group-text"><svg fill="currentColor"><use href="#i-search"/></svg></span>
+                <input type="text" class="form-control" placeholder="{{ 'Search your services...'|trans }}">
+            </div>
+        </div>
+        <div class="iq-navbar-right">
+            <div class="dropdown">
+                <button class="iq-menu-bt position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Cart'|trans }}" title="{{ 'Cart'|trans }}">
+                    <svg fill="currentColor"><use href="#i-buy"/></svg>
+                    <span class="iq-badge qc-cart-count" title="{{ qc_cart_count }} {% if qc_cart_count == 1 %}{{ 'item in cart'|trans }}{% else %}{{ 'items in cart'|trans }}{% endif %}">{{ qc_cart_count }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:270px">
+                    <div class="dropdown-header">{{ 'Shopping Cart'|trans }}</div>
+                    <div class="px-2 pb-2">
+                        <div class="stat-value mb-1"><span class="qc-cart-count">{{ qc_cart_count }}</span> {% if qc_cart_count == 1 %}{{ 'item'|trans }}{% else %}{{ 'items'|trans }}{% endif %}</div>
+                        <div class="text-size-12" style="color:#98a1b3">{{ 'Products waiting for checkout'|trans }}</div>
+                    </div>
+                    <hr class="my-1">
+                    <a href="{{ '/order'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-buy"/></svg>{{ 'Browse products'|trans }}</a>
+                    <a href="{{ '/order'|link({'checkout': 1}) }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-activity"/></svg>{{ 'Go to checkout'|trans }}</a>
+                </div>
+            </div>
+            {% if qc_news_on %}
+                <div class="dropdown">
+                    <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Announcements'|trans }}" title="{{ 'Announcements'|trans }}">
+                        <svg fill="currentColor"><use href="#i-bell"/></svg>
+                        {% if qc_bell_count > 0 %}<span class="iq-badge">{{ qc_bell_count > 9 ? '9+' : qc_bell_count }}</span>{% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:320px">
+                        <div class="d-flex justify-content-between align-items-center px-2 py-1">
+                            <h6 class="mb-0">{{ 'Announcements'|trans }}</h6>
+                            <a href="{{ '/news'|link }}" class="text-size-12 link-primary text-decoration-none">{{ 'View all'|trans }}</a>
+                        </div>
+                        {% for post in qc_bell_posts %}
+                            <a class="notify-item text-decoration-none" href="{{ '/news'|link }}/{{ post.slug }}">
+                                <span class="notify-icon bg-soft-primary"><svg fill="currentColor"><use href="#i-bell"/></svg></span>
+                                <div class="notify-text"><strong>{{ post.title|truncate(46) }}</strong><div class="notify-time">{{ post.created_at|timeago }} {{ 'ago'|trans }}</div></div>
+                            </a>
+                        {% else %}
+                            <div class="notify-item"><div class="notify-text">{{ 'No announcements yet — we will post updates here.'|trans }}</div></div>
+                        {% endfor %}
+                        <a href="{{ '/news'|link }}" class="dropdown-item text-center text-size-12 link-primary">{{ 'All announcements'|trans }}</a>
+                    </div>
+                </div>
+            {% endif %}
+            {% if settings.sidebar_balance_enabled or settings.side_menu_payments %}
+                <div class="dropdown">
+                    <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Wallet'|trans }}" title="{{ 'Wallet'|trans }}">
+                        <svg fill="currentColor"><use href="#i-wallet"/></svg>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:280px">
+                        <div class="dropdown-header">{{ 'Account Balance'|trans }}</div>
+                        <div class="px-2 pb-2">
+                            <div class="stat-value mb-1">{{ profile.balance|money(profile.currency) }}</div>
+                            <div class="text-size-12" style="color:#98a1b3">{{ 'Available for renewals & new orders'|trans }}</div>
+                        </div>
+                        <hr class="my-1">
+                        <a href="{{ '/client/balance'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-buy"/></svg>{{ 'Add funds'|trans }}</a>
+                        <a href="{{ '/invoice'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-document"/></svg>{{ 'Invoice history'|trans }}</a>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="dropdown">
+                <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto;padding:0 .35rem;gap:.65rem">
+                    <span class="avatar-user">{{ (profile.first_name|default('?'))|first|upper }}{{ (profile.last_name|default(''))|first|upper }}</span>
+                    <span class="user-info">
+                        <strong>{{ profile.first_name }} {{ profile.last_name|first|upper }}{% if profile.last_name %}.{% endif %}</strong>
+                        <small>{{ profile.email|truncate(30) }}</small>
+                    </span>
+                    <svg width="12" height="12" fill="currentColor"><use href="#i-chevron"/></svg>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:260px">
+                    <div class="d-flex align-items-center gap-3 px-2 py-2 mb-1">
+                        <span class="avatar-user">{{ (profile.first_name|default('?'))|first|upper }}{{ (profile.last_name|default(''))|first|upper }}</span>
+                        <div class="user-info"><strong>{{ profile.first_name }} {{ profile.last_name }}</strong><small>{{ profile.email|truncate(30) }}</small></div>
+                    </div>
+                    <a href="{{ 'client/profile'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-profile"/></svg>{{ 'My Profile'|trans }}</a>
+                    <a href="{{ 'client/profile'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-setting"/></svg>{{ 'Account Settings'|trans }}</a>
+                    <a href="{{ '/invoice'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-wallet"/></svg>{{ 'Billing'|trans }}</a>
+                    <hr class="my-1">
+                    <a href="{{ 'client/logout'|link }}" class="dropdown-item text-danger"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-lock"/></svg>{{ 'Sign Out'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {# ---- main ---- #}
+    <main class="main-content" id="main-content">
+        {% block banner %}{% endblock %}
+        <div class="container-fluid content-inner">
+{% else %}
+    {# ==================== GUEST / PUBLIC AREA (stock light chrome) ==================== #}
 <div class="container">
     <header>
         {# Quizontal: initial cart count server-side (JS keeps it live afterwards) #}
@@ -83,19 +257,6 @@
                     <a class="navbar-brand qc-brand-top" href="{{ '/'|link }}">
                         <span>{{ company.name }}</span>
                     </a>
-                {% endif %}
-                {% if client %}
-                    {% set qc_bell_count = guest.extension_is_on({ "mod": "news" }) ? guest.news_get_list({ "per_page": 1 }).total : 0 %}
-                    <form class="qcd-topsearch d-none d-md-flex" role="search" onsubmit="return false">
-                        <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
-                        <input type="search" placeholder="{{ 'Search your services...'|trans }}" aria-label="{{ 'Search services'|trans }}">
-                    </form>
-                    {% if guest.extension_is_on({ "mod": "news" }) %}
-                        <a class="qcd-bell d-none d-md-grid" href="{{ '/news'|link }}" aria-label="{{ 'Announcements'|trans }}" title="{{ 'Announcements'|trans }}">
-                            <svg viewBox="0 0 24 24"><path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/></svg>
-                            {% if qc_bell_count > 0 %}<span class="qcd-bell-badge">{{ qc_bell_count }}</span>{% endif %}
-                        </a>
-                    {% endif %}
                 {% endif %}
                 <a href="{{ '/order'|link({'checkout': 1}) }}" class="nav-link d-md-none ms-auto pe-2 position-relative" aria-label="{{ 'Cart'|trans }}" title="{{ 'Cart'|trans }}">
                     <svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M17,18C15.89,18 15,18.89 15,20A2,2 0 0,0 17,22A2,2 0 0,0 19,20C19,18.89 18.1,18 17,18M1,2V4H3L6.6,11.59L5.24,14.04C5.09,14.32 5,14.65 5,15A2,2 0 0,0 7,17H19V15H7.42A0.25,0.25 0 0,1 7.17,14.75C7.17,14.7 7.18,14.66 7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.59 17.3,11.97L20.88,5.5C20.95,5.34 21,5.17 21,5A1,1 0 0,0 20,4H5.21L4.27,2M7,18C5.89,18 5,18.89 5,20A2,2 0 0,0 7,22A2,2 0 0,0 9,20C9,18.89 8.1,18 7,18Z" /></svg>
@@ -192,9 +353,10 @@
             <div class="col-12 col-md-9" {% if not client and settings.hide_menu %} style="margin-left: auto; margin-right: auto;" {% endif %}>
                 <div id="wrapper">
                     <section role="main">
+{% endif %}
                         {% block content_before %}{% endblock %}
                         <div class="content-block" role="main">
-                            {% if settings.show_breadcrumb %}
+                            {% if not client and settings.show_breadcrumb %}
                                 {% block breadcrumbs %}
                                     <nav aria-label="{{ 'breadcrumb'|trans }}">
                                         <ol class="breadcrumb d-none d-md-flex">
@@ -214,6 +376,20 @@
 
                             {% block content_after %}{% endblock %}
                         </div>
+
+{% if client %}
+            {# client footer #}
+        </div>
+        <footer class="footer">
+            <span>&copy; {{ 'now'|date('Y') }} {{ settings.footer_signature|default(company.signature|default(company.name)) }} {{ 'All rights reserved.'|trans }}</span>
+            <span>
+                <a href="{{ '/tos'|link }}">{{ 'Terms of Service'|trans }}</a> ·
+                <a href="{{ '/privacy-policy'|link }}">{{ 'Privacy Policy'|trans }}</a> ·
+                <a href="{{ '/support'|link }}">{{ 'Support'|trans }}</a>
+            </span>
+        </footer>
+    </main>
+{% else %}
                     </section>
                     <div id="push"></div>
                 </div>
@@ -283,9 +459,11 @@
                 {% endif %}
             </div>
         </div>
-    </div>
+    </div>{# /inner container #}
+</div>{# /outer container #}
+{% endif %}
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1070;"></div>
-    {% if settings.footer_to_top_enabled %}
+    {% if not client and settings.footer_to_top_enabled %}
         <a href="#top" class="position-fixed btn btn-primary bottom-0 end-0 m-3">
             <span class="awe-arrow-up"></span> {{ 'Top'|trans }}</a>
     {% endif %}
@@ -345,15 +523,8 @@
         @media (prefers-reduced-motion: reduce) { .qc-shimmer-line { animation: none; } }
     </style>
     <style>
-        /* ===== Quizontal Cloud app-shell (client area) ===== */
-        .qc-authed { background: #f6f5fa; }
-        .qc-authed, .qc-authed .qcd, .qc-authed .qcd-rail { font-family: 'DM Sans', sans-serif; }
-        .qc-authed h1, .qc-authed h2, .qc-authed h3, .qc-authed .qcd h3 { font-family: 'Space Grotesk', 'DM Sans', sans-serif; letter-spacing: -.02em; }
+        /* Guest light rail (kept for the public pages that share the side menu) */
         @media (min-width: 768px) {
-            .qc-authed header .qc-brand-top { display: none !important; }
-            /* fixed-width rail */
-            .qc-authed header + .container .row > .col-3 { flex: 0 0 284px; max-width: 284px; }
-            .qc-authed header + .container .row > .col-md-9 { flex: 1 1 auto; max-width: calc(100% - 284px); }
             .qcd-rail .offcanvas-body {
                 background: #fff; border: 1px solid #e8e6f0; border-radius: 22px;
                 padding: 20px 14px; margin-top: 4px; position: sticky; top: 18px;
@@ -389,134 +560,718 @@
         .qcd-promo-glow { position: absolute; border-radius: 50%; background: rgba(255,255,255,.16); filter: blur(2px); }
         .qcd-promo-glow.g1 { width: 120px; height: 120px; right: -40px; top: -44px; }
         .qcd-promo-glow.g2 { width: 80px; height: 80px; left: -30px; bottom: -34px; opacity: .6; }
-
-        /* topbar search + bell */
-        .qcd-topsearch {
-            flex: 1 1 320px; max-width: 440px; margin: 0 14px; align-items: center; gap: 8px;
-            background: #fff; border: 1.5px solid #e8e6f0; border-radius: 999px; padding: .5rem 1rem;
-            transition: border-color .16s ease, box-shadow .16s ease;
+    </style>
+    <style>
+        /* =====================================================================
+           Quizontal Cloud client app — dark theme shell (Inter)
+           Scoped to authenticated pages only (body.qc-app). Guest, signup and
+           order marketing pages keep the stock light theme.
+           ===================================================================== */
+        :root {
+            --iq-primary: #E31C64;
+            --iq-primary-hover: #ee3d80;
+            --iq-primary-dark: #a51149;
+            --iq-primary-light: rgba(227, 28, 100, 0.16);
+            --iq-secondary: #22d3ee;
+            --iq-secondary-hover: #19c1db;
+            --iq-secondary-light: rgba(34, 211, 238, 0.15);
+            --iq-success: #20c997;
+            --iq-success-light: rgba(32, 201, 151, 0.15);
+            --iq-warning: #ffbc35;
+            --iq-warning-light: rgba(255, 188, 53, 0.16);
+            --iq-danger: #f4113c;
+            --iq-danger-light: rgba(244, 17, 60, 0.15);
+            --iq-body-bg: #000000;
+            --iq-heading: #f5f6f8;
+            --iq-body: #9aa3b2;
+            --iq-sidebar-width: 260px;
+            --iq-navbar-height: 72px;
+            --iq-border: #1b1b20;
+            --iq-line: rgba(255, 255, 255, 0.06);
         }
-        .qcd-topsearch:focus-within { border-color: #e31c64; box-shadow: 0 0 0 3px rgba(227,28,100,.1); }
-        .qcd-topsearch svg { width: 17px; height: 17px; fill: #9aa0b4; flex: none; }
-        .qcd-topsearch input { border: 0; outline: 0; background: transparent; width: 100%; font: 500 .9rem 'DM Sans', sans-serif; color: #23263a; }
-        .qcd-bell {
-            position: relative; width: 42px; height: 42px; border-radius: 50%; place-items: center;
-            background: #fff; border: 1.5px solid #e8e6f0; transition: border-color .16s ease, box-shadow .16s ease;
+        body.qc-app {
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: var(--iq-body);
+            overflow-x: hidden;
         }
-        .qcd-bell:hover { border-color: rgba(227,28,100,.45); box-shadow: 0 6px 16px rgba(227,28,100,.14); }
-        .qcd-bell svg { width: 19px; height: 19px; fill: #4a4e63; }
-        .qcd-bell-badge {
-            position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px; border-radius: 999px;
-            background: #e31c64; color: #fff; font-size: .62rem; font-weight: 700; display: grid; place-items: center; padding: 0 4px;
-            border: 2px solid #f6f5fa;
+        body.qc-app * { scrollbar-width: thin; scrollbar-color: #2a2a30 transparent; }
+        body.qc-app ::-webkit-scrollbar { width: 5px; height: 5px; }
+        body.qc-app ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 10px; }
+        .qc-app h1, .qc-app h2, .qc-app h3, .qc-app h4, .qc-app h5, .qc-app h6 { color: var(--iq-heading); }
+        .qc-app a { color: #f06b9d; text-decoration: none; }
+        .qc-app a:hover { color: var(--iq-primary-hover); }
+        .qc-app .text-muted { color: #7d8494 !important; }
+
+        /* ---- brand color plumbing used across the shell ---- */
+        .qc-app .text-primary { color: var(--iq-primary) !important; }
+        .qc-app .link-primary { color: var(--iq-primary) !important; }
+        .qc-app .bg-soft-primary { background-color: var(--iq-primary-light) !important; color: #f06b9d !important; }
+        .qc-app .bg-soft-info { background-color: var(--iq-secondary-light) !important; color: var(--iq-secondary) !important; }
+        .qc-app .bg-soft-success { background-color: var(--iq-success-light) !important; color: #2fd9a8 !important; }
+        .qc-app .bg-soft-warning { background-color: var(--iq-warning-light) !important; color: #ffc95e !important; }
+        .qc-app .bg-soft-danger { background-color: var(--iq-danger-light) !important; color: #ff5c77 !important; }
+        .qc-app .btn { border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; }
+        .qc-app .btn-primary {
+            --bs-btn-bg: var(--iq-primary);
+            --bs-btn-border-color: var(--iq-primary);
+            --bs-btn-hover-bg: var(--iq-primary-hover);
+            --bs-btn-hover-border-color: var(--iq-primary-hover);
+            --bs-btn-active-bg: var(--iq-primary-dark);
+            --bs-btn-active-border-color: var(--iq-primary-dark);
+            --bs-btn-focus-shadow-rgb: 227, 28, 100;
+            color: #fff;
+        }
+        .qc-app .btn-outline-primary {
+            --bs-btn-color: #f06b9d;
+            --bs-btn-border-color: var(--iq-primary);
+            --bs-btn-hover-bg: var(--iq-primary);
+            --bs-btn-hover-border-color: var(--iq-primary);
+            --bs-btn-active-bg: var(--iq-primary-dark);
+            --bs-btn-focus-shadow-rgb: 227, 28, 100;
         }
 
-        /* ===== dashboard content ===== */
-        .qcd-hero { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 8px 0 22px; }
-        .qcd-hero-title { font-size: clamp(1.55rem, 2.6vw, 2rem); font-weight: 700; margin: 0; color: #171a26; }
-        .qcd-hero-sub { color: #8b8fa3; margin: 6px 0 0; font-size: .95rem; }
-        .qcd-hero-art { position: relative; width: 130px; height: 64px; flex: none; }
-        .qcd-blob { position: absolute; border-radius: 24px; }
-        .qcd-blob.b1 { width: 64px; height: 64px; right: 0; top: 0; background: linear-gradient(135deg, #e31c64, #a855f7); opacity: .9; }
-        .qcd-blob.b2 { width: 44px; height: 44px; right: 58px; top: 10px; background: rgba(227,28,100,.14); border: 1.5px dashed rgba(227,28,100,.45); }
-        .qcd-blob.b3 { width: 26px; height: 26px; right: 44px; top: -8px; background: rgba(168,85,247,.28); }
-        .qcd-wave { display: inline-block; animation: qcdwave 2.2s ease-in-out infinite; transform-origin: 70% 70%; }
-        @keyframes qcdwave { 0%,60%,100% { transform: rotate(0); } 10% { transform: rotate(14deg); } 20% { transform: rotate(-8deg); } 30% { transform: rotate(14deg); } 40% { transform: rotate(-4deg); } 50% { transform: rotate(10deg); } }
-        @media (prefers-reduced-motion: reduce) { .qcd-wave { animation: none; } }
+        /* ---- stock bootstrap building blocks, re-toned for dark pages ---- */
+        .qc-app .card {
+            border: 1px solid var(--iq-line);
+            border-radius: 0.5rem;
+            box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.55);
+            background: #0b0b0e;
+            color: var(--iq-body);
+        }
+        .qc-app .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--iq-line);
+            padding: 1.1rem 1.25rem;
+        }
+        .qc-app .card-body { padding: 1.25rem; }
+        .qc-app .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .qc-app .text-size-14 { font-size: 0.875rem; }
+        .qc-app .text-size-12 { font-size: 0.75rem; }
+        .qc-app .table {
+            --bs-table-color: var(--iq-body);
+            --bs-table-bg: transparent;
+        }
+        .qc-app .table > :not(caption) > * > * {
+            background: transparent;
+            color: var(--iq-body);
+            border-bottom-color: rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+        }
+        .qc-app .form-control, .qc-app .form-select {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid #26262b;
+            color: #e6e8ec;
+            border-radius: 0.5rem;
+        }
+        .qc-app .form-control:focus, .qc-app .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.04);
+            border-color: #f1719f;
+            box-shadow: 0 0 0 0.22rem rgba(227, 28, 100, 0.15);
+            color: #e6e8ec;
+        }
+        .qc-app .form-control::placeholder { color: #5f6673; }
+        .qc-app .form-select option { background: #101014; color: #e6e8ec; }
+        .qc-app .input-group-text { background: transparent; border-color: #26262b; color: #7e8594; }
+        .qc-app .form-label, .qc-app .form-check-label { color: #9aa3b2; }
+        .qc-app .form-check-input { background-color: #1c1c22; border-color: #2a2a32; }
+        .qc-app .form-check-input:checked { background-color: var(--iq-primary); border-color: var(--iq-primary); }
+        .qc-app .list-group-item { background: #0b0b0e; border-color: var(--iq-line); color: var(--iq-body); }
+        .qc-app .dropdown-menu { background: #101014; border: 1px solid #26262b; }
+        .qc-app .dropdown-item { color: #9aa3b2; }
+        .qc-app .dropdown-item:hover, .qc-app .dropdown-item:focus { background: var(--iq-primary-light); color: #f06b9d; }
+        .qc-app .modal-content { background: #101014; border: 1px solid #26262b; }
+        .qc-app .modal-header, .qc-app .modal-footer { border-color: var(--iq-line); }
+        .qc-app .btn-close { filter: invert(1) grayscale(1); }
+        .qc-app .nav-tabs { border-color: var(--iq-line); }
+        .qc-app .nav-tabs .nav-link { color: #7e8594; }
+        .qc-app .nav-tabs .nav-link.active {
+            background: var(--iq-primary-light); color: #f06b9d; border-color: transparent;
+        }
+        .qc-app .nav-pills .nav-link { border-radius: 0.5rem; color: #7e8594; }
+        .qc-app .nav-pills .nav-link.active { background: var(--iq-primary); color: #fff; }
+        .qc-app .pagination .page-link {
+            background: #101014; border-color: #26262b; color: #9aa3b2; border-radius: 0.5rem; margin: 0 2px;
+        }
+        .qc-app .pagination .active > .page-link { background: var(--iq-primary); border-color: var(--iq-primary); color: #fff; }
+        .qc-app .progress { background: #1e1e24; }
+        .qc-app .progress-bar { background: var(--iq-primary); }
+        .qc-app .alert { border-radius: 0.75rem; border-width: 1px; }
+        .qc-app .alert-info { background: rgba(34, 211, 238, .08); border-color: rgba(34, 211, 238, .25); color: #a5ecf8; }
+        .qc-app .alert-danger { background: rgba(244, 17, 60, .08); border-color: rgba(244, 17, 60, .3); color: #ff9db1; }
+        .qc-app .alert-warning { background: rgba(255, 188, 53, .08); border-color: rgba(255, 188, 53, .3); color: #ffd98a; }
+        .qc-app .badge.bg-primary { background-color: var(--iq-primary) !important; }
+        .qc-app .content-block { background: transparent; border: 0; box-shadow: none; padding: 0; }
+        .qc-app #wrapper { background: transparent; padding: 0; }
 
-        .qcd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
-        .qcd-stat { position: relative; display: flex; gap: 13px; align-items: flex-start; background: #fff; border: 1px solid #eae8f2; border-radius: 18px; padding: 18px; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
-        .qcd-stat:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(21,10,38,.09); }
-        .qcd-stat-ic { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; flex: none; }
-        .qcd-stat-ic svg { width: 22px; height: 22px; fill: currentColor; }
-        .ic-vps { background: rgba(227,28,100,.12); color: #e31c64; }
-        .ic-host { background: rgba(59,130,246,.12); color: #2563eb; }
-        .ic-dom { background: rgba(16,185,129,.12); color: #0d9e6e; }
-        .ic-due { background: rgba(245,158,11,.14); color: #d97706; }
-        .qcd-stat-label { display: block; color: #8b8fa3; font-size: .78rem; font-weight: 600; }
-        .qcd-stat-num { display: block; font: 700 1.5rem 'Space Grotesk', sans-serif; color: #171a26; margin: 2px 0; }
-        .qcd-stat-note { display: block; font-size: .72rem; font-weight: 700; }
-        .n-pink { color: #e31c64; } .n-blue { color: #2563eb; } .n-green { color: #0d9e6e; } .n-amber { color: #d97706; }
-        .qcd-stat-bar { position: absolute; left: 18px; bottom: 12px; width: 26px; height: 3.5px; border-radius: 99px; }
-        .b-pink { background: #e31c64; } .b-blue { background: #2563eb; } .b-green { background: #10b981; } .b-amber { background: #f59e0b; }
+        /* ---- badges ---- */
+        .qc-app .iq-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.4em 0.75em; font-size: 0.72rem; font-weight: 600;
+            border-radius: 10rem; line-height: 1;
+        }
+        .qc-app .iq-badge .iq-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-        .qcd-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1.35fr) minmax(0,.95fr); gap: 16px; align-items: start; }
-        .qcd-card { background: #fff; border: 1px solid #eae8f2; border-radius: 20px; padding: 20px; }
-        .qcd-card + .qcd-card { margin-top: 16px; }
-        .qcd-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .qcd-card-head h3 { font-size: 1.02rem; font-weight: 700; margin: 0; color: #171a26; }
-        .qcd-link-btn { font: 700 .76rem 'DM Sans', sans-serif; color: #5b5f74; background: #f2f0f8; border-radius: 10px; padding: .42rem .8rem; transition: .16s; }
-        .qcd-link-btn:hover { background: rgba(227,28,100,.1); color: #d8185b; }
-        .qcd-link-btn.is-static { cursor: default; } .qcd-link-btn.is-static:hover { background: #f2f0f8; color: #5b5f74; }
+        /* ---- sidebar ---- */
+        .iq-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--iq-sidebar-width);
+            background: #050507;
+            border-right: 1px solid var(--iq-line);
+            z-index: 1045;
+            display: flex; flex-direction: column;
+            transition: width 0.35s ease, transform 0.35s ease;
+        }
+        .iq-sidebar-logo {
+            display: flex; align-items: center;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--iq-line);
+            min-height: var(--iq-navbar-height);
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 40px; height: 40px; flex: 0 0 40px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--iq-primary), var(--iq-primary-dark));
+            display: inline-flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.25rem; color: #fff;
+            box-shadow: 0 6px 14px rgba(227, 28, 100, 0.35);
+        }
+        .iq-sidebar-logo .header-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+        .logo-title { font-size: 1.2rem; font-weight: 700; color: var(--iq-heading); line-height: 1; }
+        .logo-title small {
+            display: block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em;
+            color: var(--iq-primary); margin-top: 0.2rem; text-transform: uppercase;
+        }
+        .iq-menu-bt-sidebar { display: none; margin-left: auto; }
+        .sidebar-close {
+            width: 32px; height: 32px; border: 0; border-radius: 0.5rem;
+            background: var(--iq-primary-light); color: #f06b9d;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .iq-sidebar-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 1rem 0.75rem 1rem; }
+        .iq-sidebar-menu .iq-menu { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+        .iq-sidebar-menu .iq-menu > li.submenu > .nav-link { position: relative; }
+        .iq-sidebar-menu .iq-menu > li.submenu > .nav-link::after {
+            content: ""; position: absolute; right: 1.1rem; top: 50%;
+            width: 8px; height: 8px; transform: translateY(-50%) rotate(45deg);
+            border-right: 2px solid #5b6270; border-bottom: 2px solid #5b6270;
+            transition: transform 0.25s ease;
+        }
+        .iq-sidebar-menu .iq-menu > li.submenu.show > .nav-link::after { transform: translateY(-50%) rotate(225deg); }
+        .iq-sidebar-menu .nav-link {
+            display: flex; align-items: center; gap: 0.85rem;
+            padding: 0.75rem 0.9rem;
+            border-radius: 0.5rem;
+            color: #a6aebb;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .iq-sidebar-menu .nav-link:hover { background: #15151a; color: var(--iq-primary); }
+        .iq-sidebar-menu .nav-link.active,
+        .qc-app .iq-sidebar-menu .nav-link.active {
+            background: linear-gradient(90deg, var(--iq-primary-light), rgba(227, 28, 100, 0.03));
+            color: #f06b9d;
+            box-shadow: inset 3px 0 0 var(--iq-primary);
+        }
+        .iq-sidebar-menu .nav-link .icon-box {
+            width: 22px; height: 22px; flex: 0 0 22px;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .iq-sidebar-menu .nav-link .icon-box svg { width: 20px; height: 20px; }
+        .iq-sidebar-menu .nav-link-text { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 0.88rem; }
+        .iq-sidebar-menu .nav-link .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 6px; }
+        .menu-group-title {
+            padding: 0.9rem 0.9rem 0.4rem;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
+            text-transform: uppercase; color: #5b6270;
+            white-space: nowrap;
+        }
+        .iq-menu .collapse:not(.show) { display: none; }
+        .iq-submenu { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+        .iq-submenu li { position: relative; }
+        .iq-submenu li::before {
+            content: ""; position: absolute; left: 2.1rem; top: 50%; transform: translateY(-50%);
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #33333c; transition: background 0.2s ease;
+        }
+        .iq-submenu li:hover::before { background: var(--iq-primary); }
+        .iq-submenu .nav-link {
+            padding: 0.6rem 0.9rem 0.6rem 2.85rem;
+            font-weight: 400; font-size: 0.85rem;
+            background: transparent; box-shadow: none;
+        }
+        .iq-submenu .nav-link.active { background: var(--iq-primary-light); box-shadow: none; }
+        .sidebar-balance {
+            margin: 0.4rem 0.9rem 0.2rem; padding: 0.55rem 0.9rem;
+            border: 1px dashed #26262b; border-radius: 0.5rem;
+            font-size: 0.78rem; color: #7d8494;
+            display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+        }
+        .sidebar-balance strong { color: var(--iq-heading); white-space: nowrap; }
+        .sidebar-upgrade {
+            margin: 0.75rem;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #E31C64 0%, #8f1046 100%);
+            color: #fff; text-align: center; position: relative; overflow: hidden;
+        }
+        .sidebar-upgrade::before, .sidebar-upgrade::after {
+            content: ""; position: absolute; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-upgrade::before { width: 110px; height: 110px; top: -40px; right: -30px; }
+        .sidebar-upgrade::after { width: 70px; height: 70px; bottom: -25px; left: -20px; background: rgba(34, 211, 238, 0.15); }
+        .sidebar-upgrade .upgrade-icon {
+            width: 42px; height: 42px; margin: 0 auto 0.75rem;
+            background: rgba(255, 255, 255, 0.15); border-radius: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .sidebar-upgrade .upgrade-icon svg { width: 22px; height: 22px; }
+        .sidebar-upgrade h6 { color: #fff; font-weight: 700; position: relative; }
+        .sidebar-upgrade p { font-size: 0.75rem; color: rgba(255, 255, 255, 0.75); margin-bottom: 0.9rem; position: relative; }
+        .sidebar-upgrade .btn { position: relative; }
 
-        .qcd-svc-list { display: grid; gap: 4px; }
-        .qcd-svc { display: flex; align-items: center; gap: 12px; padding: 11px 10px; border-radius: 14px; transition: background .15s ease; }
-        .qcd-svc:hover { background: #f8f7fc; }
-        .qcd-svc-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
-        .qcd-svc-ic svg { width: 20px; height: 20px; fill: currentColor; }
-        .t-vps { background: rgba(227,28,100,.1); color: #e31c64; }
-        .t-host { background: rgba(59,130,246,.1); color: #2563eb; }
-        .t-dom { background: rgba(124,58,237,.1); color: #7c3aed; }
-        .qcd-svc-body { min-width: 0; flex: 1; }
-        .qcd-svc-body strong { display: block; font-size: .9rem; color: #23263a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .qcd-svc-body small { display: block; color: #9aa0b4; font-size: .76rem; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .qcd-chip { flex: none; font: 700 .68rem 'DM Sans', sans-serif; border-radius: 999px; padding: .28rem .7rem; }
-        .ch-ok { background: rgba(16,185,129,.13); color: #0d9e6e; }
-        .ch-warn { background: rgba(245,158,11,.15); color: #b45309; }
-        .ch-bad { background: rgba(239,68,68,.12); color: #dc2626; }
-        .ch-mute { background: #eef0f4; color: #8b8fa3; }
+        /* ---- top navbar ---- */
+        .iq-navbar {
+            position: fixed; top: 0; right: 0; left: var(--iq-sidebar-width);
+            height: var(--iq-navbar-height);
+            display: flex; align-items: center;
+            gap: 1.25rem;
+            padding: 0 1.5rem;
+            z-index: 1040;
+            transition: left 0.35s ease;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .menu-toggle {
+            width: 38px; height: 38px; border: 0; border-radius: 0.5rem;
+            background: var(--iq-primary-light); color: #f06b9d;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-direction: column; gap: 0;
+        }
+        .menu-toggle span {
+            display: block; width: 18px; height: 2px; border-radius: 2px;
+            background: currentColor; margin: 2px auto; transition: all 0.25s ease;
+        }
+        .navbar-crumb { line-height: 1.2; }
+        .navbar-crumb .page-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; }
+        .navbar-crumb strong { font-size: 1rem; font-weight: 600; color: var(--iq-heading); }
+        .search-box { flex: 1; max-width: 320px; }
+        .search-box .input-group {
+            border-radius: 10rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #26262b;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .search-box .input-group:focus-within { border-color: #f1719f; box-shadow: 0 0 0 0.22rem rgba(227, 28, 100, 0.15); }
+        .search-box .input-group-text { background: transparent; border: 0; color: #7e8594; padding-left: 0.9rem; }
+        .search-box .input-group-text svg { width: 16px; height: 16px; }
+        .search-box .form-control {
+            background: transparent; border: 0; box-shadow: none;
+            font-size: 0.85rem; padding: 0.5rem 0.5rem;
+            color: #e6e8ec;
+        }
+        .search-box .form-control:focus { box-shadow: none; }
+        .search-box .form-control::placeholder { color: #5f6673; }
+        .iq-navbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
+        .iq-menu-bt {
+            position: relative;
+            width: 40px; height: 40px; border-radius: 0.6rem;
+            background: transparent; border: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: #a6aebb; cursor: pointer; transition: background 0.2s ease;
+        }
+        .iq-menu-bt:hover { background: var(--iq-primary-light); color: #f06b9d; }
+        .iq-menu-bt svg { width: 20px; height: 20px; }
+        .iq-menu-bt .iq-badge {
+            position: absolute; top: 3px; right: 2px;
+            min-width: 16px; height: 16px; padding: 0 4px;
+            font-size: 0.6rem; display: flex; align-items: center; justify-content: center;
+            border-radius: 10rem; background: var(--iq-primary); color: #fff; font-weight: 700;
+        }
+        .avatar-user {
+            width: 40px; height: 40px; border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--iq-primary), var(--iq-secondary-hover));
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; flex: 0 0 40px;
+        }
+        .user-info { line-height: 1.2; text-align: left; min-width: 0; }
+        .user-info strong { font-size: 0.85rem; color: var(--iq-heading); font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-info small { font-size: 0.7rem; color: #6b7280; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-dropdown-menu {
+            border: 1px solid #26262b; border-radius: 1rem;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+            padding: 0.75rem;
+            background: #101014;
+            max-height: 70vh; overflow-y: auto;
+        }
+        .card-dropdown-menu .dropdown-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
+        .card-dropdown-menu hr { border-color: #1d1d23; }
+        .card-dropdown-menu .dropdown-item { border-radius: 0.6rem; font-size: 0.85rem; padding: 0.55rem 0.75rem; color: #9aa3b2; }
+        .card-dropdown-menu .dropdown-item:hover { background: var(--iq-primary-light); color: #f06b9d; }
+        .notify-item { display: flex; gap: 0.75rem; padding: 0.6rem 0.5rem; align-items: flex-start; color: inherit; }
+        .notify-item + .notify-item { border-top: 1px solid #1d1d23; }
+        .notify-icon {
+            width: 36px; height: 36px; flex: 0 0 36px; border-radius: 0.65rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .notify-icon svg { width: 17px; height: 17px; }
+        .notify-text { flex: 1; font-size: 0.8rem; color: #9aa3b2; line-height: 1.45; min-width: 0; }
+        .notify-text strong { color: var(--iq-heading); font-weight: 600; }
+        .notify-time { font-size: 0.68rem; color: #6b7280; }
 
-        .qcd-total small { color: #8b8fa3; font-size: .8rem; font-weight: 600; display: block; }
-        .qcd-total-row { display: flex; align-items: center; gap: 12px; margin: 4px 0 10px; }
-        .qcd-total-row strong { font: 700 1.7rem 'Space Grotesk', sans-serif; color: #171a26; }
-        .qcd-delta { font-size: .75rem; font-weight: 700; border-radius: 999px; padding: .22rem .6rem; }
-        .qcd-delta.up { background: rgba(227,28,100,.1); color: #d8185b; }
-        .qcd-delta.down { background: rgba(16,185,129,.13); color: #0d9e6e; }
-        .qcd-chart { width: 100%; height: 130px; display: block; margin-top: 6px; }
-        .qcd-chart-x { display: flex; justify-content: space-between; padding: 4px 2px 0; }
-        .qcd-chart-x span { font-size: .68rem; color: #9aa0b4; font-weight: 600; }
+        /* ---- dashboard banner (decorative CSS art, no image asset needed) ---- */
+        .iq-banner {
+            position: relative; overflow: hidden;
+            border-radius: 1.25rem;
+            min-height: 215px;
+            color: #fff;
+            margin: 0;
+            background: linear-gradient(120deg, #8f1046 0%, var(--iq-primary) 55%, #f2578f 130%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .iq-banner .iq-banner-art {
+            position: absolute; inset: 0; z-index: 0; overflow: hidden;
+        }
+        .iq-banner .iq-banner-art::before {
+            content: ""; position: absolute; inset: -30% -10% -30% 30%;
+            background:
+                radial-gradient(28rem 14rem at 78% 18%, rgba(34, 211, 238, .35), transparent 62%),
+                radial-gradient(30rem 18rem at 92% 78%, rgba(168, 85, 247, .4), transparent 60%),
+                radial-gradient(24rem 20rem at 60% 90%, rgba(255, 255, 255, .28), transparent 58%);
+            filter: blur(2px);
+            animation: qcBannerDrift 26s ease-in-out infinite;
+        }
+        .iq-banner .iq-banner-art::after {
+            content: ""; position: absolute; inset: 0;
+            background:
+                linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.32) 100%),
+                repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 2px, transparent 2px 26px);
+        }
+        @keyframes qcBannerDrift {
+            0%, 100% { transform: translateX(0) scale(1); }
+            50% { transform: translateX(-4%) scale(1.08); }
+        }
+        .iq-banner .iq-container { padding: 1.75rem 2rem; position: relative; z-index: 2; }
+        .iq-banner h1 { color: #fff; font-weight: 700; font-size: 1.75rem; margin-bottom: 0.4rem; }
+        .iq-banner p { color: rgba(255, 255, 255, 0.82); max-width: 480px; margin-bottom: 0; }
+        .btn-soft-light {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+        .btn-soft-light:hover { background: rgba(255, 255, 255, 0.25); color: #fff; }
+        .banner-date {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            font-size: 0.78rem; font-weight: 500; color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.12); border-radius: 10rem;
+            padding: 0.35rem 0.9rem; margin-top: 1rem;
+        }
+        .banner-date svg { width: 14px; height: 14px; }
+        .container-fluid.content-inner { padding: 1.5rem 1.5rem 0; position: relative; z-index: 2; }
+        body.qc-has-banner .container-fluid.content-inner { margin-top: -3rem; }
 
-        .qcd-act-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
-        .qcd-act-list li { display: flex; gap: 11px; align-items: flex-start; }
-        .qcd-act-dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, #e31c64, #a855f7); margin-top: 5px; flex: none; box-shadow: 0 0 0 4px rgba(227,28,100,.1); }
-        .qcd-act-dot.d-green { background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 0 0 4px rgba(16,185,129,.1); }
-        .qcd-act-list a { color: inherit; }
-        .qcd-act-list a:hover strong, .qcd-act-list strong a:hover { color: #d8185b; }
-        .qcd-act-list strong a { font-weight: 600; }
-.qcd-act-list strong { display: block; font-size: .84rem; color: #2b2e40; font-weight: 600; line-height: 1.4; }
-        .qcd-act-list small { color: #9aa0b4; font-size: .73rem; }
+        /* ---- circle stat slider ---- */
+        .slider-list { list-style: none; flex-wrap: nowrap; scrollbar-width: none; }
+        .slider-list::-webkit-scrollbar { display: none; }
+        .card-slide { flex: 0 0 auto; min-width: 215px; }
+        .card-slide .card-body { padding: 1.1rem 1.25rem; display: flex; align-items: center; }
+        .progress-widget { display: flex; align-items: center; gap: 0.9rem; }
+        .circle-progress {
+            --ring: var(--iq-primary);
+            width: 46px; height: 46px; flex: 0 0 46px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: conic-gradient(var(--ring) calc(var(--val) * 1%), rgba(255, 255, 255, 0.12) 0);
+        }
+        .circle-progress-info { --ring: var(--iq-secondary); }
+        .circle-progress-success { --ring: var(--iq-success); }
+        .circle-progress-warning { --ring: var(--iq-warning); }
+        .circle-inner {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: #0b0b0e;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--ring);
+        }
+        .circle-inner svg { width: 16px; height: 16px; }
+        .progress-detail p { font-size: 0.78rem; color: #7d8494; margin-bottom: 0.25rem; }
+        .progress-detail h4 { font-size: 1.2rem; font-weight: 700; color: var(--iq-heading); margin: 0; }
 
-        .qcd-act-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .qcd-qa { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 14px 8px; border-radius: 15px; border: 1px solid #eeecf6; background: #fbfbfe; font: 700 .76rem 'DM Sans', sans-serif; color: #3b3e52; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-        .qcd-qa:hover { transform: translateY(-2px); border-color: rgba(227,28,100,.35); box-shadow: 0 10px 22px rgba(21,10,38,.07); color: #d8185b; }
-        .qa-ic { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; font-size: 1rem; color: var(--qac, #e31c64); background: color-mix(in srgb, var(--qac, #e31c64) 12%, #fff); }
-        .qcd-news-item { display: block; padding: 11px 12px; border-radius: 14px; background: #fbf7fa; border: 1px solid #f2e7ee; margin-top: 6px; transition: .15s; }
-        .qcd-news-item:hover { border-color: rgba(227,28,100,.35); }
-        .qcd-news-item strong { display: block; font-size: .86rem; color: #23263a; }
-        .qcd-news-item small { color: #9aa0b4; font-size: .73rem; }
-        .qcd-empty { text-align: center; padding: 26px 14px; color: #9aa0b4; font-size: .88rem; }
+        /* ---- stats / charts / table widgets ---- */
+        .qc-app .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .qc-app .stat-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6); }
+        .stat-value { font-size: 1.35rem; font-weight: 700; color: var(--iq-heading); line-height: 1.1; }
+        .stat-label { font-size: 0.78rem; color: #7d8494; font-weight: 500; }
+        .stat-delta {
+            margin-left: auto; display: inline-flex; align-items: center; gap: 0.25rem;
+            font-size: 0.75rem; font-weight: 600;
+            border-radius: 10rem; padding: 0.3rem 0.6rem; white-space: nowrap;
+        }
+        .stat-delta svg { width: 12px; height: 12px; }
+        .chart-tabs { display: flex; gap: 0.25rem; background: #15151a; border-radius: 10rem; padding: 0.25rem; }
+        .chart-tabs button {
+            border: 0; background: transparent; border-radius: 10rem;
+            padding: 0.35rem 0.85rem; font-size: 0.75rem; font-weight: 600; color: #7e8594;
+            transition: all 0.2s ease;
+        }
+        .chart-tabs button.active { background: #232329; color: #f06b9d; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+        .earning-legend { display: flex; align-items: center; justify-content: space-between; padding: 0 0.25rem; }
+        .earning-legend .dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+        .earning-legend .label { font-size: 0.78rem; color: #7d8494; }
+        .earning-legend .value { font-size: 0.85rem; font-weight: 600; color: var(--iq-heading); }
+        .iq-progress { height: 6px; border-radius: 10rem; background: #1e1e24; overflow: hidden; }
+        .iq-progress .progress-bar { background: var(--iq-primary); border-radius: 10rem; }
+        .table-layout-flat {
+            border-collapse: separate; border-spacing: 0 0.5rem;
+            margin-bottom: 0;
+            --bs-table-color: var(--iq-body);
+            --bs-table-bg: transparent;
+        }
+        .table-layout-flat thead th {
+            border: 0; font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280;
+            padding: 0.25rem 0.9rem; white-space: nowrap;
+        }
+        .table-layout-flat tbody td {
+            border: 0; background: #121216; padding: 0.85rem 0.9rem;
+            vertical-align: middle; white-space: nowrap;
+        }
+        .table-layout-flat tbody tr td:first-child { border-radius: 0.75rem 0 0 0.75rem; }
+        .table-layout-flat tbody tr td:last-child { border-radius: 0 0.75rem 0.75rem 0; }
+        .table-layout-flat tbody tr:hover td { background: #17171c; }
+        .service-cell { display: flex; align-items: center; gap: 0.75rem; }
+        .service-ico {
+            width: 38px; height: 38px; flex: 0 0 38px; border-radius: 0.7rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .service-ico svg { width: 18px; height: 18px; }
+        .service-name { font-weight: 600; color: var(--iq-heading); font-size: 0.85rem; }
+        .service-sub { font-size: 0.72rem; color: #6b7280; }
+
+        /* ---- wallet / activity / misc cards ---- */
+        .credit-card-3d {
+            position: relative; overflow: hidden;
+            border-radius: 1.1rem;
+            padding: 1.5rem;
+            min-height: 190px;
+            color: #fff;
+            background: linear-gradient(120deg, #E31C64 0%, #a20f4d 55%, #6d0933 100%);
+            box-shadow: 0 18px 36px -12px rgba(227, 28, 100, 0.55);
+        }
+        .credit-card-3d::before, .credit-card-3d::after {
+            content: ""; position: absolute; border-radius: 50%;
+        }
+        .credit-card-3d::before { width: 190px; height: 190px; background: rgba(34, 211, 238, 0.18); top: -70px; right: -50px; }
+        .credit-card-3d::after { width: 120px; height: 120px; background: rgba(255, 255, 255, 0.08); bottom: -50px; left: 40px; }
+        .card-chip {
+            width: 46px; height: 34px; border-radius: 0.4rem;
+            background: linear-gradient(135deg, #f8e9ae, #dfb74e);
+            position: relative;
+        }
+        .card-chip::after {
+            content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+            background: rgba(120, 90, 20, 0.35); transform: translateX(-50%);
+        }
+        .card-chip::before {
+            content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 2px;
+            background: rgba(120, 90, 20, 0.35); transform: translateY(-50%);
+        }
+        .card-brand { font-weight: 800; letter-spacing: 0.18em; font-size: 0.9rem; }
+        .card-number { font-size: 1.05rem; letter-spacing: 0.14em; font-weight: 500; }
+        .mini-bars { display: flex; align-items: flex-end; gap: 5px; height: 104px; }
+        .mini-bar {
+            flex: 1; border-radius: 5px 5px 2px 2px;
+            background: linear-gradient(180deg, #f78fb4, #fbd2e1);
+            transition: filter 0.2s ease; min-height: 4px;
+        }
+        .mini-bar:hover { filter: brightness(0.9); }
+        .mini-bar.alt { background: linear-gradient(180deg, #22d3ee, #a5ecf8); }
+        .d-activity-widget { list-style: none; margin: 0; padding: 0; }
+        .d-activity-widget li {
+            display: flex; gap: 0.85rem; align-items: flex-start;
+            padding: 0.6rem 0;
+        }
+        .d-activity-widget li + li { border-top: 1px dashed #1d1d23; }
+        .activity-ico {
+            width: 40px; height: 40px; flex: 0 0 40px; border-radius: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .activity-ico svg { width: 18px; height: 18px; }
+        .activity-text { flex: 1; font-size: 0.83rem; color: #9aa3b2; line-height: 1.5; min-width: 0; }
+        .activity-text strong { color: var(--iq-heading); font-weight: 600; }
+        .activity-time { font-size: 0.68rem; color: #6b7280; white-space: nowrap; }
+        .qcd-empty { text-align: center; padding: 26px 14px; color: #6b7280; font-size: 0.88rem; }
         .qcd-empty p { margin-bottom: 10px; }
 
-        @media (max-width: 1199.98px) {
-            .qcd-grid { grid-template-columns: 1fr 1fr; }
-            .qcd-side { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-            .qcd-side .qcd-card + .qcd-card { margin-top: 0; }
-            .qcd-news { grid-column: 1 / -1; }
+        /* ---- layout frame / footer ---- */
+        .footer {
+            padding: 1.1rem 1.5rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 0.75rem;
+            font-size: 0.8rem; color: #7d8494;
         }
-        @media (max-width: 991.98px) {
-            .qcd-stats { grid-template-columns: 1fr 1fr; }
+        .footer a { color: var(--iq-primary); text-decoration: none; font-weight: 500; }
+        .main-content {
+            margin-left: var(--iq-sidebar-width);
+            padding-top: var(--iq-navbar-height);
+            transition: margin-left 0.35s ease;
+            min-height: 100vh;
+        }
+
+        /* ---- mini (collapsed) sidebar, desktop only ---- */
+        body.sidebar-mini .iq-sidebar { width: 78px; }
+        body.sidebar-mini .iq-sidebar-logo { justify-content: center; padding: 0.9rem 0.5rem; }
+        body.sidebar-mini .logo-title, body.sidebar-mini .menu-group-title,
+        body.sidebar-mini .nav-link-text, body.sidebar-mini .iq-sidebar-menu .nav-link::after,
+        body.sidebar-mini .iq-submenu, body.sidebar-mini .sidebar-upgrade h6,
+        body.sidebar-mini .sidebar-upgrade p, body.sidebar-mini .sidebar-upgrade .btn,
+        body.sidebar-mini .sidebar-upgrade .upgrade-icon { display: none; }
+        body.sidebar-mini .iq-sidebar-menu .nav-link { justify-content: center; padding: 0.8rem 0; }
+        body.sidebar-mini .iq-navbar { left: 78px; }
+        body.sidebar-mini .main-content { margin-left: 78px; }
+        body.sidebar-mini .sidebar-upgrade { padding: 0.9rem; }
+        body.sidebar-mini .sidebar-balance { justify-content: center; }
+        body.sidebar-mini .sidebar-balance .sb-label { display: none; }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
+            z-index: 1044; opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
+        }
+        body.mobile-menu-open .sidebar-overlay { opacity: 1; visibility: visible; }
+
+        /* ---- page loader ---- */
+        #loading {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+        }
+        #loading.hide { opacity: 0; visibility: hidden; }
+        .loader-box { text-align: center; }
+        .loader-logo {
+            width: 64px; height: 64px; margin: 0 auto 1rem; border-radius: 1.1rem;
+            background: linear-gradient(135deg, var(--iq-primary), var(--iq-primary-dark));
+            color: #fff; font-size: 1.9rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            animation: loaderPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes loaderPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(227, 28, 100, 0.35); }
+            50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(227, 28, 100, 0); }
+        }
+        .loader-text { font-weight: 600; color: var(--iq-primary); letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; }
+
+        /* ---- responsive ---- */
+        @media (max-width: 1399.98px) {
+            .qc-app .stat-value { font-size: 1.15rem; }
+        }
+        @media (max-width: 1199.98px) {
+            .iq-sidebar { transform: translateX(-100%); box-shadow: 16px 0 48px rgba(0, 0, 0, 0.6); }
+            body.mobile-menu-open .iq-sidebar { transform: translateX(0); }
+            .iq-menu-bt-sidebar { display: block; }
+            .iq-navbar { left: 0; }
+            .main-content { margin-left: 0; }
+            body.sidebar-mini .iq-sidebar { width: var(--iq-sidebar-width); transform: translateX(-100%); }
+            body.sidebar-mini .iq-navbar { left: 0; }
+            body.sidebar-mini .main-content { margin-left: 0; }
+            body.sidebar-mini.mobile-menu-open .iq-sidebar { transform: translateX(0); }
+            body.sidebar-mini .logo-title, body.sidebar-mini .menu-group-title,
+            body.sidebar-mini .nav-link-text, body.sidebar-mini .iq-sidebar-menu .nav-link::after,
+            body.sidebar-mini .iq-submenu, body.sidebar-mini .sidebar-upgrade h6,
+            body.sidebar-mini .sidebar-upgrade p, body.sidebar-mini .sidebar-upgrade .btn,
+            body.sidebar-mini .sidebar-upgrade .upgrade-icon { display: initial; }
+            body.sidebar-mini .iq-sidebar-menu .nav-link { justify-content: flex-start; padding: 0.75rem 0.9rem; }
+            body.sidebar-mini .iq-sidebar-logo { justify-content: flex-start; padding: 0.9rem 1rem; }
         }
         @media (max-width: 767.98px) {
-            .qcd-grid, .qcd-side { grid-template-columns: 1fr; }
-            .qcd-hero-art { display: none; }
-            .qcd-act-grid { grid-template-columns: repeat(2, 1fr); }
-            .qc-authed .content-block > .breadcrumb { display: none; }
+            body.qc-has-banner .container-fluid.content-inner { margin-top: 0; }
+            .iq-banner { min-height: auto; }
+            .iq-navbar { padding: 0 0.9rem; gap: 0.75rem; }
+            .search-box { display: none; }
+            .navbar-crumb { display: none; }
+            .user-info { display: none; }
+            .container-fluid.content-inner { padding: 1rem 0.9rem 0; }
+            .footer { justify-content: center; text-align: center; }
         }
-        @media (max-width: 460px) { .qcd-stats { grid-template-columns: 1fr; } }
+        @media (max-width: 575.98px) {
+            .stat-delta { margin-left: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .iq-banner .iq-banner-art::before { animation: none; }
+            .loader-logo { animation: none; }
+        }
     </style>
+    {% if client %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Page loader (hidden once everything — charts included — is up)
+        var hideLoader = function () {
+            var el = document.getElementById('loading');
+            if (el) el.classList.add('hide');
+        };
+        if (document.readyState === 'complete') { setTimeout(hideLoader, 250); }
+        window.addEventListener('load', function () { setTimeout(hideLoader, 250); });
+        setTimeout(hideLoader, 3500); // failsafe — never trap the user on a spinner
+
+        // Sidebar toggles
+        var menuToggle = document.getElementById('menu-toggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function () {
+                if (window.innerWidth > 1199) {
+                    document.body.classList.toggle('sidebar-mini');
+                } else {
+                    document.body.classList.toggle('mobile-menu-open');
+                }
+            });
+        }
+        var closeSidebar = function () { document.body.classList.remove('mobile-menu-open'); };
+        var closeBtn = document.getElementById('sidebar-close');
+        var overlay = document.getElementById('sidebar-overlay');
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+
+        // Vanilla submenu toggles (bootstrap collapse handles it if present)
+        document.querySelectorAll('.iq-sidebar-menu .nav-link[data-qc-toggle]').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                var target = document.querySelector(link.getAttribute('data-qc-target'));
+                var li = link.closest('li.submenu');
+                if (!target) return;
+                target.classList.toggle('show');
+                if (li) li.classList.toggle('show', target.classList.contains('show'));
+            });
+        });
+
+        // Active menu state from the current URL
+        var path = window.location.pathname.replace(/\/+$/, '') || '/';
+        document.querySelectorAll('.iq-sidebar-menu .nav-link').forEach(function (a) {
+            try {
+                var href = new URL(a.href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+                if (href === path) {
+                    a.classList.add('active');
+                    var sub = a.closest('.iq-submenu');
+                    if (sub) {
+                        sub.classList.add('show');
+                        var li = sub.closest('li.submenu');
+                        if (li) {
+                            li.classList.add('show');
+                            var parentLink = li.querySelector('.nav-link');
+                            if (parentLink) parentLink.classList.add('active');
+                        }
+                    }
+                }
+            } catch (e) {}
+        });
+    });
+    </script>
+    {% endif %}
     <noscript>{{ "NOTE: Many features on FOSSBilling require Javascript and cookies. You can enable both in your browser's preference settings."|trans }}</noscript>
 
-    {# Quizontal: live cart badge in the header. Refreshes on load and whenever the tab regains focus. #}
+    {# Quizontal: live cart badge. Refreshes on load and whenever the tab regains focus. #}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         var badges = document.querySelectorAll('.qc-cart-count');
@@ -545,7 +1300,6 @@
     {% if guest.extension_is_on({ "mod": "cookieconsent" }) %}
         {{ include('mod_cookieconsent_index.html.twig', ignore_missing: true) }}
     {% endif %}
-</div>
 {{ DebugBar_render() }}
 </body>
 </html>

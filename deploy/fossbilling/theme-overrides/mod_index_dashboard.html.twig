@@ -1,251 +1,595 @@
 {% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
-{# Quizontal Cloud — modern client dashboard (app-shell design).
-   All data comes from FOSSBilling's own client/guest APIs, so grouping,
-   counts and amounts always reflect the real account state. #}
+{# Quizontal Cloud — dark app-shell client dashboard.
+   Every number, chart, table and feed is built from FOSSBilling's own
+   client/guest APIs: orders, invoices, support tickets and news. Nothing
+   is mocked, so the page always reflects the real account state. #}
 
 {% block meta_title %}{{ 'Dashboard'|trans }}{% endblock %}
-{% block body_class %}dashboard qcd-dashboard-page{% endblock %}
+{% block body_class %}dashboard qc-has-banner{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 
 {% import "macro_functions.html.twig" as mf %}
 {% import "qc_storefront.html.twig" as qc_store %}
 
-{% block head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+{% block banner %}
+    {% if client %}
+        <div class="iq-banner">
+            <div class="iq-banner-art" aria-hidden="true"></div>
+            <div class="container-fluid iq-container">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h1>{{ 'Hello'|trans }}, {{ profile.first_name }}</h1>
+                        <p>{{ 'Welcome back to your hosting control panel. Everything you need is one click away.'|trans }}</p>
+                        <span class="banner-date">
+                            <svg fill="currentColor"><use href="#i-calendar"/></svg>
+                            {{ "now"|format_date(pattern="EEEE, MMMM d, yyyy") }}
+                        </span>
+                    </div>
+                    {% if guest.extension_is_on({ "mod": "news" }) %}
+                        <div>
+                            <a href="{{ '/news'|link }}" class="btn btn-soft-light d-inline-flex gap-2 align-items-center">
+                                <svg width="16" height="16" fill="currentColor"><use href="#i-bell"/></svg>
+                                {{ 'Announcements'|trans }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 {% if client %}
-    {# ---------- data gathering ---------- #}
+    {# ================= data gathering (all real, all from client APIs) ================= #}
     {% set qc_orders = client.order_get_list({ "per_page": 100, "hide_addons": 1 }).list %}
-    {% set qc_domains = [] %}{% set qc_hosting = [] %}{% set qc_vps = [] %}
+    {% set qc_domains = [] %}
+    {% set qc_services = [] %}
+    {% set qc_next = null %}
     {% for order in qc_orders %}
         {% if order.status == 'active' %}
             {% if order.service_type == 'domain' %}
                 {% set qc_domains = qc_domains|merge([order]) %}
-            {% elseif order.service_type == 'hosting' %}
-                {% set qc_hosting = qc_hosting|merge([order]) %}
             {% else %}
-                {% set qc_vps = qc_vps|merge([order]) %}
+                {% set qc_services = qc_services|merge([order]) %}
+            {% endif %}
+            {% if order.expires_at %}
+                {% if qc_next is null or order.expires_at < qc_next %}
+                    {% set qc_next = order.expires_at %}
+                {% endif %}
             {% endif %}
         {% endif %}
     {% endfor %}
 
     {% set qc_unpaid = client.invoice_get_list({ "status": "unpaid", "per_page": 100 }).list %}
+    {% set qc_paid = client.invoice_get_list({ "status": "paid", "per_page": 100 }).list %}
     {% set qc_due = 0 %}
     {% for inv in qc_unpaid %}{% set qc_due = qc_due + inv.total %}{% endfor %}
+    {% set qc_paid_total = 0 %}
+    {% for inv in qc_paid %}{% set qc_paid_total = qc_paid_total + inv.total %}{% endfor %}
 
-    {% set qc_paid = client.invoice_get_list({ "status": "paid", "per_page": 100 }).list %}
-    {% set qc_spent_total = 0 %}
-    {% for inv in qc_paid %}{% set qc_spent_total = qc_spent_total + inv.total %}{% endfor %}
+    {% set qc_tickets = client.support_ticket_get_list({ "per_page": 50 }).list %}
+    {% set qc_open_tickets = 0 %}
+    {% for t in qc_tickets %}
+        {% if t.status in ['open', 'on_hold'] %}
+            {% set qc_open_tickets = qc_open_tickets + 1 %}
+        {% endif %}
+    {% endfor %}
 
-    {# 6 monthly buckets (oldest -> newest). Pure date arithmetic — no
+    {# 12 monthly buckets (oldest -> newest). Pure date arithmetic — no
        date_modify dependency, works on FOSSBilling's stock Twig setup. #}
     {% set qc_nowY = "now"|date("Y") + 0 %}
     {% set qc_nowM = "now"|date("n") + 0 %}
     {% set qc_names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
     {% set qc_months = [] %}
-    {% for d in 5..0 %}
-        {% set m = qc_nowM - d %}
-        {% if m < 1 %}{% set m = m + 12 %}{% endif %}
-        {% set qc_months = qc_months|merge([{ label: qc_names[m - 1], sum: 0 }]) %}
+    {% for d in 11..0 %}
+        {% set mm = qc_nowM - d %}
+        {% if mm < 1 %}{% set mm = mm + 12 %}{% endif %}
+        {% set qc_months = qc_months|merge([{ label: qc_names[mm - 1], sum: 0, pays: 0, acts: 0 }]) %}
     {% endfor %}
     {% for inv in qc_paid %}
         {% set invY = inv.created_at|date("Y") + 0 %}
         {% set invM = inv.created_at|date("n") + 0 %}
         {% set diff = (qc_nowY - invY) * 12 + (qc_nowM - invM) %}
-        {% if diff >= 0 and diff <= 5 %}
-            {% set bi = 5 - diff %}
-            {% set qc_months = qc_months|merge({ (bi): qc_months[bi]|merge({ sum: qc_months[bi].sum + inv.total }) }) %}
+        {% if diff >= 0 and diff <= 11 %}
+            {% set bi = 11 - diff %}
+            {% set qc_months = qc_months|merge({ (bi): qc_months[bi]|merge({ sum: qc_months[bi].sum + inv.total, pays: qc_months[bi].pays + 1 }) }) %}
         {% endif %}
     {% endfor %}
-    {% set qc_max = 1 %}
-    {% for m in qc_months %}{% if m.sum > qc_max %}{% set qc_max = m.sum %}{% endif %}{% endfor %}
-    {% set qc_points = "" %}
-    {% for i, m in qc_months %}
-        {% set x = (i * 240 / 5)|round + 20 %}
-        {% set y = (80 - (m.sum / qc_max) * 66)|round(1) %}
-        {% set qc_points = qc_points ~ x ~ "," ~ y ~ " " %}
+    {% for order in qc_orders %}
+        {% set ordY = order.updated_at|date("Y") + 0 %}
+        {% set ordM = order.updated_at|date("n") + 0 %}
+        {% set diff = (qc_nowY - ordY) * 12 + (qc_nowM - ordM) %}
+        {% if diff >= 0 and diff <= 11 %}
+            {% set bi = 11 - diff %}
+            {% set qc_months = qc_months|merge({ (bi): qc_months[bi]|merge({ acts: qc_months[bi].acts + 1 }) }) %}
+        {% endif %}
     {% endfor %}
-    {% set qc_this = qc_months[5].sum %}{% set qc_prev = qc_months[4].sum %}
-    {% set qc_delta = qc_prev > 0 ? ((qc_this - qc_prev) / qc_prev * 100)|round(1) : null %}
 
-    {# recent activity lanes: latest orders + latest payments (no client-side
-       activity API exists in FOSSBilling 0.7.1, so we compose our own feed) #}
+    {% set qc_lbl = [] %}{% set qc_sum = [] %}{% set qc_pay = [] %}{% set qc_act = [] %}
+    {% set qc_max_mix = 1 %}
+    {% set qc_year_orders = 0 %}{% set qc_year_pays = 0 %}
+    {% for m in qc_months %}
+        {% set qc_lbl = qc_lbl|merge([m.label]) %}
+        {% set qc_sum = qc_sum|merge([m.sum]) %}
+        {% set qc_pay = qc_pay|merge([m.pays]) %}
+        {% set qc_act = qc_act|merge([m.acts]) %}
+        {% if (m.acts + m.pays) > qc_max_mix %}{% set qc_max_mix = m.acts + m.pays %}{% endif %}
+        {% set qc_year_pays = qc_year_pays + m.pays %}
+    {% endfor %}
+    {% set qc_year_orders = 0 %}
+    {% for m in qc_months %}{% set qc_year_orders = qc_year_orders + m.acts %}{% endfor %}
+
+    {# health ring values (all real ratios) #}
+    {% set qc_total_orders = qc_orders|length > 0 ? qc_orders|length : 1 %}
+    {% set qc_total_tickets = qc_tickets|length > 0 ? qc_tickets|length : 1 %}
+    {% set qc_money_seen = (qc_paid_total + qc_due) > 0 ? (qc_paid_total + qc_due) : 1 %}
+    {% set qc_ring_svc = ((qc_services|length / qc_total_orders) * 100)|round %}
+    {% set qc_ring_dom = ((qc_domains|length / qc_total_orders) * 100)|round %}
+    {% set qc_ring_due = ((qc_due / qc_money_seen) * 100)|round %}
+    {% set qc_ring_tkt = ((qc_open_tickets / qc_total_tickets) * 100)|round %}
+
+    {# billing overview radial: share of invoices already settled #}
+    {% set qc_inv_seen = (qc_paid|length + qc_unpaid|length) %}
+    {% set qc_bill_pct = qc_inv_seen > 0 ? (((qc_paid|length) / qc_inv_seen) * 100)|round : 100 %}
+
+    {# recent activity lanes: latest orders + payments + one ticket #}
     {% set qc_feed_orders = qc_orders|slice(0, 2) %}
     {% set qc_feed_paid = qc_paid|slice(0, 2) %}
-    {% set qc_news = guest.extension_is_on({ "mod": "news" }) ? guest.news_get_list({ "per_page": 2 }).list : [] %}
-    {% set qc_onhold = client.support_ticket_get_list({ "status": 'on_hold', "per_page": 5 }).list %}
+    {% set qc_feed_ticket = qc_tickets|slice(0, 1) %}
     {% set qc_currency = profile.currency %}
 
-    <div class="qcd">
-        {# ---------- welcome ---------- #}
-        <div class="qcd-hero">
-            <div>
-                <h2 class="qcd-hero-title">{{ 'Welcome back'|trans }}, {{ profile.first_name }}! <span class="qcd-wave">👋</span></h2>
-                <p class="qcd-hero-sub">{{ "Here's what's happening with your account today."|trans }}</p>
-            </div>
-            <div class="qcd-hero-art" aria-hidden="true"><span class="qcd-blob b1"></span><span class="qcd-blob b2"></span><span class="qcd-blob b3"></span></div>
-        </div>
+    {% set qc_onhold = client.support_ticket_get_list({ "status": 'on_hold', "per_page": 5 }).list %}
 
-        {% if settings.showcase_enabled %}
-            <div class="alert alert-info" role="alert">
-                <p class="mb-1">{{ settings.showcase_text|markdown }}</p>
-                {% if (settings.showcase_button_url) and (settings.showcase_button_title) %}
-                    <a class="btn btn-primary btn-sm" href="{{ settings.showcase_button_url }}">{{ settings.showcase_button_title }}</a>
-                {% endif %}
-            </div>
-        {% endif %}
-
-        {% for ticket in qc_onhold %}
-            <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
-                <span>{{ 'Ticket'|trans }} <strong>#{{ ticket.id }}</strong> {{ 'was replied to'|trans }} {{ ticket.updated_at|timeago }} {{ 'ago'|trans }}.</span>
-                <a href="{{ 'support/ticket'|link }}/{{ ticket.id }}" class="alert-link">{{ 'Reply'|trans }}</a>
-            </div>
-        {% endfor %}
-
-        {# ---------- stat cards ---------- #}
-        <div class="qcd-stats">
-            <div class="qcd-stat">
-                <div class="qcd-stat-ic ic-vps"><svg viewBox="0 0 24 24"><path d="M4,1H20A1,1 0 0,1 21,2V6A1,1 0 0,1 20,7H4A1,1 0 0,1 3,6V2A1,1 0 0,1 4,1M4,9H20A1,1 0 0,1 21,10V14A1,1 0 0,1 20,15H4A1,1 0 0,1 3,14V10A1,1 0 0,1 4,9M4,17H20A1,1 0 0,1 21,18V22A1,1 0 0,1 20,23H4A1,1 0 0,1 3,22V18A1,1 0 0,1 4,17M9,5H10V3H9V5M9,13H10V11H9V13M9,21H10V19H9V21M5,3V5H7V3H5M5,11V13H7V11H5M5,19V21H7V19H5Z" /></svg></div>
-                <div><span class="qcd-stat-label">{{ 'VPS / Servers'|trans }}</span><strong class="qcd-stat-num">{{ qc_vps|length }}</strong><span class="qcd-stat-note n-pink">{{ 'Active services'|trans }}</span></div>
-                <i class="qcd-stat-bar b-pink"></i>
-            </div>
-            <div class="qcd-stat">
-                <div class="qcd-stat-ic ic-host"><svg viewBox="0 0 24 24"><path d="M17,3H7A2,2 0 0,0 5,5V9H19V5A2,2 0 0,0 17,3M7,7A1,1 0 0,1 6,6A1,1 0 0,1 7,5A1,1 0 0,1 8,6A1,1 0 0,1 7,7M19,11H5V15H19M7,14A1,1 0 0,1 6,13A1,1 0 0,1 7,12A1,1 0 0,1 8,13A1,1 0 0,1 7,14M19,17H5V21H19M7,20A1,1 0 0,1 6,19A1,1 0 0,1 7,18A1,1 0 0,1 8,19A1,1 0 0,1 7,20Z" /></svg></div>
-                <div><span class="qcd-stat-label">{{ 'Web Hosting'|trans }}</span><strong class="qcd-stat-num">{{ qc_hosting|length }}</strong><span class="qcd-stat-note n-blue">{{ 'Active services'|trans }}</span></div>
-                <i class="qcd-stat-bar b-blue"></i>
-            </div>
-            <div class="qcd-stat">
-                <div class="qcd-stat-ic ic-dom"><svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.56,13.34 9.5,12.68 9.5,12C9.5,11.32 9.56,10.65 9.66,10H14.34C14.43,10.65 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,8H5.08C6.03,6.34 7.57,5.06 9.4,4.44C8.8,5.55 8.35,6.75 8,8M5.08,16H8C8.35,17.25 8.8,18.45 9.4,19.56C7.57,18.93 6.03,17.65 5.08,16M4.26,14C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H7.64C7.56,10.66 7.5,11.32 7.5,12C7.5,12.68 7.56,13.34 7.64,14M12,4.03C12.83,5.23 13.5,6.57 13.91,8H10.09C10.5,6.57 11.17,5.23 12,4.03M18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44C16.43,5.07 17.96,6.34 18.92,8M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg></div>
-                <div><span class="qcd-stat-label">{{ 'Domains'|trans }}</span><strong class="qcd-stat-num">{{ qc_domains|length }}</strong><span class="qcd-stat-note n-green">{{ 'Active domains'|trans }}</span></div>
-                <i class="qcd-stat-bar b-green"></i>
-            </div>
-            <div class="qcd-stat">
-                <div class="qcd-stat-ic ic-due"><svg viewBox="0 0 24 24"><path d="M15.5,15.5C16.33,15.5 17,14.83 17,14C17,13.17 16.33,12.5 15.5,12.5C14.67,12.5 14,13.17 14,14C14,14.83 14.67,15.5 15.5,15.5M7,3H17C18.11,3 19,3.9 19,5V7C20.11,7 21,7.9 21,9V19C21,20.11 20.11,21 19,21H7C4.79,21 3,19.21 3,17V7C3,4.79 4.79,3 7,3M17,7V5H7C5.9,5 5,5.9 5,7V7.54C5.59,7.2 6.27,7 7,7H17M5,17C5,18.11 5.9,19 7,19H19V9H7C5.9,9 5,9.9 5,11V17Z" /></svg></div>
-                <div><span class="qcd-stat-label">{{ 'Outstanding'|trans }}</span><strong class="qcd-stat-num">{{ qc_due|money(qc_currency) }}</strong><span class="qcd-stat-note n-amber">{{ 'Due amount'|trans }}</span></div>
-                <i class="qcd-stat-bar b-amber"></i>
-            </div>
-        </div>
-
-        {# ---------- main grid ---------- #}
-        <div class="qcd-grid">
-            <section class="qcd-card qcd-services">
-                <div class="qcd-card-head"><h3>{{ 'Your Services'|trans }}</h3><a class="qcd-link-btn" href="{{ 'order/service'|link }}">{{ 'View All'|trans }}</a></div>
-                {% if qc_orders %}
-                    <div class="qcd-svc-list" id="qcdServiceList">
-                    {% for order in qc_orders|slice(0, 4) %}
-                        <a class="qcd-svc" href="{{ 'order/service/manage'|link }}/{{ order.id }}" data-name="{{ order.title|lower }}">
-                            <span class="qcd-svc-ic {{ order.service_type == 'domain' ? 't-dom' : (order.service_type == 'hosting' ? 't-host' : 't-vps') }}">
-                                {% if order.service_type == 'domain' %}<svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6.5A5.5,5.5 0 0,0 6.5,12A5.5,5.5 0 0,0 12,17.5A5.5,5.5 0 0,0 17.5,12A5.5,5.5 0 0,0 12,6.5Z" /></svg>
-                                {% elseif order.service_type == 'hosting' %}<svg viewBox="0 0 24 24"><path d="M17,3H7A2,2 0 0,0 5,5V9H19V5A2,2 0 0,0 17,3M19,11H5V15H19M5,17H19V21H5V17M7,5A1,1 0 0,0 6,6A1,1 0 0,0 7,7A1,1 0 0,0 8,6A1,1 0 0,0 7,5M7,12A1,1 0 0,0 6,13A1,1 0 0,0 7,14A1,1 0 0,0 8,13A1,1 0 0,0 7,12M7,18A1,1 0 0,0 6,19A1,1 0 0,0 7,20A1,1 0 0,0 8,19A1,1 0 0,0 7,18Z" /></svg>
-                                {% else %}<svg viewBox="0 0 24 24"><path d="M4,1H20A1,1 0 0,1 21,2V6A1,1 0 0,1 20,7H4A1,1 0 0,1 3,6V2A1,1 0 0,1 4,1M4,9H20A1,1 0 0,1 21,10V14A1,1 0 0,1 20,15H4A1,1 0 0,1 3,14V10A1,1 0 0,1 4,9M4,17H20A1,1 0 0,1 21,18V22A1,1 0 0,1 20,23H4A1,1 0 0,1 3,22V18A1,1 0 0,1 4,17M9,5H10V3H9V5M9,13H10V11H9V13M9,21H10V19H9V21M5,3V5H7V3H5M5,11V13H7V11H5M5,19V21H7V19H5Z" /></svg>{% endif %}
-                            </span>
-                            <span class="qcd-svc-body">
-                                <strong>{{ order.title|truncate(38) }}</strong>
-                                <small>{{ order.service_type == 'domain' ? 'Domain'|trans : (order.service_type == 'hosting' ? 'Web Hosting'|trans : 'VPS / Server'|trans) }}{% if order.expires_at %} · {{ 'renews'|trans }} {{ order.expires_at|format_date(pattern="d MMM yyyy") }}{% endif %}</small>
-                            </span>
-                            <span class="qcd-chip ch-{{ order.status == 'active' ? 'ok' : (order.status == 'pending_setup' ? 'warn' : (order.status in ['suspended','failed_setup','failed_renew'] ? 'bad' : 'mute')) }}">{{ mf.status_name(order.status) }}</span>
-                        </a>
-                    {% endfor %}
+    {# ================= stat slider ================= #}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="p-0 m-0 mb-2 list-inline d-flex gap-3 overflow-auto slider-list">
+                <li class="card card-slide">
+                    <div class="card-body">
+                        <div class="progress-widget">
+                            <div class="circle-progress" style="--val:{{ qc_ring_svc }}">
+                                <span class="circle-inner"><svg fill="currentColor"><use href="#i-folder"/></svg></span>
+                            </div>
+                            <div class="progress-detail">
+                                <p class="mb-2">{{ 'Active Services'|trans }}</p>
+                                <h4>{{ qc_services|length }}</h4>
+                            </div>
+                        </div>
                     </div>
-                {% else %}
-                    <div class="qcd-empty"><p>{{ 'No services yet — your next product is one order away.'|trans }}</p><a class="btn btn-primary btn-sm" href="{{ '/order'|link }}">{{ 'Browse products'|trans }}</a></div>
-                {% endif %}
-            </section>
+                </li>
+                <li class="card card-slide">
+                    <div class="card-body">
+                        <div class="progress-widget">
+                            <div class="circle-progress circle-progress-info" style="--val:{{ qc_ring_dom }}">
+                                <span class="circle-inner"><svg fill="currentColor"><use href="#i-globe"/></svg></span>
+                            </div>
+                            <div class="progress-detail">
+                                <p class="mb-2">{{ 'Active Domains'|trans }}</p>
+                                <h4>{{ qc_domains|length }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="card card-slide">
+                    <div class="card-body">
+                        <div class="progress-widget">
+                            <div class="circle-progress circle-progress-warning" style="--val:{{ qc_ring_due }}">
+                                <span class="circle-inner"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+                            </div>
+                            <div class="progress-detail">
+                                <p class="mb-2">{{ 'Amount Due'|trans }}</p>
+                                <h4>{{ qc_due|money(qc_currency) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="card card-slide">
+                    <div class="card-body">
+                        <div class="progress-widget">
+                            <div class="circle-progress circle-progress-success" style="--val:{{ qc_ring_tkt }}">
+                                <span class="circle-inner"><svg fill="currentColor"><use href="#i-chat"/></svg></span>
+                            </div>
+                            <div class="progress-detail">
+                                <p class="mb-2">{{ 'Open Tickets'|trans }}</p>
+                                <h4>{{ qc_open_tickets }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
 
-            <section class="qcd-card qcd-overview">
-                <div class="qcd-card-head"><h3>{{ 'Account Overview'|trans }}</h3><span class="qcd-link-btn is-static">{{ 'Last 6 months'|trans }}</span></div>
-                <div class="qcd-total">
-                    <small>{{ 'Total spending (paid invoices)'|trans }}</small>
-                    <div class="qcd-total-row"><strong>{{ qc_spent_total|money(qc_currency) }}</strong>
-                    {% if qc_delta is not null %}<span class="qcd-delta {{ qc_delta >= 0 ? 'up' : 'down' }}">{{ qc_delta >= 0 ? '↑' : '↓' }} {{ qc_delta|abs }}%</span>{% endif %}</div>
+    {% if settings.showcase_enabled %}
+        <div class="alert alert-info" role="alert">
+            <p class="mb-1">{{ settings.showcase_text|markdown }}</p>
+            {% if (settings.showcase_button_url) and (settings.showcase_button_title) %}
+                <a class="btn btn-primary btn-sm" href="{{ settings.showcase_button_url }}">{{ settings.showcase_button_title }}</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% for ticket in qc_onhold %}
+        <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+            <span>{{ 'Ticket'|trans }} <strong>#{{ ticket.id }}</strong> {{ 'was replied to'|trans }} {{ ticket.updated_at|timeago }} {{ 'ago'|trans }}.</span>
+            <a href="{{ 'support/ticket'|link }}/{{ ticket.id }}" class="alert-link">{{ 'Reply'|trans }}</a>
+        </div>
+    {% endfor %}
+
+    {# ================= spending chart + billing overview ================= #}
+    <div class="row g-3 mb-3">
+        <div class="col-xxl-8">
+            <div class="card h-100">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Your Spending'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Paid invoices, month by month'|trans }}</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="chart-tabs" id="qcSpendTabs">
+                            <button type="button" data-range="12" class="active">{{ 'Yearly'|trans }}</button>
+                            <button type="button" data-range="6">{{ '6 Months'|trans }}</button>
+                        </div>
+                    </div>
                 </div>
-                <svg class="qcd-chart" viewBox="0 0 280 96" preserveAspectRatio="none" aria-label="{{ 'Spending over the last 6 months'|trans }}">
-                    <defs>
-                        <linearGradient id="qcdFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#e31c64" stop-opacity="0.22"/>
-                            <stop offset="100%" stop-color="#e31c64" stop-opacity="0"/>
-                        </linearGradient>
-                    </defs>
-                    <polygon class="qcd-area" points="{{ qc_points }} 260,88 20,88" fill="url(#qcdFill)"/>
-                    <polyline class="qcd-line" points="{{ qc_points|trim }}" fill="none" stroke="#e31c64" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-                    {% for i, m in qc_months %}
-                        {% set x = (i * 240 / 5)|round + 20 %}{% set y = (80 - (m.sum / qc_max) * 66)|round(1) %}
-                        <circle cx="{{ x }}" cy="{{ y }}" r="3" fill="#e31c64" stroke="#fff" stroke-width="1.4"/>
-                    {% endfor %}
-                </svg>
-                <div class="qcd-chart-x">{% for i, m in qc_months %}<span>{{ m.label }}</span>{% endfor %}</div>
-            </section>
+                <div class="card-body">
+                    <div id="qc-spend-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Billing Overview'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'How much of your billing is settled'|trans }}</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="qc-billing-chart"></div>
+                    <div class="mt-2">
+                        <div class="earning-legend mb-2">
+                            <span class="d-inline-flex align-items-center gap-2"><span class="dot" style="background:var(--iq-primary)"></span><span class="label">{{ 'Paid'|trans }}</span></span>
+                            <span class="value">{{ qc_paid_total|money(qc_currency) }}</span>
+                        </div>
+                        <div class="earning-legend mb-3">
+                            <span class="d-inline-flex align-items-center gap-2"><span class="dot" style="background:var(--iq-warning)"></span><span class="label">{{ 'Outstanding'|trans }}</span></span>
+                            <span class="value">{{ qc_due|money(qc_currency) }}</span>
+                        </div>
+                        <div class="iq-progress mb-2"><div class="progress-bar" style="width:{{ qc_bill_pct }}%"></div></div>
+                        <p class="text-size-12 mb-0" style="color:#98a1b3">{{ 'Wallet balance'|trans }}: <strong class="text-primary">{{ profile.balance|money(qc_currency) }}</strong> {{ 'ready for renewals'|trans }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <aside class="qcd-side">
-                <section class="qcd-card qcd-activity">
-                    <div class="qcd-card-head"><h3>{{ 'Recent Activity'|trans }}</h3></div>
-                    {% if qc_feed_orders or qc_feed_paid %}
-                        <ul class="qcd-act-list">
-                        {% for order in qc_feed_orders %}
-                            <li><span class="qcd-act-dot"></span><div><strong><a href="{{ ('order/service/manage'|link) ~ '/' ~ order.id }}">{{ order.title|truncate(44) }}</a></strong><small>{{ mf.status_name(order.status) }} · {{ order.updated_at|timeago }} {{ 'ago'|trans }}</small></div></li>
+    {# ================= activity bars + services table ================= #}
+    <div class="row g-3 mb-3">
+        <div class="col-xxl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Activity Overview'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Service events and payments, last 12 months'|trans }}</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="qc-activity-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Your Services'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Products on your account'|trans }}</p>
+                    </div>
+                    <a href="{{ 'order/service'|link }}" class="link-primary text-size-12 text-decoration-none fw-medium">{{ 'View All'|trans }}</a>
+                </div>
+                <div class="card-body">
+                    {% if qc_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-layout-flat" id="qcServiceTable">
+                                <thead>
+                                    <tr>
+                                        <th>{{ 'Service'|trans }}</th>
+                                        <th>{{ 'Type'|trans }}</th>
+                                        <th>{{ 'Price'|trans }}</th>
+                                        <th>{{ 'Next Renewal'|trans }}</th>
+                                        <th>{{ 'Status'|trans }}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for order in qc_orders|slice(0, 5) %}
+                                    <tr data-name="{{ order.title|lower }}">
+                                        <td>
+                                            <div class="service-cell">
+                                                <span class="service-ico {{ order.service_type == 'domain' ? 'bg-soft-info' : (order.service_type == 'hosting' ? 'bg-soft-primary' : 'bg-soft-warning') }}">
+                                                    {% if order.service_type == 'domain' %}<svg fill="currentColor"><use href="#i-globe"/></svg>
+                                                    {% elseif order.service_type == 'hosting' %}<svg fill="currentColor"><use href="#i-folder"/></svg>
+                                                    {% else %}<svg fill="currentColor"><use href="#i-activity"/></svg>{% endif %}
+                                                </span>
+                                                <div>
+                                                    <div class="service-name">{{ order.title|truncate(30) }}</div>
+                                                    <div class="service-sub">#{{ order.id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-size-12">{{ order.service_type == 'domain' ? 'Domain'|trans : (order.service_type == 'hosting' ? 'Web Hosting'|trans : 'Service'|trans) }}</td>
+                                        <td class="fw-medium" style="color:var(--iq-heading)">{{ order.total|money(order.currency) }}{% if order.period %} · {{ order.period|period_title }}{% endif %}</td>
+                                        <td class="text-size-12">{% if order.expires_at %}{{ order.expires_at|format_date(pattern="MMM d, yyyy") }}{% else %}—{% endif %}</td>
+                                        <td>
+                                            {% if order.status == 'active' %}
+                                                <span class="iq-badge bg-soft-success"><span class="iq-badge-dot"></span>{{ mf.status_name(order.status) }}</span>
+                                            {% elseif order.status == 'pending_setup' %}
+                                                <span class="iq-badge bg-soft-warning"><span class="iq-badge-dot"></span>{{ mf.status_name(order.status) }}</span>
+                                            {% elseif order.status in ['suspended', 'failed_setup', 'failed_renew'] %}
+                                                <span class="iq-badge bg-soft-danger"><span class="iq-badge-dot"></span>{{ mf.status_name(order.status) }}</span>
+                                            {% else %}
+                                                <span class="iq-badge" style="background:#1e1e24;color:#9aa3b2"><span class="iq-badge-dot"></span>{{ mf.status_name(order.status) }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a class="iq-menu-bt" style="width:28px;height:28px" href="{{ '/order/service/manage'|link }}/{{ order.id }}" title="{{ 'Manage'|trans }}" aria-label="{{ 'Manage'|trans }}">
+                                                <svg width="14" height="14" fill="currentColor"><use href="#i-chevron"/></svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="qcd-empty">
+                            <p>{{ 'No services yet — your next product is one order away.'|trans }}</p>
+                            <a class="btn btn-primary btn-sm" href="{{ '/order'|link }}">{{ 'Browse products'|trans }}</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ================= wallet + mini bars + recent activity ================= #}
+    <div class="row g-3">
+        <div class="col-xxl-4 col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Wallet'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Prepaid credit on your account'|trans }}</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="credit-card-3d mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-4 position-relative">
+                            <span class="card-brand">QUIZONTAL</span>
+                            <span class="card-chip"></span>
+                        </div>
+                        <div class="card-number mb-1 position-relative text-size-12" style="color:rgba(255,255,255,.65);letter-spacing:.14em;text-transform:uppercase">{{ 'Current Balance'|trans }}</div>
+                        <div class="mb-4 position-relative" style="font-size:1.5rem;font-weight:700">{{ profile.balance|money(qc_currency) }}</div>
+                        <div class="d-flex justify-content-between align-items-end position-relative">
+                            <div>
+                                <div class="text-size-12" style="color:rgba(255,255,255,.65);letter-spacing:.1em;text-transform:uppercase">{{ 'Holder'|trans }}</div>
+                                <div style="font-weight:600">{{ profile.first_name }} {{ profile.last_name }}</div>
+                            </div>
+                            <div>
+                                <div class="text-size-12" style="color:rgba(255,255,255,.65);letter-spacing:.1em;text-transform:uppercase">{{ 'Currency'|trans }}</div>
+                                <div style="font-weight:600">{{ profile.currency }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-size-12" style="color:#98a1b3">
+                            {% if qc_next %}{{ 'Next renewal'|trans }} <strong style="color:var(--iq-heading)">{{ qc_next|format_date(pattern="MMM d") }}</strong>{% else %}{{ 'No renewals scheduled'|trans }}{% endif %}
+                        </span>
+                        {% if profile.balance > 0 %}
+                            <span class="iq-badge bg-soft-success"><span class="iq-badge-dot"></span>{{ 'Funded'|trans }}</span>
+                        {% else %}
+                            <span class="iq-badge" style="background:#1e1e24;color:#9aa3b2"><span class="iq-badge-dot"></span>{{ 'Empty'|trans }}</span>
+                        {% endif %}
+                    </div>
+                    <a class="btn btn-outline-primary w-100" href="{{ '/client/balance'|link }}">{{ 'Add Funds'|trans }}</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-4 col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Account Pulse'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Activity and payments, last 12 months'|trans }}</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-end gap-3 mb-3">
+                        <div>
+                            <div class="stat-value">{{ qc_year_orders + qc_year_pays }}</div>
+                            <div class="stat-label">{{ 'Events in the last 12 months'|trans }}</div>
+                        </div>
+                    </div>
+                    <div class="mini-bars mb-3">
+                        {% for i, m in qc_months %}
+                            {% set mix = m.acts + m.pays %}
+                            <div class="mini-bar{% if i % 2 == 1 %} alt{% endif %}" style="height:{{ ((mix / qc_max_mix) * 100)|round }}%" title="{{ m.label }}: {{ mix }}"></div>
                         {% endfor %}
-                        {% for inv in qc_feed_paid %}
-                            <li><span class="qcd-act-dot d-green"></span><div><strong><a href="{{ 'invoice'|link }}">{{ 'Payment received'|trans }} — {{ inv.total|money(inv.currency) }}</a></strong><small>{{ 'Invoice paid'|trans }} · {{ inv.created_at|timeago }} {{ 'ago'|trans }}</small></div></li>
-                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="d-inline-flex align-items-center gap-2 text-size-12"><span class="dot" style="width:9px;height:9px;border-radius:3px;background:var(--iq-primary);display:inline-block"></span>{{ 'Service events'|trans }}</span>
+                        <span class="d-inline-flex align-items-center gap-2 text-size-12"><span class="dot" style="width:9px;height:9px;border-radius:3px;background:var(--iq-secondary);display:inline-block"></span>{{ 'Payments'|trans }}</span>
+                        <span class="text-size-12 fw-medium" style="color:var(--iq-heading)">{{ qc_year_pays }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ 'Recent Activity'|trans }}</h4>
+                        <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Latest operations on your account'|trans }}</p>
+                    </div>
+                    <a href="{{ '/invoice'|link }}" class="link-primary text-size-12 text-decoration-none fw-medium">{{ 'Invoices'|trans }}</a>
+                </div>
+                <div class="card-body">
+                    {% if qc_feed_orders or qc_feed_paid or qc_feed_ticket %}
+                        <ul class="d-activity-widget">
+                            {% for order in qc_feed_orders %}
+                                <li>
+                                    <span class="activity-ico bg-soft-primary"><svg fill="currentColor"><use href="#i-activity"/></svg></span>
+                                    <div class="activity-text">
+                                        <a href="{{ '/order/service/manage'|link }}/{{ order.id }}" class="text-decoration-none"><strong>{{ order.title|truncate(34) }}</strong></a>
+                                        — {{ mf.status_name(order.status) }}
+                                        <div class="activity-time">{{ order.updated_at|timeago }} {{ 'ago'|trans }}</div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                            {% for inv in qc_feed_paid %}
+                                <li>
+                                    <span class="activity-ico bg-soft-success"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+                                    <div class="activity-text">
+                                        <a href="{{ '/invoice'|link }}" class="text-decoration-none"><strong>{{ 'Payment received'|trans }}</strong></a>
+                                        — {{ inv.total|money(inv.currency) }}
+                                        <div class="activity-time">{{ inv.created_at|timeago }} {{ 'ago'|trans }}</div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                            {% for ticket in qc_feed_ticket %}
+                                <li>
+                                    <span class="activity-ico bg-soft-warning"><svg fill="currentColor"><use href="#i-chat"/></svg></span>
+                                    <div class="activity-text">
+                                        <a href="{{ 'support/ticket'|link }}/{{ ticket.id }}" class="text-decoration-none"><strong>{{ 'Ticket'|trans }} #{{ ticket.id }}</strong></a>
+                                        — {{ mf.status_name(ticket.status) }}
+                                        <div class="activity-time">{{ ticket.updated_at|timeago }} {{ 'ago'|trans }}</div>
+                                    </div>
+                                </li>
+                            {% endfor %}
                         </ul>
                     {% else %}
                         <div class="qcd-empty"><p>{{ 'Nothing here yet — orders and payments will show up here.'|trans }}</p></div>
                     {% endif %}
-                </section>
-
-                <section class="qcd-card qcd-actions">
-                    <div class="qcd-card-head"><h3>{{ 'Quick Actions'|trans }}</h3></div>
-                    <div class="qcd-act-grid">
-                        <a class="qcd-qa" href="{{ qc_store.url() }}/vps"><span class="qa-ic" style="--qac:#e31c64">＋</span>{{ 'Order VPS'|trans }}</a>
-                        <a class="qcd-qa" href="{{ qc_store.url() }}/hosting"><span class="qa-ic" style="--qac:#3b82f6">⚡</span>{{ 'Order Hosting'|trans }}</a>
-                        <a class="qcd-qa" href="{{ qc_store.url() }}/domains"><span class="qa-ic" style="--qac:#7c3aed">◎</span>{{ 'Register Domain'|trans }}</a>
-                        <a class="qcd-qa" href="{{ '/client/balance'|link }}"><span class="qa-ic" style="--qac:#f59e0b">💳</span>{{ 'Top up Wallet'|trans }}</a>
-                        <a class="qcd-qa" href="{{ 'support'|link({ 'ticket': 1 }) }}"><span class="qa-ic" style="--qac:#10b981">🎧</span>{{ 'Open Ticket'|trans }}</a>
-                    </div>
-                </section>
-
-                {% if qc_news %}
-                    <section class="qcd-card qcd-news">
-                        <div class="qcd-card-head"><h3>📣 {{ 'Announcements'|trans }}</h3></div>
-                        {% for post in qc_news %}
-                            <a class="qcd-news-item" href="{{ '/news'|link }}/{{ post.slug }}">
-                                <strong>{{ post.title }}</strong>
-                                <small>{{ post.created_at|timeago }} {{ 'ago'|trans }}</small>
-                            </a>
-                        {% endfor %}
-                    </section>
-                {% endif %}
-            </aside>
+                </div>
+            </div>
         </div>
     </div>
 
+    {# ================= charts + live search ================= #}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Topbar search -> live-filters the services list on this page.
-        var input = document.querySelector('.qcd-topsearch input');
-        var list = document.getElementById('qcdServiceList');
-        if (input && list) {
+        // Topbar search -> live-filters the services table on this page.
+        var input = document.querySelector('.search-box input');
+        var table = document.getElementById('qcServiceTable');
+        if (input && table) {
             input.addEventListener('input', function () {
                 var q = input.value.trim().toLowerCase();
-                list.querySelectorAll('.qcd-svc').forEach(function (row) {
-                    row.style.display = !q || row.dataset.name.indexOf(q) !== -1 ? '' : 'none';
+                table.querySelectorAll('tbody tr').forEach(function (row) {
+                    row.style.display = !q || (row.dataset.name || '').indexOf(q) !== -1 ? '' : 'none';
                 });
             });
-            var form = input.closest('form');
-            if (form) form.addEventListener('submit', function (e) { e.preventDefault(); });
         }
-        // Active state for the rail links (matches current path).
-        var path = window.location.pathname.replace(/\/$/, '') || '/';
-        document.querySelectorAll('.qcd-rail .nav-link').forEach(function (a) {
-            try {
-                var href = new URL(a.href).pathname.replace(/\/$/, '') || '/';
-                if (href === path) a.classList.add('qcd-active');
-            } catch (e) {}
+
+        if (typeof ApexCharts === 'undefined') return; // CDN offline -> leave cards clean
+
+        var PINK = '#E31C64', CYAN = '#22d3ee';
+        var axisStyle = { colors: '#9aa0ac', fontSize: '12px', fontWeight: 500 };
+        var lbl = {{ qc_lbl|json_encode|raw }};
+        var sum = {{ qc_sum|json_encode|raw }};
+        var pays = {{ qc_pay|json_encode|raw }};
+        var acts = {{ qc_act|json_encode|raw }};
+
+        var spendOptions = {
+            series: [{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }],
+            chart: { height: 340, type: 'area', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+            colors: [PINK],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 4 },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 95, 100],
+                    colorStops: [
+                        { offset: 0, color: PINK, opacity: 0.35 },
+                        { offset: 100, color: PINK, opacity: 0.02 }
+                    ]
+                }
+            },
+            markers: { size: 0, hover: { size: 6 } },
+            grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4, padding: { left: 8, right: 8 } },
+            xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
+            yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.round(v * 100) / 100; } } },
+            tooltip: { theme: 'dark', y: { formatter: function (v) { return Math.round(v * 100) / 100; } } }
+        };
+        var spendEl = document.querySelector('#qc-spend-chart');
+        var spendChart = spendEl ? new ApexCharts(spendEl, spendOptions) : null;
+        if (spendChart) spendChart.render();
+
+        var tabs = document.querySelectorAll('#qcSpendTabs button');
+        tabs.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                tabs.forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                if (!spendChart) return;
+                if (btn.getAttribute('data-range') === '6') {
+                    spendChart.updateOptions({ xaxis: { categories: lbl.slice(6) } }, false, false);
+                    spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum.slice(6) }]);
+                } else {
+                    spendChart.updateOptions({ xaxis: { categories: lbl } }, false, false);
+                    spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }]);
+                }
+            });
         });
+
+        var billPct = {{ qc_bill_pct }};
+        var billOptions = {
+            series: [billPct],
+            chart: { height: 275, type: 'radialBar', fontFamily: 'Inter, sans-serif' },
+            colors: [PINK],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '62%' },
+                    track: { background: '#1d1d22', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: { show: true, fontSize: '30px', fontWeight: '700', color: '#f5f6f8', offsetY: 2, formatter: function (v) { return Math.round(v) + '%'; } }
+                    }
+                }
+            },
+            stroke: { lineCap: 'round' },
+            labels: [{{ 'Settled'|trans|json_encode|raw }}]
+        };
+        var billEl = document.querySelector('#qc-billing-chart');
+        if (billEl) new ApexCharts(billEl, billOptions).render();
+
+        var activityOptions = {
+            series: [
+                { name: {{ 'Service events'|trans|json_encode|raw }}, data: acts },
+                { name: {{ 'Payments'|trans|json_encode|raw }}, data: pays }
+            ],
+            chart: { type: 'bar', height: 330, stacked: true, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+            plotOptions: {
+                bar: { horizontal: false, columnWidth: '38%', borderRadius: 4, borderRadiusApplication: 'end' }
+            },
+            colors: [PINK, CYAN],
+            dataLabels: { enabled: false },
+            fill: { opacity: 1 },
+            legend: {
+                position: 'bottom', horizontalAlign: 'center', fontSize: '12px', fontWeight: 500,
+                labels: { colors: '#9ca3af' },
+                markers: { width: 10, height: 10, radius: 10, strokeWidth: 0 },
+                itemMargin: { horizontal: 12 }
+            },
+            grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+            xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
+            yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.floor(v) === v ? v : Math.round(v); } } },
+            tooltip: { theme: 'dark' }
+        };
+        var activityEl = document.querySelector('#qc-activity-chart');
+        if (activityEl) new ApexCharts(activityEl, activityOptions).render();
     });
     </script>
 {% else %}

@@ -1,3 +1,116 @@
+{% if client %}
+{# ==================== CLIENT AREA — dark app-shell menu ==================== #}
+{% import "qc_storefront.html.twig" as qc_store %}
+{% set qc_cp = guest.extension_is_on({"mod":"custompages"}) %}
+{# Honour the same theme switches the stock menu uses, and fall back across the
+   pages that exist: VPS/Domains point at the custom pages when available,
+   otherwise at the order catalog. #}
+<nav class="iq-sidebar-menu">
+    <ul class="iq-menu iq-main-menu">
+        <li class="menu-group-title">{{ 'Main Menu'|trans }}</li>
+        {% if settings.side_menu_dashboard %}
+            <li>
+                <a href="{{ '/'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-category"/></svg></span>
+                    <span class="nav-link-text">{{ 'Dashboard'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+        {% if settings.side_menu_services %}
+            <li>
+                <a href="{{ '/order/service'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-folder"/></svg></span>
+                    <span class="nav-link-text">{{ 'Services'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+        {% if qc_cp %}
+            <li>
+                <a href="{{ '/hosting/vps'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-activity"/></svg></span>
+                    <span class="nav-link-text">{{ 'VPS Hosting'|trans }}</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ '/hosting/domains'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-globe"/></svg></span>
+                    <span class="nav-link-text">{{ 'Domains'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+        {% if settings.side_menu_order %}
+            <li>
+                <a href="{% if qc_cp %}{{ 'custompages/vps'|link }}{% else %}{{ '/order'|link }}{% endif %}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-buy"/></svg></span>
+                    <span class="nav-link-text">{{ 'Order'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% if settings.side_menu_invoices or settings.side_menu_payments %}
+            <li class="menu-group-title">{{ 'Billing'|trans }}</li>
+            <li>
+                <a href="{{ '/invoice'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-document"/></svg></span>
+                    <span class="nav-link-text">{{ 'Invoices'|trans }}</span>
+                </a>
+            </li>
+            {% if settings.side_menu_payments %}
+                <li>
+                    <a href="{{ '/client/balance'|link }}" class="nav-link">
+                        <span class="icon-box"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+                        <span class="nav-link-text">{{ 'Wallet'|trans }}</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% if settings.side_menu_emails %}
+                <li>
+                    <a href="{{ '/email'|link }}" class="nav-link">
+                        <span class="icon-box"><svg fill="currentColor"><use href="#i-mail"/></svg></span>
+                        <span class="nav-link-text">{{ 'Email History'|trans }}</span>
+                    </a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        <li class="menu-group-title">{{ 'Support'|trans }}</li>
+        {% if settings.side_menu_support %}
+            <li>
+                <a href="{{ '/support'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-chat"/></svg></span>
+                    <span class="nav-link-text">{{ 'Support'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+        {% if (guest.support_kb_enabled() and settings.side_menu_kb) %}
+            <li>
+                <a href="{{ 'support/kb'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-star"/></svg></span>
+                    <span class="nav-link-text">{{ 'Knowledge Base'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+        {% if (guest.extension_is_on({"mod":"news"}) and settings.side_menu_news) %}
+            <li>
+                <a href="{{ '/news'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-bell"/></svg></span>
+                    <span class="nav-link-text">{{ 'News'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
+
+        {% if settings.sidebar_balance_enabled %}
+            <li>
+                <div class="sidebar-balance">
+                    <span class="sb-label">{{ 'Balance'|trans }}</span>
+                    <strong>{{ profile.balance | money(profile.currency) }}</strong>
+                </div>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% else %}
+{# ==================== GUEST / PUBLIC — stock light rail ==================== #}
 {% import "qc_storefront.html.twig" as qc_store %}
 {% set qc_company = guest.system_company %}
 {% set qc_rail_logo = settings.theme == 'dark' ? qc_company.logo_url_dark : qc_company.logo_url %}
@@ -103,13 +216,6 @@
                 </li>
             {% endif %}
 
-            {% if settings.sidebar_balance_enabled and client %}
-                <li class="pt-3 ps-3">
-                    <h5 class="text-secondary d-block pb-1">{{ 'Account balance'|trans }}</h5>
-                    <h4><strong>{{ profile.balance | money(profile.currency) }}</strong></h4>
-                </li>
-            {% endif %}
-
             {% if settings.sidebar_note_enabled %}
                 <li class="pt-3 ps-3">
                     <h5 class="text-secondary d-block pb-1">{{ settings.sidebar_note_title }}</h5>
@@ -125,3 +231,4 @@
         </div>
     </div>
 </div>
+{% endif %}
