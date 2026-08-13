@@ -1341,7 +1341,10 @@
             transition: background .2s ease, border-color .2s ease, color .2s ease;
         }
         .premium-btn-sm { height: 40px; min-width: 96px; padding: 0 18px; border-radius: 10px; font-size: 12.5px; }
-        .premium-btn:hover { background: #c8105c; border-color: #c8105c; color: #ffffff; }
+        /* Beat the global `.qc-app a { color:#f06b9d }` link rule, which is more
+           specific than `.premium-btn` and was tinting the label rose. */
+        .qc-app .premium-btn { color: #000; }
+        .qc-app .premium-btn:hover { background: #c8105c; border-color: #c8105c; color: #ffffff; }
         .premium-btn:active { transform: none; }
 
         .premium-btn .span-mother,
