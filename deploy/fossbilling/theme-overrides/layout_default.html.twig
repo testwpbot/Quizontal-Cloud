@@ -959,43 +959,34 @@
         .notify-text strong { color: var(--iq-heading); font-weight: 600; }
         .notify-time { font-size: 0.68rem; color: #6b7280; }
 
-        /* ---- dashboard banner (decorative CSS art, no image asset needed) ---- */
+        /* ---- dashboard banner (image background with slow zoom) ---- */
         .iq-banner {
             position: relative; overflow: hidden;
             border-radius: 1.25rem;
             min-height: 215px;
             color: #fff;
             margin: 0;
-            background:
-                radial-gradient(90rem 34rem at 85% -20%, rgba(168, 85, 247, .55), transparent 55%),
-                radial-gradient(60rem 30rem at -10% 130%, rgba(227, 28, 100, .5), transparent 55%),
-                linear-gradient(120deg, #2a0a1e 0%, #4a0f38 40%, #23104a 100%);
+            background: #4a0f38;
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .iq-banner .iq-banner-art {
-            position: absolute; inset: 0; z-index: 0; overflow: hidden;
+            position: absolute; inset: -4%; z-index: 0; overflow: hidden;
+            background-image: url("https://res.cloudinary.com/dt1sdefd6/image/upload/v1786648658/quizontal-header_ve3tk6.png");
+            background-size: cover;
+            background-position: center;
+            animation: qcBannerZoom 24s ease-in-out infinite;
         }
         .iq-banner .iq-banner-art::before {
-            content: ""; position: absolute; inset: -30% -10% -30% 30%;
-            background:
-                radial-gradient(26rem 15rem at 76% 22%, rgba(255, 255, 255, .22), transparent 60%),
-                radial-gradient(30rem 18rem at 90% 76%, rgba(168, 85, 247, .5), transparent 60%),
-                radial-gradient(24rem 20rem at 58% 88%, rgba(227, 28, 100, .42), transparent 58%),
-                radial-gradient(20rem 14rem at 18% 12%, rgba(34, 211, 238, .18), transparent 60%);
-            filter: blur(3px);
-            animation: qcBannerDrift 26s ease-in-out infinite;
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 55%, rgba(0, 0, 0, 0.34) 100%);
         }
         .iq-banner .iq-banner-art::after {
             content: ""; position: absolute; inset: 0;
-            background:
-                linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.48) 55%, rgba(0, 0, 0, 0.3) 100%),
-                repeating-linear-gradient(115deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 22px),
-                radial-gradient(circle at 50% 120%, rgba(255, 255, 255, .1), transparent 55%);
+            background: repeating-linear-gradient(115deg, rgba(255, 255, 255, .04) 0 1px, transparent 1px 22px);
         }
-        .iq-banner .iq-banner-art::marker { display: none; }
-        @keyframes qcBannerDrift {
-            0%, 100% { transform: translateX(0) scale(1); }
-            50% { transform: translateX(-4%) scale(1.08); }
+        @keyframes qcBannerZoom {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
         }
         .iq-banner .iq-container { padding: 1.75rem 2rem; position: relative; z-index: 2; }
         .iq-banner h1 { color: #fff; font-weight: 700; font-size: 1.75rem; margin-bottom: 0.4rem; }
@@ -1381,7 +1372,7 @@
             .stat-delta { margin-left: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .iq-banner .iq-banner-art::before { animation: none; }
+            .iq-banner .iq-banner-art { animation: none; }
             .loader-spinner { animation: none; }
         }
 
