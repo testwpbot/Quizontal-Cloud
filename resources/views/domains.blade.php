@@ -1,5 +1,7 @@
 @extends('layouts.site')
 
+@section('body_class', 'theme-dark')
+
 @section('title', 'Domain Search — Live availability & honest LKR prices | Quizontal Cloud')
 @section('meta_description', 'Search any name or idea and instantly see prices across every extension Quizontal Cloud sells — live availability, name suggestions and transparent LKR pricing with free WHOIS privacy.')
 

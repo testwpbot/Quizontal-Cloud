@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizontal Cloud — Landing (preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/styles.css">
+  <link rel="stylesheet" href="/public/modern.css">
+  <link rel="stylesheet" href="/public/premium.css">
+  <style>
+    .brand img { display: none; }
+    .brand::after { content: 'Quizontal Cloud'; font: 700 18px 'Space Grotesk',sans-serif; color: var(--text); letter-spacing: -0.02em; }
+    .brand { display: flex; align-items: center; }
+  </style>
+</head>
+<body class="theme-dark">
+<div class="site-glow glow-one"></div><div class="site-glow glow-two"></div>
+
+<header class="site-header">
+  <nav class="container nav-shell">
+    <a href="#" class="brand" aria-label="Quizontal Cloud home"></a>
+    <div class="nav-menu" id="navLinks">
+      <a href="#">Home</a>
+      <a href="#">Web Hosting</a>
+      <a href="#">Cloud VPS</a>
+      <a href="#">Domains</a>
+      <a href="#">Pricing</a>
+    </div>
+    <div class="nav-ctas">
+      <a class="button button-ghost" href="#">Client area</a>
+      <a class="button button-primary" href="#">View pricing</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="hero container">
+    <div class="hero-copy">
+      <div class="eyebrow"><span></span> Domains · Hosting · Cloud servers — one platform</div>
+      <h1>Everything your project<br><em>needs on the internet.</em></h1>
+      <p>Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
+      <div class="hero-actions">
+        <a href="#" class="premium-btn">Explore pricing</a>
+        <a href="#" class="button button-ghost button-large">Open client area</a>
+      </div>
+      <div class="chip-stat-row" style="justify-content:flex-start;margin-top:34px">
+        <span class="chip-stat"><i>▦</i>VPS from <b>Rs. 1,850</b>/mo</span>
+        <span class="chip-stat"><i>⚡</i>Hosting from <b>Rs. 499</b>/mo</span>
+        <span class="chip-stat"><i>◎</i>20+ domain extensions</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="visual-card server-console">
+        <div class="console-head"><span class="console-icon">Q</span><div><strong>Cloud server</strong><small>Operational</small></div><span class="live-dot">Live</span></div>
+        <div class="console-chart"><span style="height:25%"></span><span style="height:42%"></span><span style="height:33%"></span><span style="height:62%"></span><span style="height:48%"></span><span style="height:77%"></span><span style="height:58%"></span><span style="height:88%"></span><span style="height:70%"></span><span style="height:94%"></span></div>
+        <div class="console-metrics"><div><small>CPU load</small><strong>18%</strong></div><div><small>Network</small><strong>1.2 Gb/s</strong></div><div><small>Status</small><strong class="online">Online</strong></div></div>
+      </div>
+      <div class="visual-card location-float"><span class="flag">🇺🇸</span><div><small>Deployed in</small><strong>New Jersey</strong></div></div>
+      <div class="hero-float hosting-float"><span class="hf-dot"></span><div><small>Web hosting</small><strong>From Rs. 499/mo</strong></div></div>
+      <div class="visual-card price-float"><small>VPS plans from</small><strong>Rs. 1,850</strong><span>/ month</span></div>
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+    </div>
+  </section>
+
+  <section class="section container" id="stats" style="padding-top:0">
+    <div class="stat-grid">
+      <article class="stat-card"><div class="stat-ring" style="--val:100"><span class="stat-ring-inner">⚡</span></div><div class="stat-meta"><span class="stat-label">Products</span><strong class="stat-value">3-in-1</strong><span class="stat-sub">Domains · Hosting · VPS</span></div></article>
+      <article class="stat-card"><div class="stat-ring cyan" style="--val:100"><span class="stat-ring-inner">₨</span></div><div class="stat-meta"><span class="stat-label">Pricing</span><strong class="stat-value">LKR</strong><span class="stat-sub">Local rupee pricing</span></div></article>
+      <article class="stat-card"><div class="stat-ring green" style="--val:90"><span class="stat-ring-inner">▦</span></div><div class="stat-meta"><span class="stat-label">Uptime</span><strong class="stat-value">99.9%</strong><span class="stat-sub">Network uptime target</span></div></article>
+      <article class="stat-card"><div class="stat-ring amber" style="--val:100"><span class="stat-ring-inner">✓</span></div><div class="stat-meta"><span class="stat-label">Support</span><strong class="stat-value">24/7</strong><span class="stat-sub">Account access</span></div></article>
+    </div>
+  </section>
+
+  <section class="section container" id="products">
+    <div class="section-intro"><div><span class="section-kicker">One store, three products</span><h2>Start small. Scale when you're ready.</h2></div><p>Grab a domain and a web hosting plan today — then graduate to your own cloud server when traffic grows.</p></div>
+    <div class="trio-grid">
+      <article class="trio-card"><div class="trio-icon">⚡</div><h3>Web Hosting</h3><span class="trio-tag">Fast NVMe shared hosting on LiteSpeed — perfect for websites, blogs and small businesses.</span><span class="trio-from">Starting at<b>Rs. 499<small> / month</small></b></span><ul class="trio-feats"><li><span class="check">✓</span>Free SSL certificate on every site</li><li><span class="check">✓</span>Daily & weekly backup options</li><li><span class="check">✓</span>Instant activation after payment</li></ul><a href="#" class="button button-primary">View hosting plans <span>→</span></a></article>
+      <article class="trio-card"><div class="trio-icon">▦</div><h3>Cloud VPS</h3><span class="trio-tag">KVM Linux and Windows virtual servers with dedicated resources, deployed in three US locations.</span><span class="trio-from">Starting at<b>Rs. 1,850<small> / month</small></b></span><ul class="trio-feats"><li><span class="check">✓</span>Full root access & OS of choice</li><li><span class="check">✓</span>KVM, storage or Windows flavours</li><li><span class="check">✓</span>Transparent monthly LKR pricing</li></ul><a href="#" class="button button-ghost">Explore VPS plans <span>→</span></a></article>
+      <article class="trio-card"><div class="trio-icon">◎</div><h3>Domain Names</h3><span class="trio-tag">Live availability search across every extension we sell — with free WHOIS privacy included.</span><span class="trio-from">Extensions<b>20+<small> & growing</small></b></span><ul class="trio-feats"><li><span class="check">✓</span>Free WHOIS privacy, on by default</li><li><span class="check">✓</span>Honest renewal prices shown upfront</li><li><span class="check">✓</span>DNS managed in your client area</li></ul><a href="#" class="button button-ghost">Find your domain <span>→</span></a></article>
+    </div>
+  </section>
+
+  <section class="section container" id="why">
+    <div class="center-intro"><span class="section-kicker">Why Quizontal Cloud</span><h2>Everything you need. Nothing you don't.</h2></div>
+    <div class="feature-grid">
+      <article class="feature-card feature-wide"><div class="feature-icon">⚡</div><h3>Fast, modern infrastructure</h3><p>NVMe storage, LiteSpeed web servers for hosting and KVM virtualization for cloud.</p><div class="mini-terminal"><span>$ cloud status</span><strong>All systems operational</strong></div></article>
+      <article class="feature-card"><div class="feature-icon">₨</div><h3>Local LKR pricing</h3><p>Understand your monthly cost before checkout — no foreign-currency surprises, ever.</p></article>
+      <article class="feature-card"><div class="feature-icon">◈</div><h3>Secure wallet billing</h3><p>Fund your account by bank transfer and pay invoices from one customer wallet.</p></article>
+    </div>
+  </section>
+
+  <section class="container"><div class="final-cta band-dark"><div><span class="section-kicker">Ready when you are</span><h2>Launch your next project on Quizontal Cloud.</h2><p>Transparent LKR prices, one wallet, and a platform that grows with you.</p></div><div><a href="#" class="premium-btn">Explore plans</a><a href="#" class="button button-ghost button-large">Client area</a></div></div></section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><p>Domains, web hosting and cloud servers — priced in rupees, managed from one simple dashboard.</p></div>
+    <div><strong>Products</strong><a href="#">Web hosting</a><a href="#">Cloud VPS</a><a href="#">Domain names</a><a href="#">All pricing</a></div>
+    <div><strong>Account</strong><a href="#">Client area</a><a href="#">How it works</a><a href="#">FAQ</a></div>
+    <div class="footer-meta"><span>© 2026 Quizontal Cloud</span><span class="footer-status"><i></i> Systems operational</span></div>
+  </div>
+</footer>
+
+<script src="/public/site.js"></script>
+</body>
+</html>

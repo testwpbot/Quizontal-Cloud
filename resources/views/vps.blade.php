@@ -1,5 +1,7 @@
 @extends('layouts.site')
 
+@section('body_class', 'theme-dark')
+
 @section('title', 'Cloud VPS Hosting — KVM Linux, Storage & Windows servers | Quizontal Cloud')
 @section('meta_description', 'Deploy KVM Linux, KVM Storage or Hyper-V Windows cloud servers in three US locations with transparent monthly pricing in Sri Lankan Rupees.')
 

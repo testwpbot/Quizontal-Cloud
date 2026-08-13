@@ -1,5 +1,7 @@
 @extends('layouts.site')
 
+@section('body_class', 'theme-dark')
+
 @section('title', 'Web Hosting — Fast NVMe hosting from Rs. 499/month | Quizontal Cloud')
 @section('meta_description', 'Fast LiteSpeed NVMe web hosting with free SSL, backups, email accounts and LKR monthly pricing. Starter, Business and Premium plans with instant activation.')
 

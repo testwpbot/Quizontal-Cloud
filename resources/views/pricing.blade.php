@@ -1,5 +1,7 @@
 @extends('layouts.site')
 
+@section('body_class', 'theme-dark')
+
 @section('title', 'Pricing — Web Hosting, Cloud VPS & Domains in LKR | Quizontal Cloud')
 @section('meta_description', 'Every Quizontal Cloud price on one page: web hosting from Rs. 499/month, cloud VPS configurations and transparent domain registration and renewal prices — all in Sri Lankan Rupees.')
 
