@@ -30,6 +30,26 @@
 
 {% block content %}
 {% if client %}
+    <style>
+        /* Clear, premium per-row action button. */
+        .qc-manage-btn {
+            background: rgba(227, 28, 100, .14);
+            border: 1px solid rgba(227, 28, 100, .5);
+            color: #ff7bac;
+            border-radius: .6rem;
+            padding: .4rem .95rem;
+            font-size: .8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+        }
+        .qc-manage-btn:hover {
+            background: var(--iq-primary);
+            border-color: var(--iq-primary);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(227, 28, 100, .35);
+        }
+    </style>
     {# ================= data gathering (all real, from client APIs) ================= #}
     {% set qc_all = client.order_get_list({ "per_page": 100, "hide_addons": 1 }).list %}
     {% set qc_domains = [] %}
@@ -199,7 +219,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ '/order/service/manage'|link }}/{{ order.id }}">{{ 'Manage'|trans }}</a>
+                                    <a class="qc-manage-btn" href="{{ '/order/service/manage'|link }}/{{ order.id }}">{{ 'Manage'|trans }}</a>
                                 </td>
                             </tr>
                         {% endfor %}
