@@ -1382,6 +1382,35 @@
         }
         .premium-btn .premium-arrow svg { width: 13px; height: 13px; }
         .premium-btn:hover .premium-arrow { color: #fff; }
+
+        /* Static premium button: same white->rose styling, no letter-swap animation. */
+        .premium-btn-static {
+            position: relative;
+            height: 50px;
+            padding: 0 26px;
+            min-width: 125px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 12px;
+            border: 1px solid #fff;
+            background: #fff;
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.1px;
+            cursor: pointer;
+            overflow: hidden;
+            text-decoration: none;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+        }
+        .premium-btn-static .premium-arrow { color: var(--iq-primary); flex-shrink: 0; display: inline-flex; transition: color .2s ease; }
+        .premium-btn-static .premium-arrow svg { width: 13px; height: 13px; }
+        .premium-btn-static:hover { background: #c8105c; border-color: #c8105c; color: #ffffff; }
+        .premium-btn-static:hover .premium-arrow { color: #fff; }
+        .qc-app .premium-btn-static { color: #000; }
+        .qc-app .premium-btn-static:hover { color: #ffffff; }
     </style>
     {% if client %}
     <script>

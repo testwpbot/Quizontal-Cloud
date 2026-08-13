@@ -141,7 +141,7 @@ body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:no
       <form class="api-form mt-3" method="post" action="{{ 'api/client/cart/checkout'|link }}" data-api-jsonp="onOrderCheckout">
         <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
         {% if settings.checkout_tos == 'explicit' %}<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="qc-tos-bank" required><label class="form-check-label" for="qc-tos-bank">I agree to the <a href="{{ '/tos'|link }}" target="_blank">terms of service</a> and <a href="{{ '/privacy-policy'|link }}" target="_blank">privacy policy</a>.</label></div>{% endif %}
-        <button class="premium-btn qc-place-order" id="qc-place-order-bank" type="submit">Place order &amp; get payment instructions</button>
+        <button class="premium-btn-static qc-place-order" id="qc-place-order-bank" type="submit">Place order &amp; get payment instructions</button>
       </form>
       <div class="small text-muted mt-2">Want instant activation instead? <a href="{{ 'client/balance'|link }}">Add {{ (amount_due-wallet_balance)|money_convert }} to your wallet</a> — wallet orders start provisioning immediately.</div>
     </div>
@@ -157,6 +157,14 @@ body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:no
   <div id="qc-checkout-loading"><div class="qc-checkout-box text-center" id="qc-checkout-box"><img src="{{ 'wallet.svg'|mod_asset_url('quizontalbanktransfer') }}" width="58" height="58" alt="" class="mb-3"><h3 id="qc-checkout-title" style="color:#fff">Placing your order securely…</h3><p class="text-muted" id="qc-checkout-text">Paying from your wallet and preparing cloud resources. Please keep this page open.</p><div class="qc-checkout-shimmer" style="width:55%;margin-left:auto;margin-right:auto"></div><div class="qc-checkout-shimmer"></div><div class="qc-checkout-shimmer" style="width:78%;margin-left:auto;margin-right:auto"></div></div></div>
 </div>
 <script>
+/* Static premium buttons: append the arrow only (no letter-swap animation). */
+document.querySelectorAll('.premium-btn-static').forEach(function (btn) {
+    var arrow = document.createElement('span');
+    arrow.className = 'premium-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    btn.appendChild(arrow);
+});
 $('.remove-cart-item').on('click',function(e){e.preventDefault();var id=$(this).attr('data-cart-item-id');if(confirm('Remove this item from your cart?')){bb.post('guest/cart/remove_item',{id:id,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});}});
 $('#qc-apply-promo').on('click',function(){var code=$('#qc-promocode').val().trim(),message=$('#qc-promo-message');if(!code){message.removeClass('text-success').addClass('text-danger').text('Enter a coupon code first.');return;}$(this).prop('disabled',true);bb.post('guest/cart/apply_promo',{promocode:code,CSRFToken:'{{ CSRFToken }}'},function(){location.reload(false);});});
 var qcCheckoutDone=false;
