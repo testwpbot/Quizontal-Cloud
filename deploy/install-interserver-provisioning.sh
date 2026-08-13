@@ -178,6 +178,7 @@ src = open(path).read()
 block = ("    # BEGIN Quizontal routes\n"
          "    # Pretty store URLs served by the Custom Pages module.\n"
          "    RewriteRule ^hosting/(vps|domains)/?$ index.php?_url=/custompages/$1 [L,QSA]\n"
+         "    RewriteRule ^hosting/web/?$ index.php?_url=/custompages/hosting [L,QSA]\n"
          "    # END Quizontal routes\n")
 existing = re.compile(r"\n? *# BEGIN Quizontal routes.*?# END Quizontal routes\n", re.S)
 if re.search(existing, src):

@@ -19,11 +19,12 @@ class SyncStorePages extends Command
     protected $signature = 'fossbilling:sync-pages
                             {--dry-run : Show what would change without writing to FOSSBilling}';
 
-    protected $description = 'Publish the VPS Hosting and Domains catalog pages into FOSSBilling';
+    protected $description = 'Publish the VPS Hosting, Web Hosting and Domains catalog pages into FOSSBilling';
 
     /** slug => [title, description] (content file = deploy/fossbilling/store-pages/{slug}.html) */
     private const PAGES = [
         'vps' => ['VPS Hosting', 'Cloud VPS lines and plans with LKR pricing.'],
+        'hosting' => ['Web Hosting', 'Web hosting packages and plans with LKR pricing.'],
         'domains' => ['Domains', 'Search and register domains with live availability and LKR pricing.'],
     ];
 

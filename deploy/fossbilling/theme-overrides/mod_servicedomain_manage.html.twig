@@ -79,6 +79,39 @@
     .qc-dd-item.sel{background:#fde8f0}
     .qc-dd-check{margin-left:auto;flex:none}
     </style>
+    {# Quizontal Cloud: dark-theme re-tone of the DNS manager (the shell is dark;
+       the component above was written for the light theme). #}
+    <style>
+    #qc-dns-rows .qc-dns-skel{background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%)}
+    .qc-select>select{background-color:rgba(255,255,255,.04);border-color:var(--iq-line, rgba(255,255,255,.1));color:var(--iq-heading, #f5f6f8)}
+    .qc-select>select:disabled{background-color:#121216;color:#6b7280}
+    .qc-type{color:var(--iq-heading, #f5f6f8)}
+    .qc-stat{background:rgba(255,255,255,.03);border-color:var(--iq-line, rgba(255,255,255,.08))}
+    .qc-stat-icon{background:var(--iq-primary-light, rgba(227,28,100,.16))}
+    .qc-stat-label{color:#7d8494}
+    .qc-stat-value{color:var(--iq-heading, #f5f6f8)}
+    #qc-dns-table{color:var(--iq-body, #9aa3b2)}
+    #qc-dns-table td{color:var(--iq-body, #9aa3b2)}
+    #qc-dns-table thead th{color:#7d8494;border-bottom-color:var(--iq-line, rgba(255,255,255,.08))}
+    #qc-dns-table tbody tr{border-bottom-color:var(--iq-line, rgba(255,255,255,.08))}
+    #qc-dns-table strong{color:var(--iq-heading, #f5f6f8)}
+    #qc-dns-table code{color:var(--iq-heading, #f5f6f8);background:rgba(255,255,255,.06)}
+    #dns-tab-pane .form-label{color:#7d8494}
+    #qc-dns-add .form-control,.qc-dns-edit-row .form-control{color:var(--iq-heading, #f5f6f8);border-color:var(--iq-line, rgba(255,255,255,.12));background:rgba(255,255,255,.04)}
+    .qc-dd-btn{background:rgba(255,255,255,.04);border-color:var(--iq-line, rgba(255,255,255,.12));color:var(--iq-heading, #f5f6f8)}
+    .qc-dd-btn:hover{border-color:rgba(227,28,100,.5)}
+    .qc-dd-desc{color:#8b93a3}
+    .qc-dd-menu{background:#101014;border-color:var(--iq-line, rgba(255,255,255,.1));box-shadow:0 16px 36px rgba(0,0,0,.6)}
+    .qc-dd-item{color:var(--iq-heading, #f5f6f8)}
+    .qc-dd-item:hover,.qc-dd-item:focus{background:var(--iq-primary-light, rgba(227,28,100,.16))}
+    .qc-dd-item.sel{background:var(--iq-primary-light, rgba(227,28,100,.16))}
+    .qc-ns-current{background:var(--iq-primary-light, rgba(227,28,100,.16));border-color:rgba(227,28,100,.35)}
+    .qc-ns-current code{background:transparent;color:var(--iq-heading, #f5f6f8)}
+    @media (max-width:767.98px){
+        #qc-dns-table td::before{color:#7d8494}
+        #qc-dns-table td.qc-dns-actions{border-top-color:var(--iq-line, rgba(255,255,255,.1))}
+    }
+    </style>
 
     <div class="card mb-4">
         <div class="card-header">
@@ -200,7 +233,7 @@
                 {% for qc_ns in [service.ns1, service.ns2, service.ns3, service.ns4] %}
                     {% if qc_ns is not empty %}{% set qc_ns_list = qc_ns_list|merge([qc_ns]) %}{% endif %}
                 {% endfor %}
-                <div class="rounded-3 p-3 mb-3" style="background:#fdf2f7;border:1px solid #f3c6db">
+                <div class="rounded-3 p-3 mb-3 qc-ns-current">
                     <div class="d-flex align-items-center mb-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="#e31c64" class="me-2"><path d="M4 1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1m0 8h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1m2 1.5A1.5 1.5 0 1 0 7.5 9 1.5 1.5 0 0 0 6 10.5M6 2.5A1.5 1.5 0 1 0 7.5 1 1.5 1.5 0 0 0 6 2.5M13 11h4v1h-4zM13 3h4v1h-4z"/></svg>
                         <strong class="small">{{ 'Current nameservers'|trans }}</strong>

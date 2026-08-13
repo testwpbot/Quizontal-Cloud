@@ -1,0 +1,340 @@
+<!-- Quizontal Cloud — Web Hosting catalog page (dashboard-style). Managed by `php artisan fossbilling:sync-pages`. -->
+<div class="qc-hosting-page">
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="qch-globe" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08c.95-1.66 2.49-2.94 4.32-3.56C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56-1.83-.63-3.37-1.9-4.32-3.56M4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38a8.26 8.26 0 0 0-.14 2c0 .68.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.57 1.91 3.97h-3.82C10.5 6.6 11.17 5.23 12 4.03M18.92 8h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2Z" fill="currentColor"/></symbol>
+    <symbol id="qch-list" viewBox="0 0 24 24"><path d="M4 10.5C3.2 10.5 2.5 11.2 2.5 12S3.2 13.5 4 13.5 5.5 12.8 5.5 12 4.8 10.5 4 10.5M4 4.5C3.2 4.5 2.5 5.2 2.5 6S3.2 7.5 4 7.5 5.5 6.8 5.5 6 4.8 4.5 4 4.5M4 16.5C3.2 16.5 2.5 17.2 2.5 18S3.2 19.5 4 19.5 5.5 18.8 5.5 18 4.8 16.5 4 16.5M8 19H21V17H8V19M8 13H21V11H8V13M8 5V7H21V5H8Z" fill="currentColor"/></symbol>
+    <symbol id="qch-wallet" viewBox="0 0 24 24"><path d="M17.7689 8.3818H22C22 4.98459 19.9644 3 16.5156 3H7.48444C4.03556 3 2 4.98459 2 8.33847V15.6615C2 19.0154 4.03556 21 7.48444 21H16.5156C19.9644 21 22 19.0154 22 15.6615V15.3495H17.7689C15.8052 15.3495 14.2133 13.7975 14.2133 11.883C14.2133 9.96849 15.8052 8.41647 17.7689 8.41647V8.3818ZM17.7689 9.87241H21.2533C21.6657 9.87241 22 10.1983 22 10.6004V13.131C21.9952 13.5311 21.6637 13.8543 21.2533 13.8589H17.8489C16.8548 13.872 15.9855 13.2084 15.76 12.2643C15.6471 11.6783 15.8056 11.0736 16.1931 10.6122C16.5805 10.1509 17.1573 9.88007 17.7689 9.87241ZM17.92 12.533H18.2489C18.6711 12.533 19.0133 12.1993 19.0133 11.7877C19.0133 11.3761 18.6711 11.0424 18.2489 11.0424H17.92C17.7181 11.0401 17.5236 11.1166 17.38 11.255C17.2364 11.3934 17.1555 11.5821 17.1556 11.779C17.1555 12.1921 17.4964 12.5282 17.92 12.533ZM6.73778 8.3818H12.3822C12.8044 8.3818 13.1467 8.04812 13.1467 7.63649C13.1467 7.22487 12.8044 6.89119 12.3822 6.89119H6.73778C6.31903 6.89116 5.9782 7.2196 5.97333 7.62783C5.97331 8.04087 6.31415 8.37705 6.73778 8.3818Z" fill="currentColor"/></symbol>
+    <symbol id="qch-bolt" viewBox="0 0 24 24"><path d="M7 2V13H10V22L17 10H13L17 2H7Z" fill="currentColor"/></symbol>
+  </svg>
+
+  <!-- stat cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qch-globe"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Packages</p>
+              <h4 id="qcStatPackages">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-info" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qch-list"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Plans</p>
+              <h4 id="qcStatPlans">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-warning" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qch-wallet"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">From</p>
+              <h4 id="qcStatFrom">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-success" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qch-bolt"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Setup</p>
+              <h4>Instant</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="qcHostingError" class="alert alert-warning" hidden></div>
+
+  <div id="qcHostingCats" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+    <div class="col-12">
+      <div class="qc-hosting-loading text-center text-muted p-4">Loading plans&hellip;</div>
+    </div>
+  </div>
+
+  <div id="qcHostingPlans" hidden>
+    <div class="card">
+      <div class="card-header d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="premium-btn premium-btn-sm" id="qcHostingBack">All packages</button>
+        <h4 class="card-title mb-0 me-auto" id="qcHostingTitle"></h4>
+        <div class="d-flex align-items-center gap-2 flex-grow-1 flex-sm-grow-0">
+          <div class="qc-hosting-search">
+            <svg width="15" height="15" fill="currentColor"><use href="#qch-list"/></svg>
+            <input id="qcHostingFilter" type="search" class="form-control form-control-sm" autocomplete="off" placeholder="Filter plans&hellip;">
+          </div>
+          <small class="text-muted text-nowrap" id="qcHostingCount"></small>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="qcHostingList"></div>
+        <div id="qcHostingEmpty" class="text-center text-muted py-4" hidden>
+          <strong class="d-block mb-1">Nothing matches that filter.</strong>
+          <small>Try a different word, or go back to the packages.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .qc-hosting-page .qc-hosting-loading { border: 1px dashed var(--iq-line, rgba(255,255,255,.14)); border-radius: .5rem; }
+  .qc-hosting-page .qc-cat-card {
+    background: var(--iq-surface, #0b0b0e);
+    border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+    border-radius: .75rem;
+    color: var(--iq-body, #9aa3b2);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .qc-hosting-page .qc-cat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(227, 28, 100, .45);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .6);
+  }
+  .qc-hosting-page .qc-cat-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--iq-primary-light, rgba(227, 28, 100, .16));
+    color: #f06b9d;
+    margin-bottom: 12px;
+  }
+  .qc-hosting-page .qc-cat-icon svg { width: 20px; height: 20px; }
+  .qc-hosting-page .qc-cat-card .card-title { color: var(--iq-heading, #f5f6f8); }
+  .qc-hosting-page .qc-cat-card .badge { background: rgba(255,255,255,.06); color: #9aa3b2; font-weight: 600; }
+  .qc-hosting-page .qc-cat-card .qc-from { color: #7d8494; }
+  .qc-hosting-page .qc-cat-card .qc-from strong { color: var(--iq-heading, #f5f6f8); }
+  .qc-hosting-page .qc-cat-card .qc-view { color: #f06b9d; font-weight: 600; }
+  .qc-hosting-page .qc-hosting-search {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+    border-radius: .5rem;
+    padding: 0 10px;
+    min-width: 200px;
+    transition: border-color .18s ease;
+  }
+  .qc-hosting-page .qc-hosting-search:focus-within { border-color: #f1719f; }
+  .qc-hosting-page .qc-hosting-search svg { color: #7e8594; flex: none; }
+  .qc-hosting-page .qc-hosting-search .form-control {
+    border: 0; background: transparent; box-shadow: none;
+    color: #e6e8ec; padding: 8px 0; font-size: .85rem;
+  }
+  .qc-hosting-page .qc-hosting-search .form-control::placeholder { color: #5f6673; }
+  .qc-hosting-page .qc-plan-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 14px 16px;
+    background: #121216;
+    border: 1px solid transparent;
+    border-radius: .6rem;
+    color: var(--iq-body, #9aa3b2);
+    text-decoration: none;
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .qc-hosting-page .qc-plan-row:hover {
+    border-color: rgba(227, 28, 100, .35);
+    background: #17171c;
+    transform: translateY(-1px);
+    color: var(--iq-body, #9aa3b2);
+  }
+  .qc-hosting-page .qc-plan-row .qc-plan-name { color: var(--iq-heading, #f5f6f8); font-weight: 600; }
+  .qc-hosting-page .qc-plan-row .qc-plan-price { color: var(--iq-heading, #f5f6f8); font-weight: 700; white-space: nowrap; }
+  .qc-hosting-page .qc-plan-row .qc-plan-price small { color: #7d8494; font-weight: 500; }
+  .qc-hosting-page { max-width: 100%; }
+  .qc-hosting-page #qcHostingList { grid-template-columns: minmax(0, 1fr); }
+  .qc-hosting-page .qc-plan-row { min-width: 0; }
+  .qc-hosting-page .qc-plan-row > span:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .qc-hosting-page .qc-hosting-search { max-width: 100%; }
+  @media (max-width: 575.98px) {
+    .qc-hosting-page .qc-hosting-search { min-width: 0; flex: 1 1 auto; }
+    .qc-hosting-page .qc-plan-row { flex-wrap: wrap; }
+    .qc-hosting-page .qc-plan-row > span:first-child { flex-basis: 100%; }
+    .qc-hosting-page .qc-plan-row > span.text-nowrap { text-align: left !important; }
+  }
+</style>
+<script>
+(function () {
+  var catsEl = document.getElementById('qcHostingCats');
+  var plansEl = document.getElementById('qcHostingPlans');
+  if (!catsEl) return;
+
+  var api = (typeof API !== 'undefined' && API.guest) ? API.guest
+      : (typeof bb !== 'undefined' ? { get: bb.get.bind(bb), post: bb.post.bind(bb), prefix: 'guest/' } : null);
+  if (!api) { console.warn('Quizontal hosting page: FOSSBilling API client not available'); return; }
+  function apiGet(endpoint, params, success, failure) {
+    try {
+      if (api.prefix) { api.get(api.prefix + endpoint, params, success, failure, false); }
+      else { api.get(endpoint, params, success, failure, false); }
+    } catch (error) {
+      console.error('Quizontal hosting page: API call failed', endpoint, error);
+      (failure || function () {})(error);
+    }
+  }
+
+  var currency = { code: 'LKR', rate: 1, loaded: false };
+  var activeCategoryId = null;
+  var categories = [];
+
+  function money(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value) || value <= 0) return '';
+    return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function moneyCompact(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value) || value <= 0) return '';
+    return currency.code + ' ' + Math.round(value).toLocaleString('en-US');
+  }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>'\"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+    });
+  }
+  function clearLoading() {
+    var loading = document.querySelector('#qcHostingCats .qc-hosting-loading');
+    if (loading) loading.parentElement.remove();
+  }
+  function fail(message) {
+    console.warn('Quizontal hosting page:', message);
+    clearLoading();
+    var box = document.getElementById('qcHostingError');
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function updateStats() {
+    var pkEl = document.getElementById('qcStatPackages');
+    var plansEl = document.getElementById('qcStatPlans');
+    var fromEl = document.getElementById('qcStatFrom');
+    if (pkEl && categories.length) pkEl.textContent = categories.length;
+    if (plansEl && categories.length) {
+      var total = categories.reduce(function (n, c) { return n + (Array.isArray(c.products) ? c.products.length : 0); }, 0);
+      plansEl.textContent = total;
+    }
+    if (fromEl && categories.length) {
+      var prices = categories.map(function (c) { return Number(c.price_starting_from); }).filter(function (p) { return isFinite(p) && p > 0; });
+      if (prices.length) fromEl.textContent = moneyCompact(Math.min.apply(null, prices));
+    }
+  }
+
+  function renderCategories() {
+    catsEl.innerHTML = categories.map(function (category) {
+      return '<div class="col">' +
+        '<button type="button" class="card w-100 h-100 text-start shadow-none qc-cat-card" data-id="' + esc(category.id) + '" data-title="' + esc(category.title) + '">' +
+          '<div class="card-body d-flex flex-column">' +
+            '<span class="qc-cat-icon"><svg fill="currentColor"><use href="#qch-globe"/></svg></span>' +
+            '<div class="d-flex justify-content-between align-items-start mb-1 gap-2">' +
+              '<h5 class="card-title mb-0">' + esc(category.title) + '</h5>' +
+              '<span class="badge border">' + category.products.length + '</span>' +
+            '</div>' +
+            (category.description ? '<p class="card-text text-muted small mb-3">' + esc(String(category.description).replace(/<[^>]*>/g, '').slice(0, 110)) + '</p>' : '') +
+            '<div class="d-flex justify-content-between align-items-center mt-auto">' +
+              '<span class="small qc-from">From <strong>' + esc(money(category.price_starting_from)) + '</strong></span>' +
+              '<span class="small qc-view">View plans &rarr;</span>' +
+            '</div>' +
+          '</div>' +
+        '</button>' +
+      '</div>';
+    }).join('');
+    catsEl.querySelectorAll('.qc-cat-card').forEach(function (card) {
+      card.addEventListener('click', function () { openCategory(card.getAttribute('data-id'), card.getAttribute('data-title')); });
+    });
+    updateStats();
+  }
+
+  function renderPlans() {
+    var term = (document.getElementById('qcHostingFilter').value || '').trim().toLowerCase();
+    var category = categories.filter(function (c) { return String(c.id) === String(activeCategoryId); })[0];
+    if (!category) return;
+    var rows = category.products.slice().sort(function (a, b) {
+      return (Number(a.priority) || 0) - (Number(b.priority) || 0) || String(a.title).localeCompare(String(b.title));
+    });
+    var visible = 0;
+    document.getElementById('qcHostingList').innerHTML = rows.map(function (product) {
+      var text = (String(product.title) + ' ' + String(product.description || '')).toLowerCase();
+      var hide = term !== '' && text.indexOf(term) === -1;
+      if (!hide) visible++;
+      var desc = String(product.description || '').replace(/<[^>]*>/g, '');
+      return '<a class="qc-plan-row' + (hide ? ' d-none' : '') + '" href="/order?product=' + encodeURIComponent(product.id) + '">' +
+        '<span class="text-truncate">' +
+          '<span class="qc-plan-name d-block text-truncate">' + esc(product.title) + '</span>' +
+          (desc ? '<small class="text-muted d-block text-truncate">' + esc(desc) + '</small>' : '') +
+        '</span>' +
+        '<span class="text-nowrap text-end">' +
+          (product.price_starting_from ? '<span class="qc-plan-price">' + esc(money(product.price_starting_from)) + '</span><small class="text-muted d-block">starting from</small>' : '') +
+        '</span>' +
+      '</a>';
+    }).join('');
+    var listEl = document.getElementById('qcHostingList');
+    listEl.style.display = 'grid';
+    listEl.style.gap = '8px';
+    document.getElementById('qcHostingCount').textContent = visible + ' / ' + rows.length;
+    document.getElementById('qcHostingEmpty').hidden = !(visible === 0 && rows.length > 0 && term !== '');
+  }
+
+  function openCategory(id, titleText) {
+    activeCategoryId = id;
+    document.getElementById('qcHostingTitle').textContent = titleText;
+    document.getElementById('qcHostingFilter').value = '';
+    catsEl.hidden = true;
+    plansEl.hidden = false;
+    renderPlans();
+  }
+
+  document.getElementById('qcHostingBack').addEventListener('click', function () {
+    plansEl.hidden = true;
+    catsEl.hidden = false;
+  });
+  document.getElementById('qcHostingFilter').addEventListener('input', renderPlans);
+
+  apiGet('cart_get_currency', {}, function (result) {
+    try {
+      currency = { code: result && result.code ? result.code : 'LKR', rate: Number(result && result.conversion_rate) || 1, loaded: true };
+    } catch (error) { console.warn('Quizontal hosting page: currency parse failed', error); }
+  }, function () { console.warn('Quizontal hosting page: currency fetch failed, showing default-currency prices'); });
+
+  apiGet('product/category_get_list', { per_page: 100 }, function (response) {
+    try {
+      var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
+      // Only web-hosting categories belong here — exclude VPS ('interserver') and domain ('domain') categories.
+      categories = list.filter(function (category) {
+        return category && category.type === 'hosting' && Array.isArray(category.products) && category.products.length > 0;
+      });
+      clearLoading();
+      if (!categories.length) { fail('Web hosting plans could not be loaded right now. Please try again in a moment.'); return; }
+      renderCategories();
+    } catch (error) {
+      console.error('Quizontal hosting page:', error);
+      fail('Plans could not be displayed. Please refresh the page.');
+    }
+  }, function () {
+    fail('Web hosting plans could not be loaded right now. Please try again in a moment.');
+  });
+})();
+</script>
