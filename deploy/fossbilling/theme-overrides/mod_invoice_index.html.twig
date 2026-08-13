@@ -1,0 +1,253 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'Invoice management'|trans }}{% endblock %}
+
+{% block body_class %}invoice-index qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% set unpaid_invoices = client.invoice_get_list({"status":"unpaid", "per_page":10, "page":request.page}) %}
+{% set paid_invoices = client.invoice_get_list({"per_page":10, "page":request.page, "status":"paid"}) %}
+
+{# totals for the stat cards #}
+{% set qc_all_unpaid = client.invoice_get_list({"status":"unpaid", "per_page":100}).list %}
+{% set qc_unpaid_count = qc_all_unpaid|length %}
+{% set qc_due_total = 0 %}
+{% for inv in qc_all_unpaid %}{% set qc_due_total = qc_due_total + inv.total %}{% endfor %}
+{% set qc_all_paid = client.invoice_get_list({"status":"paid", "per_page":100}).list %}
+{% set qc_paid_count = qc_all_paid|length %}
+{% set qc_paid_total = 0 %}
+{% for inv in qc_all_paid %}{% set qc_paid_total = qc_paid_total + inv.total %}{% endfor %}
+{% set qc_currency = profile.currency %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Invoices'|trans }}</h1>
+                    <p>{{ 'All of your invoices in one place — paid and unpaid.'|trans }}</p>
+                </div>
+                <div>
+                    <a href="{{ 'client/balance'|link }}" class="premium-btn">{{ 'Add funds'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% if client %}
+    {# ================= stat cards ================= #}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-warning" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-document"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Unpaid invoices'|trans }}</p>
+                            <h4>{{ qc_unpaid_count }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Amount due'|trans }}</p>
+                            <h4>{{ qc_due_total|money(qc_currency) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-success" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-download"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Paid invoices'|trans }}</p>
+                            <h4>{{ qc_paid_count }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xxl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="progress-widget">
+                        <div class="circle-progress circle-progress-info" style="--val:100">
+                            <span class="circle-inner"><svg fill="currentColor"><use href="#i-activity"/></svg></span>
+                        </div>
+                        <div class="progress-detail">
+                            <p class="mb-2">{{ 'Total paid'|trans }}</p>
+                            <h4>{{ qc_paid_total|money(qc_currency) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="header-title">
+                <h4 class="card-title">{{ 'Your Invoices'|trans }}</h4>
+                <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Choose paid or unpaid invoices below.'|trans }}</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <ul class="nav qc-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link active" id="unpaid-tab" data-bs-toggle="tab" data-bs-target="#nav-unpaid" role="tab" aria-selected="true">{{ 'Unpaid'|trans }}{% if unpaid_invoices.total %}&nbsp;<span class="iq-badge" style="background:var(--iq-danger);color:#fff">{{ unpaid_invoices.total }}</span>{% endif %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="paid-tab" data-bs-toggle="tab" data-bs-target="#nav-paid" role="tab" aria-selected="false">{{ 'Paid'|trans }}&nbsp;<span class="iq-badge" style="background:#1e1e24;color:#9aa3b2">{{ paid_invoices.total }}</span></a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="nav-unpaid" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-layout-flat">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Invoice'|trans }}</th>
+                                    <th>{{ 'Invoice Date'|trans }}</th>
+                                    <th>{{ 'Due Date'|trans }}</th>
+                                    <th>{{ 'Total'|trans }}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for i, invoice in unpaid_invoices.list %}
+                                <tr>
+                                    <td>
+                                        <div class="service-cell">
+                                            <span class="service-ico bg-soft-warning"><svg fill="currentColor"><use href="#i-document"/></svg></span>
+                                            <div>
+                                                <div class="service-name">{{ 'Invoice'|trans }} #{{ invoice.serie ~ "%05s"|format(invoice.nr) }}</div>
+                                                <div class="service-sub">{{ invoice.currency }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-size-12">{{ invoice.created_at|format_date(pattern="MMM d, yyyy") }}</td>
+                                    <td class="text-size-12">{{ invoice.due_at|format_date(pattern="MMM d, yyyy") }}</td>
+                                    <td class="fw-medium" style="color:var(--iq-heading)">{{ invoice.total | money(invoice.currency) }}</td>
+                                    <td>
+                                        <a class="premium-btn premium-btn-sm" href="{{ 'invoice'|link }}/{{ invoice.hash }}">{{ 'Pay'|trans }}</a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="text-center py-4 text-muted">{{ 'The list is empty'|trans }}</div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ include('partial_pagination.html.twig', { 'list': unpaid_invoices }) }}
+                </div>
+
+                <div class="tab-pane fade" id="nav-paid" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-layout-flat">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Invoice'|trans }}</th>
+                                    <th>{{ 'Invoice Date'|trans }}</th>
+                                    <th>{{ 'Paid Date'|trans }}</th>
+                                    <th>{{ 'Total'|trans }}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for i, invoice in paid_invoices.list %}
+                                <tr>
+                                    <td>
+                                        <div class="service-cell">
+                                            <span class="service-ico bg-soft-success"><svg fill="currentColor"><use href="#i-download"/></svg></span>
+                                            <div>
+                                                <div class="service-name">{{ 'Invoice'|trans }} #{{ invoice.serie ~ "%05s"|format(invoice.nr) }}</div>
+                                                <div class="service-sub">{{ invoice.currency }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-size-12">{{ invoice.created_at|format_date(pattern="MMM d, yyyy") }}</td>
+                                    <td class="text-size-12">{{ invoice.paid_at|format_date(pattern="MMM d, yyyy") }}</td>
+                                    <td class="fw-medium" style="color:var(--iq-heading)">{{ invoice.total | money(invoice.currency) }}</td>
+                                    <td>
+                                        <a class="premium-btn premium-btn-sm" href="{{ 'invoice'|link }}/{{ invoice.hash }}">{{ 'View'|trans }}</a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="text-center py-4 text-muted">{{ 'The list is empty'|trans }}</div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ include('partial_pagination.html.twig', { 'list': paid_invoices }) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .qc-tabs { gap: 6px; padding: 5px; background: rgba(255,255,255,.03); border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: 14px; display: inline-flex; flex-wrap: wrap; }
+        .qc-tabs .nav-link { border: 1px solid transparent; border-radius: 10px; padding: 8px 18px; font-size: .85rem; font-weight: 600; color: #8b93a3; display: inline-flex; align-items: center; gap: 6px; }
+        .qc-tabs .nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
+        .qc-tabs .nav-link.active { background: linear-gradient(135deg, var(--iq-primary, #e31c64), var(--iq-primary-dark, #a51149)); color: #fff; box-shadow: 0 6px 16px rgba(227,28,100,.32); }
+    </style>
+{% else %}
+    <div class="qcd-empty"><p>{{ 'Please sign in to view your invoices.'|trans }}</p></div>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'paid') {
+        const paidTab = document.getElementById('paid-tab');
+        if (paidTab) {
+            const tab = new bootstrap.Tab(paidTab);
+            tab.show();
+        }
+    }
+
+    document.getElementById('unpaid-tab').addEventListener('shown.bs.tab', function() {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('tab');
+        newUrl.searchParams.delete('page');
+        window.location.href = newUrl.toString();
+    });
+
+    document.getElementById('paid-tab').addEventListener('shown.bs.tab', function() {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('tab', 'paid');
+        newUrl.searchParams.delete('page');
+        window.location.href = newUrl.toString();
+    });
+});
+</script>
+{% endblock %}

@@ -6,307 +6,281 @@
 
 {% block meta_title %}{{ 'Invoice'|trans }} #{{ nr }}{% endblock %}
 
-{% block body_class %}invoice-invoice{% endblock %}
+{% block body_class %}invoice-invoice qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{{ '/invoice'|link }}">{{ 'Invoices'|trans }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">#{{ nr }}</li>
-{% endblock %}
-
-{% block content %}
 {% set seller = invoice.seller %}
 {% set buyer = invoice.buyer %}
 {% set company = guest.system_company %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Invoice'|trans }} #{{ nr }}</h1>
+                    <p>{% if invoice.status == 'paid' %}{{ 'Paid'|trans }} · {{ invoice.paid_at|format_date }}{% else %}{{ 'Due'|trans }} {{ invoice.due_at|format_date }}{% endif %}</p>
+                    <span class="banner-date">
+                        <svg fill="currentColor"><use href="#i-document"/></svg>
+                        {{ invoice.total|money(invoice.currency) }}
+                    </span>
+                </div>
+                <div>
+                    <a href="{{ '/invoice'|link }}" class="premium-btn">{{ 'Back to invoices'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% if client %}
+    <style>
+        .qc-invoice-well {
+            background: var(--iq-surface, #0b0b0e);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+            border-radius: .75rem;
+            padding: 18px;
+            color: var(--iq-body, #9aa3b2);
+        }
+        .qc-invoice-well h4, .qc-invoice-well h5 { color: var(--iq-heading, #f5f6f8); }
+        .qc-invoice-well dt { color: #7d8494; }
+        .qc-invoice-well dd { color: var(--iq-body, #9aa3b2); }
+        .qc-gateway-card {
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.08));
+            border-radius: .75rem;
+            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+        .qc-gateway-card:hover { border-color: rgba(227,28,100,.45); transform: translateY(-2px); }
+        .qc-gateway-card .btn { border: 0; background: transparent; color: var(--iq-heading, #f5f6f8); }
+        .qc-gateway-card .btn:focus, .qc-gateway-card .btn:active { box-shadow: none; }
+        .qc-gateway-card .btn-check:checked + .btn {
+            border: 2px solid var(--iq-primary, #e31c64);
+            background: var(--iq-primary-light, rgba(227,28,100,.16));
+            box-shadow: 0 0 0 3px rgba(227,28,100,.18);
+        }
+        .qc-gateway-card .btn-check:checked + .btn::after {
+            content: '✓'; position: absolute; top: 10px; right: 12px;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: grid; place-items: center;
+            background: var(--iq-primary, #e31c64); color: #fff;
+            font-size: 12px; font-weight: 700;
+        }
+        .qc-bank-panel {
+            background: var(--iq-primary-light, rgba(227,28,100,.16));
+            border: 1px solid rgba(227,28,100,.35);
+            border-radius: .75rem;
+        }
+    </style>
+
     {% if request.receipt_submitted %}
     <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
         <svg class="svg-icon" style="width:22px;height:22px;flex:0 0 22px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg>
         <div><strong>Payment slip received.</strong> We are verifying your transfer now — once approved, this invoice is marked paid and your service activates automatically. No further action is needed.</div>
     </div>
     {% endif %}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            {% if invoice.status == 'unpaid' %}
-                <div class="card">
-                <div class="card-body">
-                    <h5 class="mb-1">Choose how to pay</h5>
-                    <p class="small text-muted mb-3">Select the payment method that matches what you want to do.</p>
-                    {% set is_deposit = false %}
-                    {% for line in invoice.lines %}{% if line.type == 'deposit' %}{% set is_deposit = true %}{% endif %}{% endfor %}
-                    <form method="post" action="{{ 'api/guest/invoice/payment'|link }}" class="api-form" data-api-redirect="{{ ('invoice/'~invoice.hash)|link({ 'auto_redirect': 1 }) }}">
-                        <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
-                        <input type="hidden" name="hash" value="{{ invoice.hash }}"/>
-                        <div class="row g-3">
-                            {% for gtw in guest.invoice_gateways %}
-                                {% if invoice.currency in gtw.accepted_currencies and (gtw.code == 'Custom' or (not is_deposit and gtw.code == 'ClientBalance')) %}
-                                    {% set is_wallet = gtw.code == 'ClientBalance' %}
-                                    {% set is_bank = gtw.code == 'Custom' %}
-                                    {% set gateway_icon = is_wallet ? ('wallet.svg'|mod_asset_url('quizontalbanktransfer')) : (is_bank ? ('bank-transfer.svg'|mod_asset_url('quizontalbanktransfer')) : gtw.logo.logo) %}
-                                    <div class="col-12 col-md-6 col-xl-5">
-                                        <div class="invoice-gateway h-100">
-                                            <input type="radio" class="btn-check" name="gateway_id" id="gateway-choice-{{ gtw.id }}" autocomplete="off">
-                                            <label class="btn btn-outline-secondary w-100 h-100 p-3 d-flex align-items-center gap-3 text-start" for="gateway-choice-{{ gtw.id }}"
-                                                onclick="paymentPrompt('{{ gtw.id }}', {{ gtw.allow_recurrent ? 'true' : 'false' }}, `{{ gtw.title }}`)">
-                                                <img src="{{ gateway_icon }}" alt="" width="52" height="52" style="object-fit:contain;flex:0 0 52px">
-                                                <span class="d-flex flex-column">
-                                                    <strong class="fs-5">{{ is_wallet ? 'Quizontal Cloud Wallet' : (is_bank ? 'Manual Bank Transfer' : gtw.title) }}</strong>
-                                                    <small class="text-muted mt-1">
-                                                        {% if is_wallet %}Pay this invoice instantly from your available wallet balance.
-                                                        {% elseif is_bank %}Transfer funds to our bank and upload your payment receipt.
-                                                        {% else %}Continue securely with {{ gtw.title }}.{% endif %}
-                                                    </small>
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <input type="hidden" name="gateway_id" id="gateway_id">
-                    </form>
-                    {% if not is_deposit %}
-                    {# Guided bank-transfer path: the module page shows our bank
-                       details and collects the transfer slip against THIS exact
-                       invoice, so admin approval marks this invoice paid and the
-                       linked service activates — never a detached wallet top-up. #}
-                    <div class="d-flex flex-wrap align-items-center gap-3 mt-4 p-3 rounded-3" style="background:#fff1f6;border:1px solid #f3c2d6">
-                        <img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="44" height="44" alt="" style="flex:0 0 44px">
-                        <div class="flex-grow-1" style="min-width:220px">
-                            <strong class="d-block">Paying by bank transfer?</strong>
-                            <span class="small text-muted">View our bank details, transfer {{ invoice.total|money(invoice.currency) }} and upload the slip — this invoice is then marked paid and your service activates automatically. Use <strong>{{ nr }}</strong> as the transfer reference where possible.</span>
-                        </div>
-                        <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">Bank details &amp; slip upload</a>
-                    </div>
-                    {% endif %}
+
+    {% if invoice.status == 'unpaid' %}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="header-title">
+                <h4 class="card-title">{{ 'Choose how to pay'|trans }}</h4>
+                <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'Select the payment method that matches what you want to do.'|trans }}</p>
+            </div>
+        </div>
+        <div class="card-body">
+            {% set is_deposit = false %}
+            {% for line in invoice.lines %}{% if line.type == 'deposit' %}{% set is_deposit = true %}{% endif %}{% endfor %}
+            <form method="post" action="{{ 'api/guest/invoice/payment'|link }}" class="api-form" data-api-redirect="{{ ('invoice/'~invoice.hash)|link({ 'auto_redirect': 1 }) }}">
+                <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
+                <input type="hidden" name="hash" value="{{ invoice.hash }}"/>
+                <div class="row g-3">
+                    {% for gtw in guest.invoice_gateways %}
+                        {% if invoice.currency in gtw.accepted_currencies and (gtw.code == 'Custom' or (not is_deposit and gtw.code == 'ClientBalance')) %}
+                            {% set is_wallet = gtw.code == 'ClientBalance' %}
+                            {% set is_bank = gtw.code == 'Custom' %}
+                            {% set gateway_icon = is_wallet ? ('wallet.svg'|mod_asset_url('quizontalbanktransfer')) : (is_bank ? ('bank-transfer.svg'|mod_asset_url('quizontalbanktransfer')) : gtw.logo.logo) %}
+                            <div class="col-12 col-md-6 col-xl-5">
+                                <div class="qc-gateway-card h-100 position-relative">
+                                    <input type="radio" class="btn-check" name="gateway_id" id="gateway-choice-{{ gtw.id }}" autocomplete="off">
+                                    <label class="btn w-100 h-100 p-3 d-flex align-items-center gap-3 text-start position-relative" for="gateway-choice-{{ gtw.id }}"
+                                        onclick="paymentPrompt('{{ gtw.id }}', {{ gtw.allow_recurrent ? 'true' : 'false' }}, `{{ gtw.title }}`)">
+                                        <img src="{{ gateway_icon }}" alt="" width="52" height="52" style="object-fit:contain;flex:0 0 52px">
+                                        <span class="d-flex flex-column">
+                                            <strong class="fs-5" style="color:var(--iq-heading)">{{ is_wallet ? 'Quizontal Cloud Wallet' : (is_bank ? 'Manual Bank Transfer' : gtw.title) }}</strong>
+                                            <small class="text-muted mt-1">
+                                                {% if is_wallet %}Pay this invoice instantly from your available wallet balance.
+                                                {% elseif is_bank %}Transfer funds to our bank and upload your payment receipt.
+                                                {% else %}Continue securely with {{ gtw.title }}.{% endif %}
+                                            </small>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
+                <input type="hidden" name="gateway_id" id="gateway_id">
+            </form>
+            {% if not is_deposit %}
+            <div class="d-flex flex-wrap align-items-center gap-3 mt-4 p-3 rounded-3 qc-bank-panel">
+                <img src="{{ 'bank-transfer.svg'|mod_asset_url('quizontalbanktransfer') }}" width="44" height="44" alt="" style="flex:0 0 44px">
+                <div class="flex-grow-1" style="min-width:220px">
+                    <strong class="d-block" style="color:var(--iq-heading)">{{ 'Paying by bank transfer?'|trans }}</strong>
+                    <span class="small text-muted">View our bank details, transfer {{ invoice.total|money(invoice.currency) }} and upload the slip — this invoice is then marked paid and your service activates automatically. Use <strong>{{ nr }}</strong> as the transfer reference where possible.</span>
+                </div>
+                <a class="btn btn-primary" href="{{ ('quizontalbanktransfer/invoice/' ~ invoice.hash)|link }}">{{ 'Bank details &amp; slip upload'|trans }}</a>
             </div>
             {% endif %}
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header py-3 py-3">
-                    <div class="d-flex justify-content-between">
-                        <div class="d-flex flex-column">
-                            <h5 class="mb-1 d-flex align-items-center">{{ 'Invoice'|trans }}</h5>
-                            <span class="small text-muted">{{ 'You can print this invoice or export it to a PDF file by clicking on the corresponding button.'|trans }}</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="d-flex gap-2 align-items-center justify-content-end">
-                                <a href="{{ 'invoice/pdf'|link }}/{{ invoice.hash }}" target="_blank" class="btn btn-sm btn-danger">{{ 'PDF'|trans }}</a>
-                                <a href="{{ 'invoice/print'|link }}/{{ invoice.hash }}" target="_blank" class="btn btn-sm btn-dark">{{ 'Print'|trans }}</a>
-                            </div>
-                        </div>
+    {% endif %}
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="header-title">
+                <h4 class="card-title">{{ 'Invoice'|trans }} #{{ nr }}</h4>
+                <p class="mb-0 text-size-12" style="color:#98a1b3">{{ 'You can print this invoice or export it to a PDF file.'|trans }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ 'invoice/pdf'|link }}/{{ invoice.hash }}" target="_blank" class="btn btn-sm btn-primary">{{ 'PDF'|trans }}</a>
+                <a href="{{ 'invoice/print'|link }}/{{ invoice.hash }}" target="_blank" class="btn btn-sm btn-outline-secondary">{{ 'Print'|trans }}</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="qc-invoice-well h-100">
+                        <h4 class="mb-3">{{ 'Invoice'|trans }} #{{ nr }}</h4>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">{{ 'Invoice Date'|trans }}</dt>
+                            <dd class="col-sm-8">{% if invoice.paid_at|trim %}{{ invoice.paid_at|format_date }}{% else %}{{ invoice.created_at|format_date }}{% endif %}</dd>
+                            <dt class="col-sm-4">{{ 'Due Date'|trans }}</dt>
+                            <dd class="col-sm-8">{% if invoice.due_at|trim %}{{ invoice.due_at|format_date }}{% else %}-----{% endif %}</dd>
+                            <dt class="col-sm-4">{{ 'Status'|trans }}</dt>
+                            <dd class="col-sm-8">
+                                {% if invoice.status == 'paid' %}
+                                    <span class="iq-badge bg-soft-success"><span class="iq-badge-dot"></span>{{ mf.status_name(invoice.status) }}</span>
+                                {% elseif invoice.status == 'unpaid' %}
+                                    <span class="iq-badge bg-soft-warning"><span class="iq-badge-dot"></span>{{ mf.status_name(invoice.status) }}</span>
+                                {% else %}
+                                    <span class="iq-badge" style="background:#1e1e24;color:#9aa3b2"><span class="iq-badge-dot"></span>{{ mf.status_name(invoice.status) }}</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
                     </div>
                 </div>
-
-                <div class="card-body">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <div class="well small">
-                                    <h4 class="fw-light mt-2 mb-3">{{ 'Invoice'|trans }} #{{ nr }}</h4>
-                                    <dl class="row">
-                                        <dt class="col-sm-4 text-muted">{{ 'Invoice Date'|trans }}</dt>
-                                        <dd class="col-sm-8">
-                                            {% if invoice.paid_at|trim %}
-                                                {{ invoice.paid_at|format_date }}
-                                            {% else %}
-                                                {{ invoice.created_at|format_date }}
-                                            {% endif %}
-                                        </dd>
-                                        <dt class="col-sm-4 text-muted">{{ 'Due Date'|trans }}</dt>
-                                        <dd class="col-sm-8">
-                                            {% if invoice.due_at|trim %}
-                                                {{ invoice.due_at|format_date }}
-                                            {% else %}
-                                                -----
-                                            {% endif %}
-                                        </dd>
-                                        <dt class="col-sm-4 text-muted">{{ 'Status'|trans }}</dt>
-                                        <dd class="col-sm-8">
-                                        <span class="badge fs-7 {% if invoice.status == 'paid' %} bg-success{% elseif invoice.status == 'unpaid' %}bg-warning{% endif %}">
-                                            {{ mf.status_name(invoice.status) }}
-                                        </span>
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-4">
-                                <div class="well small">
-                                    <h5>{{ 'Company'|trans }}</h5>
-                                        <dl class="row">
-                                            {% if seller.company|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Name'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.company }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.company_vat|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'VAT'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.company_vat }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.address|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Address'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.address }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.phone|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Phone'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.phone }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.email|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Email'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.email }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.account_number|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Account'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.account_number }}</dd>
-                                            {% endif %}
-
-                                            {% if seller.note|trim %}
-                                                <dt class="col-sm-3 text-muted">{{ 'Note'|trans }}</dt>
-                                                <dd class="col-sm-9">{{ seller.note }}</dd>
-                                            {% endif %}
-                                        </dl>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="well small">
-                                        <h5>{{ 'Client'|trans }}</h5>
-                                        <dl class="row">
-                                            {% if buyer.first_name|trim or buyer.last_name|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Name'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.first_name }} {{ buyer.last_name }}</dd>
-                                            {% endif %}
-
-                                            {% if buyer.company|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Company'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.company }}</dd>
-                                            {% endif %}
-
-                                            {% if buyer.company_number|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Company number'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.company_number }}</dd>
-                                            {% endif %}
-
-                                            {% if buyer.company_vat|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Company VAT'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.company_vat }}</dd>
-                                            {% endif %}
-
-                                            {% if buyer.address|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Address'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.address }}</dd>
-                                                <dd class="col-sm-4">{{ buyer.city }}, {{ buyer.state }}</dd>
-                                                <dd class="col-sm-8">{{ buyer.zip }}, {{ guest.system_countries[buyer.country] }}</dd>
-                                            {% endif %}
-
-                                            {% if buyer.phone|trim %}
-                                                <dt class="col-sm-4 text-muted">{{ 'Phone'|trans }}</dt>
-                                                <dd class="col-sm-8">{{ buyer.phone }}</dd>
-                                            {% endif %}
-                                        </dl>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% if invoice.text_1 %}
-                            <div class="well mt-3">
-                                {{ invoice.text_1|markdown }}
-                            </div>
-                        {% endif %}
-
-                        <table class="table table-hover mt-3 mb-0">
-                            <thead>
-                            <tr>
-                                <th>{{ '#'|trans }}</th>
-                                <th>{{ 'Title'|trans }}</th>
-                                <th>{{ 'Price'|trans }}</th>
-                                <th class="text-end">{{ 'Total'|trans }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for i, item in invoice.lines %}
-                                <tr>
-                                    <td>{{ i+1 }}</td>
-                                    <td>
-                                        {% if item.order_id %}
-                                            <a href="{{ '/order/service'|link }}/manage/{{ item.order_id }}">{{ item.title }}</a>
-                                        {% else %}
-                                            {{ item.title }}
-                                        {% endif %}
-                                        {% if item.quantity > 1 %}
-                                            x {{ item.quantity }} {{ item.unit }}
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.price|money(invoice.currency) }}</td>
-                                    <td class="text-end">{{ item.total|money(invoice.currency) }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-
-                        <div class="row">
-                            <div class="col-md-4 offset-md-8">
-                                <table class="table table-striped">
-                                    {% if invoice.tax > 0 %}
-                                        <tr class="text-end">
-                                            <td>{{ invoice.taxname }} {{ invoice.taxrate }}%</td>
-                                            <td>{{ invoice.tax | money(invoice.currency) }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if invoice.discount > 0 %}
-                                        <tr class="text-end">
-                                            <td>{{ 'Discount'|trans }}</td>
-                                            <td>{{ invoice.discount | money(invoice.currency) }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    <tr class="text-end">
-                                        <td><strong>{{ 'Total'|trans }}</strong></td>
-                                        <td><strong>{{ invoice.total | money(invoice.currency) }}</strong></td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-
-                        {% if invoice.text_2 %}
-                            <div class="well mt-3">
-                                {{ invoice.text_2|markdown }}
-                            </div>
-                        {% endif %}
+                <div class="col-md-6">
+                    <div class="qc-invoice-well h-100">
+                        <h5 class="mb-3">{{ 'Company'|trans }}</h5>
+                        <dl class="row mb-0">
+                            {% if seller.company|trim %}<dt class="col-sm-3">{{ 'Name'|trans }}</dt><dd class="col-sm-9">{{ seller.company }}</dd>{% endif %}
+                            {% if seller.company_vat|trim %}<dt class="col-sm-3">{{ 'VAT'|trans }}</dt><dd class="col-sm-9">{{ seller.company_vat }}</dd>{% endif %}
+                            {% if seller.address|trim %}<dt class="col-sm-3">{{ 'Address'|trans }}</dt><dd class="col-sm-9">{{ seller.address }}</dd>{% endif %}
+                            {% if seller.phone|trim %}<dt class="col-sm-3">{{ 'Phone'|trans }}</dt><dd class="col-sm-9">{{ seller.phone }}</dd>{% endif %}
+                            {% if seller.email|trim %}<dt class="col-sm-3">{{ 'Email'|trans }}</dt><dd class="col-sm-9">{{ seller.email }}</dd>{% endif %}
+                            {% if seller.account_number|trim %}<dt class="col-sm-3">{{ 'Account'|trans }}</dt><dd class="col-sm-9">{{ seller.account_number }}</dd>{% endif %}
+                            {% if seller.note|trim %}<dt class="col-sm-3">{{ 'Note'|trans }}</dt><dd class="col-sm-9">{{ seller.note }}</dd>{% endif %}
+                        </dl>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="qc-invoice-well h-100">
+                        <h5 class="mb-3">{{ 'Client'|trans }}</h5>
+                        <dl class="row mb-0">
+                            {% if buyer.first_name|trim or buyer.last_name|trim %}<dt class="col-sm-4">{{ 'Name'|trans }}</dt><dd class="col-sm-8">{{ buyer.first_name }} {{ buyer.last_name }}</dd>{% endif %}
+                            {% if buyer.company|trim %}<dt class="col-sm-4">{{ 'Company'|trans }}</dt><dd class="col-sm-8">{{ buyer.company }}</dd>{% endif %}
+                            {% if buyer.company_number|trim %}<dt class="col-sm-4">{{ 'Company number'|trans }}</dt><dd class="col-sm-8">{{ buyer.company_number }}</dd>{% endif %}
+                            {% if buyer.company_vat|trim %}<dt class="col-sm-4">{{ 'Company VAT'|trans }}</dt><dd class="col-sm-8">{{ buyer.company_vat }}</dd>{% endif %}
+                            {% if buyer.address|trim %}<dt class="col-sm-4">{{ 'Address'|trans }}</dt><dd class="col-sm-8">{{ buyer.address }}</dd>{% endif %}
+                            {% if buyer.phone|trim %}<dt class="col-sm-4">{{ 'Phone'|trans }}</dt><dd class="col-sm-8">{{ buyer.phone }}</dd>{% endif %}
+                        </dl>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="modal modal-lg fade" id="paymentPrompt" tabindex="-1" aria-labelledby="paymentPromptLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="paymentPromptLabel"></h4>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Close'|trans }}"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="bodyText"></p>
-                        <a href="#" class="btn btn-primary" id="single">{{ "Pay now with a one-time payment"|trans }}</a>
-                        <a href="#" class="btn btn-primary" id="subscription" hidden="true">{{ "Pay now and create a subscription"|trans }}</a>
-                        <a href="#" class="btn btn-primary" id="pay-nondescript" hidden="true">{{ "Pay now"|trans }}</a>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
+            {% if invoice.text_1 %}
+                <div class="qc-invoice-well mb-3">{{ invoice.text_1|markdown }}</div>
+            {% endif %}
+
+            <div class="table-responsive">
+                <table class="table table-layout-flat">
+                    <thead>
+                        <tr>
+                            <th>{{ '#'|trans }}</th>
+                            <th>{{ 'Title'|trans }}</th>
+                            <th>{{ 'Price'|trans }}</th>
+                            <th class="text-end">{{ 'Total'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for i, item in invoice.lines %}
+                        <tr>
+                            <td class="text-size-12">{{ i+1 }}</td>
+                            <td>
+                                <div class="service-name">
+                                    {% if item.order_id %}
+                                        <a href="{{ '/order/service'|link }}/manage/{{ item.order_id }}" class="text-decoration-none" style="color:var(--iq-heading)">{{ item.title }}</a>
+                                    {% else %}
+                                        {{ item.title }}
+                                    {% endif %}
+                                    {% if item.quantity > 1 %}<span class="service-sub">x {{ item.quantity }} {{ item.unit }}</span>{% endif %}
+                                </div>
+                            </td>
+                            <td class="text-size-12">{{ item.price|money(invoice.currency) }}</td>
+                            <td class="text-end fw-medium" style="color:var(--iq-heading)">{{ item.total|money(invoice.currency) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 offset-md-8">
+                    <div class="qc-invoice-well">
+                        <dl class="row mb-0">
+                            {% if invoice.tax > 0 %}
+                                <div class="d-flex justify-content-between mb-2"><span>{{ invoice.taxname }} {{ invoice.taxrate }}%</span><strong style="color:var(--iq-heading)">{{ invoice.tax | money(invoice.currency) }}</strong></div>
+                            {% endif %}
+                            {% if invoice.discount > 0 %}
+                                <div class="d-flex justify-content-between mb-2 text-success"><span>{{ 'Discount'|trans }}</span><strong>- {{ invoice.discount | money(invoice.currency) }}</strong></div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between pt-2" style="border-top:1px solid var(--iq-line, rgba(255,255,255,.08))"><span><strong>{{ 'Total'|trans }}</strong></span><strong style="color:var(--iq-heading)">{{ invoice.total | money(invoice.currency) }}</strong></div>
+                        </dl>
                     </div>
                 </div>
             </div>
+
+            {% if invoice.text_2 %}
+                <div class="qc-invoice-well mt-3">{{ invoice.text_2|markdown }}</div>
+            {% endif %}
         </div>
+    </div>
+
+    <div class="modal modal-lg fade" id="paymentPrompt" tabindex="-1" aria-labelledby="paymentPromptLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="paymentPromptLabel"></h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Close'|trans }}"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="bodyText"></p>
+                    <a href="#" class="btn btn-primary" id="single">{{ "Pay now with a one-time payment"|trans }}</a>
+                    <a href="#" class="btn btn-primary" id="subscription" hidden="true">{{ "Pay now and create a subscription"|trans }}</a>
+                    <a href="#" class="btn btn-primary" id="pay-nondescript" hidden="true">{{ "Pay now"|trans }}</a>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 {% endblock %}
+
 {% block js %}
 <script>
     $(function() {
