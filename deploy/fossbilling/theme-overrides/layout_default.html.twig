@@ -71,6 +71,7 @@
 {% if client %}
     {# ==================== QUIZONTAL APP SHELL (authenticated client area) ==================== #}
     {% import "qc_storefront.html.twig" as qc_store %}
+    {% set qc_logo_url = 'https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png' %}
     {% set qc_cart_count = guest.cart_get.items|default([])|length %}
     {% set qc_news_on = guest.extension_is_on({ "mod": "news" }) %}
     {% if qc_news_on %}
@@ -107,7 +108,7 @@
     {# ---- page loader ---- #}
     <div id="loading">
         <div class="loader-box">
-            <div class="loader-logo">Q</div>
+            <img class="loader-logo" src="{{ qc_logo_url }}" alt="{{ company.name }}">
             <div class="loader-text">{{ company.name }}</div>
         </div>
     </div>
@@ -118,7 +119,7 @@
     <aside class="iq-sidebar" id="iq-sidebar">
         <div class="iq-sidebar-logo">
             <a href="{{ '/'|link }}" class="header-logo">
-                <span class="logo-icon">Q</span>
+                <img class="logo-img" src="{{ qc_logo_url }}" alt="Quizontal Cloud">
                 <span class="logo-title">Quizontal<small>{{ 'Client Area'|trans }}</small></span>
             </a>
             <div class="iq-menu-bt-sidebar">
@@ -387,7 +388,10 @@
             {# client footer #}
         </div>
         <footer class="footer">
-            <span>&copy; {{ 'now'|date('Y') }} {{ settings.footer_signature|default(company.signature|default(company.name)) }} {{ 'All rights reserved.'|trans }}</span>
+            <span class="d-inline-flex align-items-center gap-2">
+                <img class="footer-logo" src="{{ qc_logo_url }}" alt="Quizontal Cloud">
+                <span>&copy; {{ 'now'|date('Y') }} {{ settings.footer_signature|default(company.signature|default(company.name)) }} {{ 'All rights reserved.'|trans }}</span>
+            </span>
             <span>
                 <a href="{{ '/tos'|link }}">{{ 'Terms of Service'|trans }}</a> ·
                 <a href="{{ '/privacy-policy'|link }}">{{ 'Privacy Policy'|trans }}</a> ·
@@ -752,6 +756,15 @@
             display: inline-flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 1.25rem; color: #fff;
             box-shadow: 0 6px 14px rgba(227, 28, 100, 0.35);
+        }
+        .logo-img {
+            height: 40px; width: auto; flex: 0 0 auto;
+            object-fit: contain;
+            display: block;
+        }
+        .footer-logo {
+            height: 22px; width: auto; object-fit: contain;
+            display: block; opacity: .9;
         }
         .iq-sidebar-logo .header-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
         .logo-title { font-size: 1.2rem; font-weight: 700; color: var(--iq-heading); line-height: 1; }
@@ -1280,15 +1293,14 @@
         #loading.hide { opacity: 0; visibility: hidden; }
         .loader-box { text-align: center; }
         .loader-logo {
-            width: 64px; height: 64px; margin: 0 auto 1rem; border-radius: 1.1rem;
-            background: linear-gradient(135deg, var(--iq-primary), var(--iq-primary-dark));
-            color: #fff; font-size: 1.9rem; font-weight: 800;
-            display: flex; align-items: center; justify-content: center;
+            width: auto; height: 64px; margin: 0 auto 1rem;
+            object-fit: contain;
+            display: block;
             animation: loaderPulse 1.4s ease-in-out infinite;
         }
         @keyframes loaderPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(227, 28, 100, 0.35); }
-            50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(227, 28, 100, 0); }
+            0%, 100% { transform: scale(1); opacity: .85; }
+            50% { transform: scale(1.06); opacity: 1; }
         }
         .loader-text { font-weight: 600; color: var(--iq-primary); letter-spacing: 0.28em; text-transform: uppercase; font-size: 0.72rem; }
 
