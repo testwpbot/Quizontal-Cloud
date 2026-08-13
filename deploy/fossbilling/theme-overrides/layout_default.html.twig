@@ -151,16 +151,17 @@
             <div class="page-label">{{ 'Control Panel'|trans }}</div>
             <strong>{{ block('meta_title') }}</strong>
         </div>
-        <div class="search-box">
+        <form class="search-box" id="qc-domain-search" autocomplete="off" role="search">
             <div class="input-group">
                 <span class="input-group-text"><svg fill="currentColor"><use href="#i-search"/></svg></span>
-                <input type="text" class="form-control" placeholder="{{ 'Search your services...'|trans }}">
+                <input type="text" class="form-control" id="qc-domain-search-input" placeholder="" aria-label="{{ 'Search a domain'|trans }}" data-storefront="{{ qc_store.url()|trim('/') }}">
             </div>
-        </div>
+        </form>
         <div class="iq-navbar-right">
             <div class="dropdown">
-                <button class="iq-menu-bt position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Cart'|trans }}" title="{{ 'Cart'|trans }}">
+                <button class="iq-menu-bt iq-icon-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Cart'|trans }}" title="{{ 'Cart'|trans }}">
                     <svg fill="currentColor"><use href="#i-buy"/></svg>
+                    <span class="qc-icon-label">{{ 'Cart'|trans }}</span>
                     <span class="iq-badge qc-cart-count" title="{{ qc_cart_count }} {% if qc_cart_count == 1 %}{{ 'item in cart'|trans }}{% else %}{{ 'items in cart'|trans }}{% endif %}">{{ qc_cart_count }}</span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:270px">
@@ -176,8 +177,9 @@
             </div>
             {% if qc_news_on %}
                 <div class="dropdown">
-                    <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Announcements'|trans }}" title="{{ 'Announcements'|trans }}">
+                    <button class="iq-menu-bt iq-icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Announcements'|trans }}" title="{{ 'Announcements'|trans }}">
                         <svg fill="currentColor"><use href="#i-bell"/></svg>
+                        <span class="qc-icon-label">{{ 'News'|trans }}</span>
                         {% if qc_bell_count > 0 %}<span class="iq-badge">{{ qc_bell_count > 9 ? '9+' : qc_bell_count }}</span>{% endif %}
                     </button>
                     <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:320px">
@@ -199,8 +201,9 @@
             {% endif %}
             {% if settings.sidebar_balance_enabled or settings.side_menu_payments %}
                 <div class="dropdown">
-                    <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Wallet'|trans }}" title="{{ 'Wallet'|trans }}">
+                    <button class="iq-menu-bt iq-icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ 'Wallet'|trans }}" title="{{ 'Wallet'|trans }}">
                         <svg fill="currentColor"><use href="#i-wallet"/></svg>
+                        <span class="qc-icon-label">{{ 'Wallet'|trans }}</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:280px">
                         <div class="dropdown-header">{{ 'Account Balance'|trans }}</div>
@@ -882,7 +885,7 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .search-box .input-group:focus-within { border-color: #f1719f; box-shadow: 0 0 0 0.22rem rgba(227, 28, 100, 0.15); }
-        .search-box .input-group-text { background: transparent; border: 0; color: #7e8594; padding-left: 0.9rem; }
+        .search-box .input-group-text { background: transparent; border: 0; color: #7e8594; padding-left: 0.9rem; cursor: pointer; }
         .search-box .input-group-text svg { width: 16px; height: 16px; }
         .search-box .form-control {
             background: transparent; border: 0; box-shadow: none;
@@ -890,7 +893,8 @@
             color: #e6e8ec;
         }
         .search-box .form-control:focus { box-shadow: none; }
-        .search-box .form-control::placeholder { color: #5f6673; }
+        .search-box .form-control::placeholder { color: #5f6673; transition: opacity .3s ease; }
+        .search-box .form-control.qc-ph-fade::placeholder { opacity: 0; }
         .iq-navbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
         .iq-menu-bt {
             position: relative;
@@ -901,6 +905,11 @@
         }
         .iq-menu-bt:hover { background: var(--iq-primary-light); color: #f06b9d; }
         .iq-menu-bt svg { width: 20px; height: 20px; }
+        /* icon + text label in the top bar */
+        .iq-menu-bt.iq-icon-btn { width: auto; padding: 0 .7rem; gap: .5rem; }
+        .iq-menu-bt.iq-icon-btn .qc-icon-label { font-size: .8rem; font-weight: 600; color: #c6cbd4; }
+        .iq-menu-bt.iq-icon-btn:hover .qc-icon-label { color: #f06b9d; }
+        .iq-menu-bt.iq-icon-btn .iq-badge { position: static; margin-left: .1rem; }
         .iq-menu-bt .iq-badge {
             position: absolute; top: 3px; right: 2px;
             min-width: 16px; height: 16px; padding: 0 4px;
@@ -1543,6 +1552,61 @@
         // Move every modal to <body> so it escapes that stacking context.
         document.querySelectorAll('.modal').forEach(function (modal) {
             document.body.appendChild(modal);
+        });
+    });
+    </script>
+
+    {# Quizontal: header domain search — rotating placeholder + redirect to the
+       storefront domain search (or the in-billing order form as fallback). #}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('qc-domain-search');
+        var input = document.getElementById('qc-domain-search-input');
+        if (!form || !input) return;
+
+        // ---- rotating placeholder ----
+        var phrases = [
+            "Search a domain — myshop.com…",
+            "Find your name before it's taken…",
+            "Try yourbusiness.lk…",
+            "Register .com, .lk, .io and more…",
+            "Check availability in one click…"
+        ];
+        var i = 0;
+        function setPlaceholder(text) {
+            input.classList.add('qc-ph-fade');
+            setTimeout(function () {
+                input.setAttribute('placeholder', text);
+                input.classList.remove('qc-ph-fade');
+            }, 300);
+        }
+        input.setAttribute('placeholder', phrases[0]);
+        setInterval(function () {
+            i = (i + 1) % phrases.length;
+            setPlaceholder(phrases[i]);
+        }, 3200);
+
+        // ---- submit -> search domains ----
+        var orderUrl = {{ 'order'|link|json_encode|raw }};
+        function go(raw) {
+            var name = (raw || '').trim().toLowerCase()
+                .replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].replace(/\.+$/, '');
+            if (!name) { input.focus(); return; }
+            var storefront = (input.getAttribute('data-storefront') || '').replace(/\/+$/, '');
+            if (storefront) {
+                window.location.href = storefront + '/domains?q=' + encodeURIComponent(name);
+            } else {
+                // No storefront configured: route through the in-billing order flow,
+                // which forwards the domain intent into the domain product.
+                window.location.href = orderUrl + (orderUrl.indexOf('?') !== -1 ? '&' : '?') + 'register_sld=' + encodeURIComponent(name);
+            }
+        }
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            go(input.value);
+        });
+        document.querySelector('.search-box .input-group-text').addEventListener('click', function () {
+            go(input.value);
         });
     });
     </script>
