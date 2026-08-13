@@ -1,0 +1,51 @@
+{% extends "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'Privacy Policy'|trans }}{% endblock %}
+
+{% set company = guest.system_company %}
+
+{% block body_class %}privacy-policy qc-has-banner{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Privacy Policy'|trans }}</h1>
+                    <p>{{ company.signature }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <style>
+        .qc-legal {
+            background: var(--iq-surface, #0b0b0e);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+            border-radius: .85rem;
+            padding: 30px 32px;
+            color: var(--iq-body, #9aa3b2);
+            line-height: 1.7;
+            font-size: .92rem;
+        }
+        .qc-legal h1, .qc-legal h2, .qc-legal h3, .qc-legal h4 { color: var(--iq-heading, #f5f6f8); margin: 1.4em 0 .5em; }
+        .qc-legal h1:first-child, .qc-legal h2:first-child, .qc-legal h3:first-child { margin-top: 0; }
+        .qc-legal p { margin: 0 0 1em; }
+        .qc-legal ul, .qc-legal ol { margin: 0 0 1em; padding-left: 1.5em; }
+        .qc-legal li { margin-bottom: .4em; }
+        .qc-legal a { color: #f06b9d; }
+        .qc-legal strong { color: var(--iq-heading, #f5f6f8); }
+        .qc-legal hr { border-color: var(--iq-line, rgba(255,255,255,.08)); margin: 1.5em 0; }
+        @media (max-width: 575.98px) {
+            .qc-legal { padding: 22px 18px; }
+        }
+    </style>
+
+    <div class="qc-legal">
+        {{ company.privacy_policy|markdown }}
+    </div>
+{% endblock %}
