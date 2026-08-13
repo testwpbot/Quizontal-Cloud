@@ -1,5 +1,7 @@
 @extends('layouts.site')
 
+@section('body_class', 'theme-dark')
+
 @section('title', 'Quizontal Cloud — Domains, Web Hosting & Cloud VPS priced in LKR')
 @section('meta_description', 'Register domains, launch fast NVMe web hosting and deploy cloud VPS — all priced in Sri Lankan Rupees with one wallet and one dashboard.')
 
@@ -10,7 +12,7 @@
     <h1>Everything your project<br><em>needs on the internet.</em></h1>
     <p>Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
     <div class="hero-actions">
-      <a href="{{ route('pricing') }}" class="button button-primary button-large">Explore pricing <span>→</span></a>
+      <a href="{{ route('pricing') }}" class="premium-btn">Explore pricing</a>
       <a id="heroClientArea" data-client-link href="{{ route('client-area') }}" class="button button-ghost button-large">Open client area</a>
     </div>
     <div class="chip-stat-row" style="justify-content:flex-start;margin-top:34px">
@@ -32,7 +34,26 @@
   </div>
 </section>
 
-<section class="trust-strip"><div class="container trust-grid"><div><strong>3-in-1</strong><span>Domains + hosting + VPS</span></div><div><strong>LKR</strong><span>Local rupee pricing</span></div><div><strong>99.9%</strong><span>Network uptime target</span></div><div><strong>24/7</strong><span>Account access</span></div></div></section>
+<section class="section container" id="stats" style="padding-top:0">
+  <div class="stat-grid">
+    <article class="stat-card reveal">
+      <div class="stat-ring" style="--val:100"><span class="stat-ring-inner">⚡</span></div>
+      <div class="stat-meta"><span class="stat-label">Products</span><strong class="stat-value">3-in-1</strong><span class="stat-sub">Domains · Hosting · VPS</span></div>
+    </article>
+    <article class="stat-card reveal" data-reveal-delay="70">
+      <div class="stat-ring cyan" style="--val:100"><span class="stat-ring-inner">₨</span></div>
+      <div class="stat-meta"><span class="stat-label">Pricing</span><strong class="stat-value">LKR</strong><span class="stat-sub">Local rupee pricing</span></div>
+    </article>
+    <article class="stat-card reveal" data-reveal-delay="140">
+      <div class="stat-ring green" style="--val:90"><span class="stat-ring-inner">▦</span></div>
+      <div class="stat-meta"><span class="stat-label">Uptime</span><strong class="stat-value">99.9%</strong><span class="stat-sub">Network uptime target</span></div>
+    </article>
+    <article class="stat-card reveal" data-reveal-delay="210">
+      <div class="stat-ring amber" style="--val:100"><span class="stat-ring-inner">✓</span></div>
+      <div class="stat-meta"><span class="stat-label">Support</span><strong class="stat-value">24/7</strong><span class="stat-sub">Account access</span></div>
+    </article>
+  </div>
+</section>
 
 <section class="section container" id="products">
   <div class="section-intro reveal"><div><span class="section-kicker">One store, three products</span><h2>Start small. Scale when you're ready.</h2></div><p>Grab a domain and a web hosting plan today — then graduate to your own cloud server when traffic grows, without ever leaving the platform.</p></div>
@@ -115,7 +136,7 @@
   <details class="reveal" data-reveal-delay="240"><summary>Can I manage everything from one account?<span>+</span></summary><p>Yes — domains, DNS, hosting, servers, invoices, wallet history, email records and support tickets all live in the same client area.</p></details>
 </div></div></div></section>
 
-<section class="container reveal"><div class="final-cta band-dark"><div><span class="section-kicker">Ready when you are</span><h2>Launch your next project on Quizontal Cloud.</h2><p>Transparent LKR prices, one wallet, and a platform that grows with you.</p></div><div><a href="{{ route('pricing') }}" class="button button-primary button-large">Explore plans</a><a id="ctaClientArea" data-client-link href="{{ route('client-area') }}" class="button button-ghost button-large">Client area</a></div></div></section>
+<section class="container reveal"><div class="final-cta band-dark"><div><span class="section-kicker">Ready when you are</span><h2>Launch your next project on Quizontal Cloud.</h2><p>Transparent LKR prices, one wallet, and a platform that grows with you.</p></div><div><a href="{{ route('pricing') }}" class="premium-btn">Explore plans</a><a id="ctaClientArea" data-client-link href="{{ route('client-area') }}" class="button button-ghost button-large">Client area</a></div></div></section>
 @endsection
 
 @push('page-scripts')

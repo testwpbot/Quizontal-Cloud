@@ -14,9 +14,10 @@
   <link rel="apple-touch-icon" href="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786291141/quizontal-cloud-logo_wa4agd.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css?v={{ filemtime(public_path('styles.css')) }}">
   <link rel="stylesheet" href="/modern.css?v={{ filemtime(public_path('modern.css')) }}">
+  <link rel="stylesheet" href="/premium.css?v={{ filemtime(public_path('premium.css')) }}">
   @stack('page-styles')
   <script type="application/ld+json">
     {
@@ -29,7 +30,7 @@
   </script>
   @stack('jsonld')
 </head>
-<body>
+<body class="@yield('body_class')">
 <div class="site-glow glow-one"></div><div class="site-glow glow-two"></div>
 <header class="site-header">
   <nav class="container nav-shell">

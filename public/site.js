@@ -126,6 +126,45 @@
     placeMenuForViewport();
     initHeader();
     initReveals();
+    initPremiumButtons();
     QC.loadConfig().then(applyClientLinks);
   });
+
+  /* ---------- Premium buttons (white -> rose letter-swap) ---------- */
+  function initPremiumButtons() {
+    const arrow = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    document.querySelectorAll('.premium-btn').forEach(btn => {
+      const label = btn.textContent.replace(/\s+/g, ' ').trim();
+      btn.textContent = '';
+      const layer1 = document.createElement('span');
+      const layer2 = document.createElement('span');
+      layer1.className = 'span-mother';
+      layer2.className = 'span-mother2';
+      for (let i = 0; i < label.length; i++) {
+        const ch = label[i];
+        const s1 = document.createElement('span');
+        const s2 = document.createElement('span');
+        s1.textContent = ch === ' ' ? '\u00A0' : ch;
+        s2.textContent = ch === ' ' ? '\u00A0' : ch;
+        s1.style.transitionDelay = (i * 0.05) + 's';
+        s2.style.transitionDelay = (i * 0.05) + 's';
+        layer1.appendChild(s1);
+        layer2.appendChild(s2);
+      }
+      const arrowEl = document.createElement('span');
+      arrowEl.className = 'premium-arrow';
+      arrowEl.setAttribute('aria-hidden', 'true');
+      arrowEl.innerHTML = arrow;
+      btn.appendChild(layer1);
+      btn.appendChild(layer2);
+      btn.appendChild(arrowEl);
+    });
+    document.querySelectorAll('.premium-btn-static').forEach(btn => {
+      const arrowEl = document.createElement('span');
+      arrowEl.className = 'premium-arrow';
+      arrowEl.setAttribute('aria-hidden', 'true');
+      arrowEl.innerHTML = arrow;
+      btn.appendChild(arrowEl);
+    });
+  }
 })();
