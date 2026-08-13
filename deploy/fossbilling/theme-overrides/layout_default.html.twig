@@ -219,7 +219,7 @@
             {% endif %}
             <div class="dropdown">
                 <button class="iq-menu-bt" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto;padding:0 .35rem;gap:.65rem">
-                    <span class="avatar-user">{{ (profile.first_name|default('?'))|first|upper }}{{ (profile.last_name|default(''))|first|upper }}</span>
+                    <img class="avatar-user" src="https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff" alt="{{ 'Profile'|trans }}">
                     <span class="user-info">
                         <strong>{{ profile.first_name }} {{ profile.last_name|first|upper }}{% if profile.last_name %}.{% endif %}</strong>
                         <small>{{ profile.email|truncate(30) }}</small>
@@ -228,7 +228,7 @@
                 </button>
                 <div class="dropdown-menu dropdown-menu-end card-dropdown-menu" style="width:260px">
                     <div class="d-flex align-items-center gap-3 px-2 py-2 mb-1">
-                        <span class="avatar-user">{{ (profile.first_name|default('?'))|first|upper }}{{ (profile.last_name|default(''))|first|upper }}</span>
+                        <img class="avatar-user" src="https://img.icons8.com/?size=100&id=23242&format=png&color=ffffff" alt="{{ 'Profile'|trans }}">
                         <div class="user-info"><strong>{{ profile.first_name }} {{ profile.last_name }}</strong><small>{{ profile.email|truncate(30) }}</small></div>
                     </div>
                     <a href="{{ 'client/profile'|link }}" class="dropdown-item"><svg width="16" height="16" fill="currentColor" class="me-2"><use href="#i-profile"/></svg>{{ 'My Profile'|trans }}</a>
@@ -921,6 +921,8 @@
             background: linear-gradient(135deg, var(--iq-primary), var(--iq-secondary-hover));
             color: #fff; font-weight: 700; font-size: 0.9rem;
             display: flex; align-items: center; justify-content: center; flex: 0 0 40px;
+            object-fit: contain;
+            padding: 7px;
         }
         .user-info { line-height: 1.2; text-align: left; min-width: 0; }
         .user-info strong { font-size: 0.85rem; color: var(--iq-heading); font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
