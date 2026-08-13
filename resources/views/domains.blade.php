@@ -1,7 +1,5 @@
 @extends('layouts.site')
 
-@section('body_class', 'theme-dark')
-
 @section('title', 'Domain Search — Live availability & honest LKR prices | Quizontal Cloud')
 @section('meta_description', 'Search any name or idea and instantly see prices across every extension Quizontal Cloud sells — live availability, name suggestions and transparent LKR pricing with free WHOIS privacy.')
 
@@ -15,7 +13,6 @@
     <div class="eyebrow"><span></span> Domain names · LKR pricing · Live availability</div>
     <h1>Claim your name<br><em>before someone else does.</em></h1>
     <p>Type a name or just an idea — instantly see prices across every extension we sell, compare renewals, and register in a couple of clicks from the dashboard you already know.</p>
-
     <form class="domain-search" id="domainSearchForm" role="search">
       <div class="domain-search-box">
         <span class="domain-search-icon">◎</span>
@@ -27,20 +24,10 @@
         <button type="button" data-tld=".com">.com</button><button type="button" data-tld=".net">.net</button><button type="button" data-tld=".org">.org</button><button type="button" data-tld=".io">.io</button><button type="button" data-tld=".dev">.dev</button><button type="button" data-tld=".xyz">.xyz</button>
       </div>
     </form>
-
-    <div class="stat-grid domain-hero-proof">
-      <article class="stat-card reveal">
-        <div class="stat-ring" style="--val:100"><span class="stat-ring-inner">◎</span></div>
-        <div class="stat-meta"><span class="stat-label">Extensions</span><strong class="stat-value" id="statExtensions">20+</strong><span class="stat-sub">honest yearly pricing</span></div>
-      </article>
-      <article class="stat-card reveal" data-reveal-delay="70">
-        <div class="stat-ring cyan" style="--val:82"><span class="stat-ring-inner">₨</span></div>
-        <div class="stat-meta"><span class="stat-label">Cheapest</span><strong class="stat-value" id="statFrom">—</strong><span class="stat-sub">first-year registration</span></div>
-      </article>
-      <article class="stat-card reveal" data-reveal-delay="140">
-        <div class="stat-ring green" style="--val:100"><span class="stat-ring-inner">🛡</span></div>
-        <div class="stat-meta"><span class="stat-label">WHOIS privacy</span><strong class="stat-value">Free</strong><span class="stat-sub">on supported extensions</span></div>
-      </article>
+    <div class="domain-hero-proof">
+      <div><strong id="statExtensions">20+</strong><span>extensions with honest yearly pricing</span></div>
+      <div><strong id="statFrom">—</strong><span>cheapest first-year registration</span></div>
+      <div><strong>Free</strong><span>WHOIS privacy on supported extensions</span></div>
     </div>
   </div>
 </section>

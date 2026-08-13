@@ -1,41 +1,125 @@
-<!-- Quizontal Cloud — Domains landing page. Managed by `php artisan fossbilling:sync-pages`.
+<!-- Quizontal Cloud — Domains landing page (dashboard-style). Managed by `php artisan fossbilling:sync-pages`.
      __STOREFRONT_URL__ is replaced at sync time (empty = use the in-billing order form). -->
 <div class="qc-domains-page">
-  <div class="card border-0 shadow-sm mb-4 qc-hero">
-    <div class="card-body p-3 p-md-4">
-      <div class="row g-3 align-items-center">
-        <div class="col-md-6">
-          <h3 class="mb-1">Find your perfect domain</h3>
-          <p class="text-muted small mb-0">Live availability and honest LKR pricing across every extension we sell.</p>
+
+  <!-- stat cards (overlap the page banner, same circle-progress cards as the dashboard) -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-info" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#i-globe"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Extensions</p>
+              <h4 id="qcStatTlds">&mdash;</h4>
+            </div>
+          </div>
         </div>
-        <div class="col-md-6">
-          <form id="qcDomSearch" class="d-flex flex-wrap gap-2" autocomplete="off">
-            <input id="qcDomInput" type="text" class="form-control flex-grow-1" style="min-width:180px" placeholder="myshop.com" aria-label="Domain name" spellcheck="false">
-            <select id="qcDomTld" class="form-select flex-grow-0" style="width:auto" aria-label="Extension" hidden></select>
-            <button type="submit" class="btn btn-dark px-4 py-2">Search</button>
-          </form>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#i-wallet"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Cheapest</p>
+              <h4 id="qcStatCheapest">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-success" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#i-lock"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">WHOIS privacy</p>
+              <h4>Free</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-warning" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#i-buy"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Registration</p>
+              <h4>Instant</h4>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="qcDomError" class="alert alert-warning" hidden></div>
-
-  <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
-    <h5 class="mb-0">Domain pricing</h5>
-    <small class="text-muted">Per year &middot; free WHOIS privacy on supported extensions</small>
+  <!-- search card -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div class="header-title">
+        <h4 class="card-title">Find your domain</h4>
+        <p class="mb-0 text-size-12" style="color:#98a1b3">Live availability and honest LKR pricing across every extension we sell.</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <form id="qcDomSearch" class="d-flex flex-wrap gap-2" autocomplete="off">
+        <div class="input-group flex-grow-1" style="min-width:220px">
+          <span class="input-group-text"><svg width="16" height="16" fill="currentColor"><use href="#i-search"/></svg></span>
+          <input id="qcDomInput" type="text" class="form-control" placeholder="myshop.com" aria-label="Domain name" spellcheck="false">
+        </div>
+        <select id="qcDomTld" class="form-select flex-grow-0" style="width:auto" aria-label="Extension" hidden></select>
+        <button type="submit" class="btn btn-primary px-4">Search</button>
+      </form>
+      <div id="qcDomError" class="alert alert-warning mt-3 mb-0" hidden></div>
+    </div>
   </div>
-  <div id="qcTldGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2">
-    <div class="col-12">
-      <div class="border rounded p-4 text-center text-muted" id="qcTldLoading">Loading prices&hellip;</div>
+
+  <!-- pricing card -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div class="header-title">
+        <h4 class="card-title">Domain pricing</h4>
+        <p class="mb-0 text-size-12" style="color:#98a1b3">Per year &middot; free WHOIS privacy on supported extensions</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="qcTldGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2">
+        <div class="col-12">
+          <div class="qc-tld-loading text-center text-muted p-4">Loading prices&hellip;</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <style>
-  .qc-domains-page .qc-hero { background: linear-gradient(135deg, #eef4ff 0%, #fff0f6 100%); }
-  .qc-domains-page .qc-tld { transition: transform .15s ease, border-color .15s ease; }
-  .qc-domains-page .qc-tld:hover { transform: translateY(-2px); border-color: var(--bs-primary); }
+  .qc-domains-page .qc-tld {
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid var(--iq-line, rgba(255, 255, 255, .06));
+    border-radius: .5rem;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .qc-domains-page .qc-tld:hover {
+    transform: translateY(-2px);
+    border-color: rgba(227, 28, 100, .45);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .6);
+  }
+  .qc-domains-page .qc-tld strong { color: var(--iq-heading, #f5f6f8); }
+  .qc-domains-page .qc-tld .text-muted { color: #7d8494 !important; }
+  .qc-domains-page .qc-tld-loading { border: 1px dashed var(--iq-line, rgba(255, 255, 255, .14)); border-radius: .5rem; }
 </style>
 <script>
 (function () {
@@ -63,8 +147,13 @@
     if (!isFinite(value) || value <= 0) return '';
     return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+  function moneyCompact(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value) || value <= 0) return '';
+    return currency.code + ' ' + Math.round(value).toLocaleString('en-US');
+  }
   function esc(value) {
-    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+    return String(value == null ? '' : value).replace(/[&<>'\"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
     });
   }
@@ -77,6 +166,19 @@
     box.hidden = false;
   }
 
+  function updateStats() {
+    var countEl = document.getElementById('qcStatTlds');
+    var cheapEl = document.getElementById('qcStatCheapest');
+    if (countEl && tlds.length) countEl.textContent = tlds.length;
+    if (cheapEl) {
+      var priced = tlds.filter(function (r) { return Number(r.price_registration) > 0; });
+      if (priced.length) {
+        var cheapest = priced.reduce(function (m, r) { return Number(r.price_registration) < Number(m.price_registration) ? r : m; }, priced[0]);
+        cheapEl.textContent = moneyCompact(cheapest.price_registration);
+      }
+    }
+  }
+
   function renderGrid() {
     var grid = document.getElementById('qcTldGrid');
     var rows = tlds.slice().sort(function (a, b) {
@@ -85,11 +187,12 @@
     });
     grid.innerHTML = rows.map(function (row) {
       var price = money(row.price_registration);
-      return '<div class="col"><div class="border rounded p-2 text-center qc-tld h-100">' +
+      return '<div class="col"><div class="qc-tld h-100 p-3 text-center">' +
         '<strong>' + esc(row.tld) + '</strong><br>' +
         (price ? '<small class="text-muted">' + esc(price) + '/yr</small>' : '<small class="text-muted">&mdash;</small>') +
       '</div></div>';
     }).join('');
+    updateStats();
   }
 
   function cleanInput(raw) {

@@ -5,23 +5,24 @@
 {% block meta_keywords %}{{ page.keywords }}{% endblock %}
 {% block breadcrumb %}<li class="breadcrumb-item active" aria-current="page">{{ page.title }}</li>{% endblock %}
 
-{% block body_class %}custom-page{% endblock %}
+{% block body_class %}custom-page qc-has-banner{% endblock %}
 
-{% block content %}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h1 class="mb-1">{{ page.title }}</h1>
-                    </div>
-                </div>
-                <div class="card-body">
-                    {# Quizontal: pages are managed by `php artisan fossbilling:sync-pages` from our own
-                       repo content files, so raw HTML is intentional (upstream applies |markdown). #}
-                    {{ page.content | raw }}
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ page.title }}</h1>
+                    {% if page.description %}<p>{{ page.description }}</p>{% endif %}
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block content %}
+    {# Quizontal: pages are managed by `php artisan fossbilling:sync-pages` from our own
+       repo content files, so raw HTML is intentional (upstream applies |markdown). #}
+    {{ page.content | raw }}
 {% endblock %}
