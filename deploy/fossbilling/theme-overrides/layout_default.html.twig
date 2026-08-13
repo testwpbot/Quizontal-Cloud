@@ -626,6 +626,15 @@
             --bs-btn-focus-shadow-rgb: 227, 28, 100;
             color: #fff;
         }
+        /* Anchor buttons: the global `.qc-app a:hover { color: pink }` link rule
+           is more specific than `.qc-app .btn-primary`, so <a> buttons flip to
+           rose text on hover. Pin them back to white (like <button> variants). */
+        .qc-app a.btn-primary,
+        .qc-app a.btn-primary:hover,
+        .qc-app a.btn-primary:focus { color: #fff; }
+        .qc-app a.btn-outline-primary,
+        .qc-app a.btn-outline-primary:focus { color: #f06b9d; }
+        .qc-app a.btn-outline-primary:hover { color: #fff; }
         .qc-app .btn-outline-primary {
             --bs-btn-color: #f06b9d;
             --bs-btn-border-color: var(--iq-primary);
