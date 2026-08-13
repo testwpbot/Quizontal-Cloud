@@ -1,41 +1,178 @@
-<!-- Quizontal Cloud — VPS Hosting catalog page. Managed by `php artisan fossbilling:sync-pages`. -->
+<!-- Quizontal Cloud — VPS Hosting catalog page (dashboard-style). Managed by `php artisan fossbilling:sync-pages`. -->
 <div class="qc-vps-page">
-  <div class="p-3 p-md-4 mb-4 rounded qc-hero">
-    <p class="text-muted mb-0 small">Pick a line, choose a plan, check out — your server provisions itself in minutes. All prices in LKR.</p>
+
+  <!-- self-contained icon sprite (works for guests too, where the client
+       area's shared sprite isn't rendered) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="qcvps-server" viewBox="0 0 24 24"><path d="M7 15H9V17H7V15M7 7H9V9H7V7M20 13H4C2.9 13 2 12.1 2 11V5C2 3.9 2.9 3 4 3H20C21.1 3 22 3.9 22 5V11C22 12.1 21.1 13 20 13M4 11H20V5H4V11M20 21H4C2.9 21 2 20.1 2 19V13C2 11.9 2.9 11 4 11H20C21.1 11 22 11.9 22 13V19C22 20.1 21.1 21 20 21M4 19H20V13H4V19Z" fill="currentColor"/></symbol>
+    <symbol id="qcvps-list" viewBox="0 0 24 24"><path d="M4 10.5C3.2 10.5 2.5 11.2 2.5 12S3.2 13.5 4 13.5 5.5 12.8 5.5 12 4.8 10.5 4 10.5M4 4.5C3.2 4.5 2.5 5.2 2.5 6S3.2 7.5 4 7.5 5.5 6.8 5.5 6 4.8 4.5 4 4.5M4 16.5C3.2 16.5 2.5 17.2 2.5 18S3.2 19.5 4 19.5 5.5 18.8 5.5 18 4.8 16.5 4 16.5M8 19H21V17H8V19M8 13H21V11H8V13M8 5V7H21V5H8Z" fill="currentColor"/></symbol>
+    <symbol id="qcvps-wallet" viewBox="0 0 24 24"><path d="M17.7689 8.3818H22C22 4.98459 19.9644 3 16.5156 3H7.48444C4.03556 3 2 4.98459 2 8.33847V15.6615C2 19.0154 4.03556 21 7.48444 21H16.5156C19.9644 21 22 19.0154 22 15.6615V15.3495H17.7689C15.8052 15.3495 14.2133 13.7975 14.2133 11.883C14.2133 9.96849 15.8052 8.41647 17.7689 8.41647V8.3818ZM17.7689 9.87241H21.2533C21.6657 9.87241 22 10.1983 22 10.6004V13.131C21.9952 13.5311 21.6637 13.8543 21.2533 13.8589H17.8489C16.8548 13.872 15.9855 13.2084 15.76 12.2643C15.6471 11.6783 15.8056 11.0736 16.1931 10.6122C16.5805 10.1509 17.1573 9.88007 17.7689 9.87241ZM17.92 12.533H18.2489C18.6711 12.533 19.0133 12.1993 19.0133 11.7877C19.0133 11.3761 18.6711 11.0424 18.2489 11.0424H17.92C17.7181 11.0401 17.5236 11.1166 17.38 11.255C17.2364 11.3934 17.1555 11.5821 17.1556 11.779C17.1555 12.1921 17.4964 12.5282 17.92 12.533ZM6.73778 8.3818H12.3822C12.8044 8.3818 13.1467 8.04812 13.1467 7.63649C13.1467 7.22487 12.8044 6.89119 12.3822 6.89119H6.73778C6.31903 6.89116 5.9782 7.2196 5.97333 7.62783C5.97331 8.04087 6.31415 8.37705 6.73778 8.3818Z" fill="currentColor"/></symbol>
+    <symbol id="qcvps-bolt" viewBox="0 0 24 24"><path d="M7 2V13H10V22L17 10H13L17 2H7Z" fill="currentColor"/></symbol>
+  </svg>
+
+  <!-- stat cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qcvps-server"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Lines</p>
+              <h4 id="qcStatLines">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-info" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qcvps-list"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Plans</p>
+              <h4 id="qcStatPlans">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-warning" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qcvps-wallet"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">From</p>
+              <h4 id="qcStatFrom">&mdash;</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xxl-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="progress-widget">
+            <div class="circle-progress circle-progress-success" style="--val:100">
+              <span class="circle-inner"><svg fill="currentColor"><use href="#qcvps-bolt"/></svg></span>
+            </div>
+            <div class="progress-detail">
+              <p class="mb-2">Deploy</p>
+              <h4>Minutes</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="qcVpsError" class="alert alert-warning" hidden></div>
 
-  <div id="qcVpsCats" class="row row-cols-1 row-cols-md-2 g-3">
+  <div id="qcVpsCats" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
     <div class="col-12">
-      <div class="border rounded p-4 text-center text-muted" id="qcVpsLoading">Loading plans&hellip;</div>
+      <div class="qc-vps-loading text-center text-muted p-4">Loading plans&hellip;</div>
     </div>
   </div>
 
   <div id="qcVpsPlans" hidden>
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-      <button type="button" class="btn btn-sm btn-outline-secondary" id="qcVpsBack">
-        <span aria-hidden="true">&larr;</span> All lines
-      </button>
-      <h4 class="mb-0 me-auto" id="qcVpsTitle"></h4>
-      <div class="d-flex align-items-center gap-2">
-        <input id="qcVpsFilter" type="search" class="form-control form-control-sm" style="min-width:200px" autocomplete="off" placeholder="Filter plans&hellip;">
-        <small class="text-muted text-nowrap" id="qcVpsCount"></small>
+    <div class="card">
+      <div class="card-header d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="qcVpsBack">
+          <span aria-hidden="true">&larr;</span> All lines
+        </button>
+        <h4 class="card-title mb-0 me-auto" id="qcVpsTitle"></h4>
+        <div class="d-flex align-items-center gap-2 flex-grow-1 flex-sm-grow-0">
+          <div class="qc-vps-search">
+            <svg width="15" height="15" fill="currentColor"><use href="#qcvps-list"/></svg>
+            <input id="qcVpsFilter" type="search" class="form-control form-control-sm" autocomplete="off" placeholder="Filter plans&hellip;">
+          </div>
+          <small class="text-muted text-nowrap" id="qcVpsCount"></small>
+        </div>
       </div>
-    </div>
-    <div class="list-group" id="qcVpsList"></div>
-    <div id="qcVpsEmpty" class="text-center text-muted border rounded py-4" hidden>
-      <strong class="d-block mb-1">Nothing matches that filter.</strong>
-      <small>Try a different word, or go back to the lines.</small>
+      <div class="card-body">
+        <div id="qcVpsList"></div>
+        <div id="qcVpsEmpty" class="text-center text-muted py-4" hidden>
+          <strong class="d-block mb-1">Nothing matches that filter.</strong>
+          <small>Try a different word, or go back to the lines.</small>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <style>
-  .qc-vps-page .qc-hero { background: rgba(255, 255, 255, .03); border: 1px solid var(--iq-line, rgba(255, 255, 255, .06)); }
-  .qc-vps-page .qc-cat-card { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-  .qc-vps-page .qc-cat-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.12); border-color: var(--bs-primary); }
-  .qc-vps-page .qc-cat-card:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+  .qc-vps-page .qc-vps-loading { border: 1px dashed var(--iq-line, rgba(255,255,255,.14)); border-radius: .5rem; }
+  /* category cards */
+  .qc-vps-page .qc-cat-card {
+    background: var(--iq-surface, #0b0b0e);
+    border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+    border-radius: .75rem;
+    color: var(--iq-body, #9aa3b2);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .qc-vps-page .qc-cat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(227, 28, 100, .45);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .6);
+  }
+  .qc-vps-page .qc-cat-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--iq-primary-light, rgba(227, 28, 100, .16));
+    color: #f06b9d;
+    margin-bottom: 12px;
+  }
+  .qc-vps-page .qc-cat-icon svg { width: 20px; height: 20px; }
+  .qc-vps-page .qc-cat-card .card-title { color: var(--iq-heading, #f5f6f8); }
+  .qc-vps-page .qc-cat-card .badge { background: rgba(255,255,255,.06); color: #9aa3b2; font-weight: 600; }
+  .qc-vps-page .qc-cat-card .qc-from { color: #7d8494; }
+  .qc-vps-page .qc-cat-card .qc-from strong { color: var(--iq-heading, #f5f6f8); }
+  .qc-vps-page .qc-cat-card .qc-view { color: #f06b9d; font-weight: 600; }
+  /* search box */
+  .qc-vps-page .qc-vps-search {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+    border-radius: .5rem;
+    padding: 0 10px;
+    min-width: 200px;
+    transition: border-color .18s ease;
+  }
+  .qc-vps-page .qc-vps-search:focus-within { border-color: #f1719f; }
+  .qc-vps-page .qc-vps-search svg { color: #7e8594; flex: none; }
+  .qc-vps-page .qc-vps-search .form-control {
+    border: 0; background: transparent; box-shadow: none;
+    color: #e6e8ec; padding: 8px 0; font-size: .85rem;
+  }
+  .qc-vps-page .qc-vps-search .form-control::placeholder { color: #5f6673; }
+  /* plan rows */
+  .qc-vps-page .qc-plan-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 14px 16px;
+    background: #121216;
+    border: 1px solid transparent;
+    border-radius: .6rem;
+    color: var(--iq-body, #9aa3b2);
+    text-decoration: none;
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .qc-vps-page .qc-plan-row:hover {
+    border-color: rgba(227, 28, 100, .35);
+    background: #17171c;
+    transform: translateY(-1px);
+    color: var(--iq-body, #9aa3b2);
+  }
+  .qc-vps-page .qc-plan-row .qc-plan-name { color: var(--iq-heading, #f5f6f8); font-weight: 600; }
+  .qc-vps-page .qc-plan-row .qc-plan-price { color: var(--iq-heading, #f5f6f8); font-weight: 700; white-space: nowrap; }
+  .qc-vps-page .qc-plan-row .qc-plan-price small { color: #7d8494; font-weight: 500; }
 </style>
 <script>
 (function () {
@@ -65,13 +202,18 @@
     if (!isFinite(value) || value <= 0) return '';
     return currency.code + ' ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+  function moneyCompact(raw) {
+    var value = Number(raw) * Number(currency.rate || 1);
+    if (!isFinite(value) || value <= 0) return '';
+    return currency.code + ' ' + Math.round(value).toLocaleString('en-US');
+  }
   function esc(value) {
-    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+    return String(value == null ? '' : value).replace(/[&<>'\"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
     });
   }
   function clearLoading() {
-    var loading = document.getElementById('qcVpsLoading');
+    var loading = document.querySelector('#qcVpsCats .qc-vps-loading');
     if (loading) loading.parentElement.remove();
   }
   function fail(message) {
@@ -82,19 +224,35 @@
     box.hidden = false;
   }
 
+  function updateStats() {
+    var linesEl = document.getElementById('qcStatLines');
+    var plansEl = document.getElementById('qcStatPlans');
+    var fromEl = document.getElementById('qcStatFrom');
+    if (linesEl && categories.length) linesEl.textContent = categories.length;
+    if (plansEl && categories.length) {
+      var total = categories.reduce(function (n, c) { return n + (Array.isArray(c.products) ? c.products.length : 0); }, 0);
+      plansEl.textContent = total;
+    }
+    if (fromEl && categories.length) {
+      var prices = categories.map(function (c) { return Number(c.price_starting_from); }).filter(function (p) { return isFinite(p) && p > 0; });
+      if (prices.length) fromEl.textContent = moneyCompact(Math.min.apply(null, prices));
+    }
+  }
+
   function renderCategories() {
     catsEl.innerHTML = categories.map(function (category) {
       return '<div class="col">' +
         '<button type="button" class="card w-100 h-100 text-start shadow-none qc-cat-card" data-id="' + esc(category.id) + '" data-title="' + esc(category.title) + '">' +
           '<div class="card-body d-flex flex-column">' +
-            '<div class="d-flex justify-content-between align-items-start mb-1">' +
+            '<span class="qc-cat-icon"><svg fill="currentColor"><use href="#qcvps-server"/></svg></span>' +
+            '<div class="d-flex justify-content-between align-items-start mb-1 gap-2">' +
               '<h5 class="card-title mb-0">' + esc(category.title) + '</h5>' +
-              '<span class="badge text-bg-light border">' + category.products.length + '</span>' +
+              '<span class="badge border">' + category.products.length + '</span>' +
             '</div>' +
-            (category.description ? '<p class="card-text text-muted small mb-2">' + esc(String(category.description).replace(/<[^>]*>/g, '').slice(0, 110)) + '</p>' : '') +
+            (category.description ? '<p class="card-text text-muted small mb-3">' + esc(String(category.description).replace(/<[^>]*>/g, '').slice(0, 110)) + '</p>' : '') +
             '<div class="d-flex justify-content-between align-items-center mt-auto">' +
-              '<span class="small">From <strong>' + esc(money(category.price_starting_from)) + '</strong></span>' +
-              '<span class="small fw-semibold">View plans &rarr;</span>' +
+              '<span class="small qc-from">From <strong>' + esc(money(category.price_starting_from)) + '</strong></span>' +
+              '<span class="small qc-view">View plans &rarr;</span>' +
             '</div>' +
           '</div>' +
         '</button>' +
@@ -103,6 +261,7 @@
     catsEl.querySelectorAll('.qc-cat-card').forEach(function (card) {
       card.addEventListener('click', function () { openCategory(card.getAttribute('data-id'), card.getAttribute('data-title')); });
     });
+    updateStats();
   }
 
   function renderPlans() {
@@ -118,17 +277,20 @@
       var hide = term !== '' && text.indexOf(term) === -1;
       if (!hide) visible++;
       var desc = String(product.description || '').replace(/<[^>]*>/g, '');
-      return '<a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3' + (hide ? ' d-none' : '') + '"' +
-             ' href="/order?product=' + encodeURIComponent(product.id) + '">' +
-          '<span class="text-truncate">' +
-            '<span class="fw-semibold d-block text-truncate">' + esc(product.title) + '</span>' +
-            (desc ? '<small class="text-muted d-block text-truncate">' + esc(desc) + '</small>' : '') +
-          '</span>' +
-          '<span class="text-nowrap text-end">' +
-            (product.price_starting_from ? '<strong>' + esc(money(product.price_starting_from)) + '</strong><small class="text-muted d-block">starting from</small>' : '') +
-          '</span>' +
-        '</a>';
+      return '<a class="qc-plan-row' + (hide ? ' d-none' : '') + '" href="/order?product=' + encodeURIComponent(product.id) + '">' +
+        '<span class="text-truncate">' +
+          '<span class="qc-plan-name d-block text-truncate">' + esc(product.title) + '</span>' +
+          (desc ? '<small class="text-muted d-block text-truncate">' + esc(desc) + '</small>' : '') +
+        '</span>' +
+        '<span class="text-nowrap text-end">' +
+          (product.price_starting_from ? '<span class="qc-plan-price">' + esc(money(product.price_starting_from)) + '</span><small class="text-muted d-block">starting from</small>' : '') +
+        '</span>' +
+      '</a>';
     }).join('');
+    // lay the rows out as a vertical grid with spacing
+    var listEl = document.getElementById('qcVpsList');
+    listEl.style.display = 'grid';
+    listEl.style.gap = '8px';
     document.getElementById('qcVpsCount').textContent = visible + ' / ' + rows.length;
     document.getElementById('qcVpsEmpty').hidden = !(visible === 0 && rows.length > 0 && term !== '');
   }
