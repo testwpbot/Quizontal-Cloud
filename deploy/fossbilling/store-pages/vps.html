@@ -321,8 +321,10 @@
   apiGet('product/category_get_list', { per_page: 100 }, function (response) {
     try {
       var list = response && Array.isArray(response.list) ? response.list : (Array.isArray(response) ? response : []);
+      // Only cloud VPS lines (InterServer products) belong here — exclude
+      // web-hosting ('hosting') and domain ('domain') categories.
       categories = list.filter(function (category) {
-        return category && category.type !== 'domain' && Array.isArray(category.products) && category.products.length > 0;
+        return category && category.type === 'interserver' && Array.isArray(category.products) && category.products.length > 0;
       });
       clearLoading();
       if (!categories.length) { fail('Plans could not be loaded right now. Please try again in a moment.'); return; }
