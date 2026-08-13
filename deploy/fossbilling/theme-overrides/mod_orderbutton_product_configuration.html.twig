@@ -82,8 +82,9 @@
 
                     <input type="hidden" name="multiple" value="1" />
                     <input type="hidden" name="id" value="{{ product.id }}" />
-                    <div class="mt-2 mb-0">
-                        <button type="submit" class="btn btn-primary btn-lg" id="config-next">{{ 'Add to cart'|trans }}</button>
+                    <div class="mt-2 mb-0 d-flex flex-wrap align-items-center gap-3">
+                        <button type="submit" class="premium-btn" id="config-next">{{ 'Continue'|trans }}</button>
+                        <span class="small text-muted">{{ 'Added to your cart, then straight to checkout.'|trans }}</span>
                     </div>
                 </form>
             </div>

@@ -1,0 +1,149 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+{% set active_menu = 'order' %}
+
+{% block meta_title %}{{ 'Order'|trans }}{% endblock %}
+{% block meta_description %}{{ 'Browse available products and services, compare options, and place your order online.'|trans }}{% endblock %}
+
+{% set loader_nr = request.loader|default("8")%}
+{% set loader_url = ('img/assets/loaders/loader'~loader_nr~'.gif') %}
+
+{% block body_class %}order-index{% if client %} qc-has-banner{% endif %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{# current step for the checkout stepper:
+   1 = products · 2 = configuration · 3 = account (guest) or checkout (client)
+   4 = checkout (guest) #}
+{% set qc_step = 1 %}
+{% if request.product %}{% set qc_step = 2 %}{% endif %}
+{% if request.checkout %}{% set qc_step = 3 %}{% endif %}
+{% set qc_last = client ? 3 : 4 %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Order'|trans }}</h1>
+                    <p>{{ 'Browse available products and services, compare options, and place your order online.'|trans }}</p>
+                </div>
+                <div class="qc-currency-wrap">
+                    {{ include('mod_orderbutton_currency.html.twig') }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    {# ================= checkout stepper ================= #}
+    <div class="qc-stepper mb-3">
+        <div class="qc-stepper-step {{ qc_step == 1 ? 'active' : (qc_step > 1 ? 'done' : '') }}">
+            <span class="qc-stepper-dot">{% if qc_step > 1 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}1{% endif %}</span>
+            <span class="qc-stepper-label">{{ 'Products'|trans }}</span>
+        </div>
+        <span class="qc-stepper-line {{ qc_step > 1 ? 'done' : '' }}"></span>
+
+        <div class="qc-stepper-step {{ qc_step == 2 ? 'active' : (qc_step > 2 ? 'done' : '') }}">
+            <span class="qc-stepper-dot">{% if qc_step > 2 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}2{% endif %}</span>
+            <span class="qc-stepper-label">{{ 'Configuration'|trans }}</span>
+        </div>
+        <span class="qc-stepper-line {{ qc_step > 2 ? 'done' : '' }}"></span>
+
+        {% if not client %}
+        <div class="qc-stepper-step {{ qc_step == 3 ? 'active' : (qc_step > 3 ? 'done' : '') }}">
+            <span class="qc-stepper-dot">{% if qc_step > 3 %}<svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>{% else %}3{% endif %}</span>
+            <span class="qc-stepper-label">{{ 'Account'|trans }}</span>
+        </div>
+        <span class="qc-stepper-line {{ qc_step > 3 ? 'done' : '' }}"></span>
+        {% endif %}
+
+        <div class="qc-stepper-step {{ qc_step == qc_last ? 'active' : '' }}">
+            <span class="qc-stepper-dot">{{ qc_last }}</span>
+            <span class="qc-stepper-label">{{ 'Checkout'|trans }}</span>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body overflow-hidden">
+            {{ include('mod_orderbutton_content.html.twig') }}
+        </div>
+    </div>
+
+    <style>
+        /* ---- checkout stepper (modern slider progress) ---- */
+        .qc-stepper { display: flex; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+        .qc-stepper-step { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 74px; }
+        .qc-stepper-dot {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: grid; place-items: center;
+            background: #1a1a1f; color: #7d8494;
+            border: 1px solid var(--iq-line, rgba(255,255,255,.08));
+            font-weight: 700; font-size: .85rem;
+            transition: background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+        .qc-stepper-dot svg { width: 16px; height: 16px; }
+        .qc-stepper-step.active .qc-stepper-dot {
+            background: linear-gradient(135deg, var(--iq-primary, #e31c64), var(--iq-primary-dark, #a51149));
+            border-color: transparent; color: #fff;
+            box-shadow: 0 6px 16px rgba(227, 28, 100, .35);
+        }
+        .qc-stepper-step.done .qc-stepper-dot { background: var(--iq-success-light, rgba(32,201,151,.15)); color: var(--iq-success, #20c997); border-color: rgba(32,201,151,.35); }
+        .qc-stepper-label { font-size: .74rem; font-weight: 600; color: #7d8494; text-align: center; }
+        .qc-stepper-step.active .qc-stepper-label { color: #f06b9d; }
+        .qc-stepper-step.done .qc-stepper-label { color: var(--iq-body, #9aa3b2); }
+        .qc-stepper-line { flex: 1 1 40px; height: 1px; background: var(--iq-line, rgba(255,255,255,.08)); margin: 17px 6px 0; min-width: 20px; max-width: 90px; }
+        .qc-stepper-line.done { background: var(--iq-success, #20c997); }
+        @media (max-width: 575.98px) {
+            .qc-stepper-step { min-width: 60px; }
+            .qc-stepper-label { font-size: .68rem; }
+            .qc-stepper-line { max-width: 40px; }
+        }
+
+        /* ---- dark slide panels (accordion restyle) ---- */
+        .order-index .accordion-item { background: transparent; border: 0; margin-bottom: 12px; }
+        .order-index .accordion-item:last-child { margin-bottom: 0; }
+        .order-index .accordion-header { margin: 0; }
+        .order-index .accordion-button {
+            background: transparent; color: var(--iq-heading, #f5f6f8);
+            padding: 4px 0 12px; font-size: .98rem; font-weight: 700;
+        }
+        .order-index .accordion-button:not(.collapsed) { background: transparent; color: var(--iq-heading, #f5f6f8); box-shadow: none; }
+        .order-index .accordion-button:focus { box-shadow: none; }
+        .order-index .accordion-button::after { filter: invert(.55) sepia(0) saturate(0); }
+        .order-index .accordion-button .svg-icon { color: #f06b9d; }
+        .order-index .accordion-collapse { border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: .85rem; background: var(--iq-surface, #0b0b0e); }
+        .order-index .accordion-body { padding: 20px; }
+        .order-index .accordion-collapse.collapsing { transition: height .3s ease; }
+        .order-index .accordion-collapse.show .accordion-body { animation: qcSlideIn .35s ease; }
+        @keyframes qcSlideIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+
+        /* currency selector in the banner */
+        .qc-currency-wrap { color: rgba(255,255,255,.9); }
+        .qc-currency-wrap form, .qc-currency-wrap label { color: rgba(255,255,255,.85); }
+
+        /* product details "well" panel in configuration */
+        .order-index .well {
+            background: var(--iq-surface, #0b0b0e);
+            border: 1px solid var(--iq-line, rgba(255,255,255,.06));
+            border-radius: .75rem; color: var(--iq-body, #9aa3b2);
+        }
+        .order-index .well h3 { color: var(--iq-heading, #f5f6f8); }
+        .order-index .well hr { border-color: var(--iq-line, rgba(255,255,255,.08)); }
+    </style>
+{% endblock %}
+
+{% block sidebar2 %}
+    {{ include('partial_currency.html.twig') }}
+{% endblock %}
+
+{% block js %}
+{% autoescape "js" %}
+<script>
+    function resizeIframe(obj) {
+        obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+        document.getElementById('loader-image').style.display = 'none';
+    }
+</script>
+{% endautoescape %}
+{% endblock %}
