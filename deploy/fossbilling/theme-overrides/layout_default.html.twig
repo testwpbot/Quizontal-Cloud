@@ -129,11 +129,14 @@
         </div>
         <div class="iq-sidebar-scroll">
             {{ include('partial_menu.html.twig') }}
-            <div class="sidebar-upgrade">
-                <div class="upgrade-icon"><svg fill="currentColor"><use href="#i-star"/></svg></div>
-                <h6>{{ 'Power Your Online Journey'|trans }}</h6>
-                <p>{{ 'High-performance domains, hosting and cloud — built for you.'|trans }}</p>
-                <a class="btn btn-sm btn-light w-100" href="{{ qc_store.url() }}/pricing">{{ 'View Plans'|trans }}</a>
+            <div class="sidebar-upgrade sidebar-wallet">
+                <div class="d-flex align-items-center justify-content-between gap-2 position-relative">
+                    <div class="text-start">
+                        <div class="sw-label">{{ 'Wallet balance'|trans }}</div>
+                        <div class="sw-amount">{{ profile.balance|money(profile.currency) }}</div>
+                    </div>
+                    <a class="sw-plus" href="{{ '/client/balance'|link }}" title="{{ 'Add funds'|trans }}" aria-label="{{ 'Add funds'|trans }}">+</a>
+                </div>
             </div>
             <div class="text-center text-size-12" style="color:#5b6270; padding-bottom:.5rem">{{ company.name }} · {{ 'now'|date('Y') }}</div>
         </div>
@@ -962,11 +965,13 @@
         .iq-banner h1 { color: #fff; font-weight: 700; font-size: 1.75rem; margin-bottom: 0.4rem; }
         .iq-banner p { color: rgba(255, 255, 255, 0.82); max-width: 480px; margin-bottom: 0; }
         .btn-soft-light {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.28);
             color: #fff;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
-        .btn-soft-light:hover { background: rgba(255, 255, 255, 0.25); color: #fff; }
+        .btn-soft-light:hover { background: rgba(0, 0, 0, 0.42); color: #fff; }
         .banner-date {
             display: inline-flex; align-items: center; gap: 0.45rem;
             font-size: 0.78rem; font-weight: 500; color: rgba(255, 255, 255, 0.9);
@@ -1123,6 +1128,109 @@
             min-height: 100vh;
         }
 
+        /* ---- contextual palette remap so stock pages match the app shell ---- */
+        .qc-app .btn-success {
+            --bs-btn-bg: #20c997; --bs-btn-border-color: #20c997;
+            --bs-btn-hover-bg: #1aa37c; --bs-btn-hover-border-color: #1aa37c;
+            --bs-btn-active-bg: #158466; --bs-btn-active-border-color: #158466;
+            --bs-btn-color: #06281e; --bs-btn-hover-color: #06281e; --bs-btn-active-color: #06281e;
+        }
+        .qc-app .btn-info {
+            --bs-btn-bg: #22d3ee; --bs-btn-border-color: #22d3ee;
+            --bs-btn-hover-bg: #19c1db; --bs-btn-hover-border-color: #19c1db;
+            --bs-btn-active-bg: #14a5bd; --bs-btn-active-border-color: #14a5bd;
+            --bs-btn-color: #083944; --bs-btn-hover-color: #083944; --bs-btn-active-color: #083944;
+        }
+        .qc-app .btn-warning {
+            --bs-btn-bg: #ffbc35; --bs-btn-border-color: #ffbc35;
+            --bs-btn-hover-bg: #f0ad1f; --bs-btn-hover-border-color: #f0ad1f;
+            --bs-btn-active-bg: #dd9a0d; --bs-btn-active-border-color: #dd9a0d;
+            --bs-btn-color: #3d2800; --bs-btn-hover-color: #3d2800; --bs-btn-active-color: #3d2800;
+        }
+        .qc-app .btn-danger {
+            --bs-btn-bg: #f4113c; --bs-btn-border-color: #f4113c;
+            --bs-btn-hover-bg: #d40e34; --bs-btn-hover-border-color: #d40e34;
+            --bs-btn-active-bg: #b50c2d; --bs-btn-active-border-color: #b50c2d;
+            --bs-btn-color: #fff; --bs-btn-hover-color: #fff; --bs-btn-active-color: #fff;
+            --bs-btn-focus-shadow-rgb: 244, 17, 60;
+        }
+        .qc-app .btn-secondary {
+            --bs-btn-bg: #2a2a33; --bs-btn-border-color: #33333c;
+            --bs-btn-hover-bg: #33333c; --bs-btn-hover-border-color: #3d3d47;
+            --bs-btn-active-bg: #26262e; --bs-btn-active-border-color: #33333c;
+            --bs-btn-color: #e6e8ec; --bs-btn-hover-color: #fff; --bs-btn-active-color: #fff;
+        }
+        .qc-app .btn-light {
+            --bs-btn-bg: #1e1e24; --bs-btn-border-color: #26262b;
+            --bs-btn-hover-bg: #26262b; --bs-btn-hover-border-color: #2a2a32;
+            --bs-btn-active-bg: #191920; --bs-btn-active-border-color: #26262b;
+            --bs-btn-color: #e6e8ec; --bs-btn-hover-color: #fff; --bs-btn-active-color: #fff;
+        }
+        .qc-app .btn-dark {
+            --bs-btn-bg: #0b0b0e; --bs-btn-border-color: #1b1b20;
+            --bs-btn-hover-bg: #15151a; --bs-btn-hover-border-color: #26262b;
+            --bs-btn-active-bg: #0b0b0e; --bs-btn-active-border-color: #2a2a32;
+            --bs-btn-color: #e6e8ec; --bs-btn-hover-color: #fff; --bs-btn-active-color: #fff;
+        }
+        .qc-app .btn-outline-success {
+            --bs-btn-color: #2fd9a8; --bs-btn-border-color: #20c997;
+            --bs-btn-hover-bg: #20c997; --bs-btn-hover-border-color: #20c997; --bs-btn-hover-color: #06281e;
+            --bs-btn-active-bg: #20c997; --bs-btn-active-border-color: #20c997;
+        }
+        .qc-app .btn-outline-info {
+            --bs-btn-color: #22d3ee; --bs-btn-border-color: #22d3ee;
+            --bs-btn-hover-bg: #22d3ee; --bs-btn-hover-border-color: #22d3ee; --bs-btn-hover-color: #083944;
+            --bs-btn-active-bg: #22d3ee; --bs-btn-active-border-color: #22d3ee;
+        }
+        .qc-app .btn-outline-warning {
+            --bs-btn-color: #ffc95e; --bs-btn-border-color: #ffbc35;
+            --bs-btn-hover-bg: #ffbc35; --bs-btn-hover-border-color: #ffbc35; --bs-btn-hover-color: #3d2800;
+            --bs-btn-active-bg: #ffbc35; --bs-btn-active-border-color: #ffbc35;
+        }
+        .qc-app .btn-outline-danger {
+            --bs-btn-color: #ff5c77; --bs-btn-border-color: #f4113c;
+            --bs-btn-hover-bg: #f4113c; --bs-btn-hover-border-color: #f4113c; --bs-btn-hover-color: #fff;
+            --bs-btn-active-bg: #f4113c; --bs-btn-active-border-color: #f4113c;
+        }
+        .qc-app .bg-primary { background-color: #E31C64 !important; }
+        .qc-app .bg-success { background-color: #20c997 !important; }
+        .qc-app .bg-info { background-color: #22d3ee !important; }
+        .qc-app .bg-warning { background-color: #ffbc35 !important; }
+        .qc-app .bg-danger { background-color: #f4113c !important; }
+        .qc-app .text-bg-primary { background-color: #E31C64 !important; color: #fff !important; }
+        .qc-app .text-bg-success { background-color: #20c997 !important; color: #06281e !important; }
+        .qc-app .text-bg-info { background-color: #22d3ee !important; color: #083944 !important; }
+        .qc-app .text-bg-warning { background-color: #ffbc35 !important; color: #3d2800 !important; }
+        .qc-app .text-bg-danger { background-color: #f4113c !important; color: #fff !important; }
+        .qc-app .text-success { color: #2fd9a8 !important; }
+        .qc-app .text-warning { color: #ffc95e !important; }
+        .qc-app .text-danger { color: #ff5c77 !important; }
+        .qc-app .text-info { color: #22d3ee !important; }
+
+        /* ---- banner aligned to the content gutters ---- */
+        .qc-app .main-content .iq-banner { margin: 1.5rem 1.5rem 0; }
+
+        /* ---- topbar crumb never pushes the actions off-screen ---- */
+        .navbar-crumb { min-width: 0; }
+        .navbar-crumb strong { display: block; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* ---- sidebar wallet card ---- */
+        .sidebar-wallet { text-align: left; }
+        .sidebar-wallet .sw-label {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+            text-transform: uppercase; color: rgba(255, 255, 255, 0.75);
+        }
+        .sidebar-wallet .sw-amount { font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.15; margin-top: 2px; }
+        .sidebar-wallet .sw-plus {
+            width: 40px; height: 40px; flex: 0 0 40px; border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.18); color: #fff !important;
+            font-size: 1.5rem; font-weight: 500; line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+        .sidebar-wallet .sw-plus:hover { background: #fff; color: var(--iq-primary) !important; transform: translateY(-1px); }
+        body.sidebar-mini .sidebar-wallet { display: none; }
+
         /* ---- mini (collapsed) sidebar, desktop only ---- */
         body.sidebar-mini .iq-sidebar { width: 78px; }
         body.sidebar-mini .iq-sidebar-logo { justify-content: center; padding: 0.9rem 0.5rem; }
@@ -1190,6 +1298,11 @@
         @media (max-width: 767.98px) {
             body.qc-has-banner .container-fluid.content-inner { margin-top: 0; }
             .iq-banner { min-height: auto; }
+            .qc-app .main-content .iq-banner { margin: 1rem 0.9rem 0; }
+            .iq-banner .iq-container { padding: 1.5rem 1.25rem; }
+            .iq-banner h1 { font-size: 1.4rem; }
+            .card-slide { min-width: 198px; }
+            .qc-app .card-body { padding: 1rem; }
             .iq-navbar { padding: 0 0.9rem; gap: 0.75rem; }
             .search-box { display: none; }
             .navbar-crumb { display: none; }

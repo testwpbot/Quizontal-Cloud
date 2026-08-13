@@ -1,6 +1,5 @@
 {% if client %}
 {# ==================== CLIENT AREA — dark app-shell menu ==================== #}
-{% import "qc_storefront.html.twig" as qc_store %}
 {% set qc_cp = guest.extension_is_on({"mod":"custompages"}) %}
 {# Honour the same theme switches the stock menu uses, and fall back across the
    pages that exist: VPS/Domains point at the custom pages when available,
@@ -96,15 +95,6 @@
                     <span class="icon-box"><svg fill="currentColor"><use href="#i-bell"/></svg></span>
                     <span class="nav-link-text">{{ 'News'|trans }}</span>
                 </a>
-            </li>
-        {% endif %}
-
-        {% if settings.sidebar_balance_enabled %}
-            <li>
-                <div class="sidebar-balance">
-                    <span class="sb-label">{{ 'Balance'|trans }}</span>
-                    <strong>{{ profile.balance | money(profile.currency) }}</strong>
-                </div>
             </li>
         {% endif %}
     </ul>
