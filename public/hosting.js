@@ -31,7 +31,14 @@
   function bullets(description) {
     return String(description || '')
       .split(/\r?\n/).map(line => line.trim()).filter(Boolean)
-      .map(line => ({ text: line.replace(/^[-•*\u2713✓✗]\s*/, '').trim(), bullet: /^[-•*\u2713✓✗]/.test(line) }))
+      .map(line => {
+        const bullet = /^([-•✓✗]|\d+[.)]|\*)\s*/.test(line);
+        const text = line
+          .replace(/^([-•✓✗]|\d+[.)]|\*)\s*/, '')   // strip bullet prefix (incl. leading *)
+          .replace(/[*_]/g, '')                     // strip markdown bold/italic markers
+          .trim();
+        return { text, bullet };
+      })
       .filter(line => line.text !== '');
   }
   function miniFromFeats(feats) {
