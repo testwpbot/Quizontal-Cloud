@@ -238,5 +238,6 @@
 </footer>
 <script src="/site.js?v={{ filemtime(public_path('site.js')) }}" defer></script>
 @stack('page-scripts')
+@include('partials.tawk')
 </body>
 </html>
