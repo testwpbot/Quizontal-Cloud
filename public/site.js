@@ -128,6 +128,9 @@
     initReveals();
     initAnimatedText();
     initDemoTabs();
+    initDemoCounters();
+    initDemoChart();
+    initDemoToolbar();
     initPremiumButtons();
     QC.loadConfig().then(applyClientLinks);
   });
@@ -144,6 +147,114 @@
         panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-qc-panel') === tab.getAttribute('data-qc-tab')));
       });
     });
+  }
+
+  /* ---------- Animated count-up (dashboard preview stats) ---------- */
+  function initDemoCounters() {
+    document.querySelectorAll('.qc-count[data-count]').forEach(el => {
+      const target = parseFloat(el.dataset.count) || 0;
+      const dur = 1200; let start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString('en-US');
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* ---------- Spending line chart (SVG) ---------- */
+  function initDemoChart() {
+    const svg = document.getElementById('qcSpendChart');
+    if (!svg) return;
+    const W = 560, H = 220, padL = 8, padR = 8, padT = 14, padB = 24;
+    const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const payments = [1800, 2100, 1600, 2600, 2300, 3100, 2800, 3600, 3200, 4100, 3700, 4500];
+    const events = [2, 3, 1, 4, 3, 4, 2, 5, 3, 5, 4, 6];
+    const max = 5000;
+    const pink = '#f06b9d', cyan = '#22d3ee';
+
+    function render(from) {
+      const p = payments.slice(from);
+      const e = events.slice(from);
+      const l = labels.slice(from);
+      const step = (W - padL - padR) / Math.max(l.length - 1, 1);
+      const y = v => H - padB - (v / max) * (H - padT - padB);
+
+      function line(data, color) {
+        const pts = data.map((v, i) => [padL + i * step, y(v)]);
+        const d = 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+        const dots = pts.map(pt => '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="3.5" fill="' + color + '" stroke="#0b0b0e" stroke-width="2"/>').join('');
+        return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 3px 6px ' + color + '66)"/>' + dots;
+      }
+
+      let grid = '';
+      for (let g = 0; g <= 4; g++) {
+        const gy = padT + (g * (H - padT - padB)) / 4;
+        grid += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="3 3"/>';
+      }
+      let xl = '';
+      l.forEach((lab, i) => {
+        xl += '<text x="' + (padL + i * step).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="#7d8494">' + lab + '</text>';
+      });
+      svg.innerHTML = grid + line(p, pink) + line(e, cyan) + xl;
+    }
+
+    render(0);
+    document.querySelectorAll('.qc-chart-tabs [data-qc-range]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.qc-chart-tabs [data-qc-range]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render(btn.dataset.qcRange === '6' ? 6 : 0);
+      });
+    });
+  }
+
+  /* ---------- Demo toolbar: multiselect + table filter ---------- */
+  function initDemoToolbar() {
+    // category multiselect
+    const trigger = document.getElementById('qcCategoryTrigger');
+    const menu = document.getElementById('qcCategoryMenu');
+    const label = document.getElementById('qcCategoryLabel');
+    if (trigger && menu) {
+      const names = { vps: 'Cloud VPS', hosting: 'Web Hosting', domains: 'Domains' };
+      const update = () => {
+        const checked = [...menu.querySelectorAll('input:checked')].map(i => names[i.value]);
+        label.textContent = checked.length ? checked.join(', ') : 'All services';
+      };
+      trigger.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = menu.classList.toggle('open');
+        trigger.classList.toggle('open', open);
+      });
+      menu.addEventListener('click', e => { if (e.target.closest('.qc-msel-option')) update(); });
+      document.addEventListener('click', () => { menu.classList.remove('open'); trigger.classList.remove('open'); });
+      update();
+    }
+
+    // service table search
+    const search = document.getElementById('qcTableSearch');
+    const table = document.getElementById('qcDemoTable');
+    if (search && table) {
+      const rows = [...table.querySelectorAll('tbody tr')];
+      const count = document.getElementById('qcTableCount');
+      search.addEventListener('input', () => {
+        const q = search.value.trim().toLowerCase();
+        let n = 0;
+        rows.forEach(r => {
+          const show = !q || (r.getAttribute('data-qc-search') || '').indexOf(q) !== -1;
+          r.style.display = show ? '' : 'none';
+          if (show) n++;
+        });
+        if (count) count.textContent = n + ' row' + (n === 1 ? '' : 's');
+      });
+    }
+
+    // period select (visual only)
+    const period = document.getElementById('qcPeriodSelect');
+    if (period) period.addEventListener('change', () => {});
   }
 
   /* ---------- Word-by-word animated hero text ---------- */
