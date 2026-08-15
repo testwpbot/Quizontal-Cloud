@@ -51,14 +51,18 @@
     <div class="qc-demo-panel active" data-qc-panel="dashboard">
       <div class="p">
         <div class="qc-demo-toolbar">
-          <div class="qc-field" style="min-width:150px;max-width:200px">
+          <div class="qc-field qc-ssel" style="min-width:150px;max-width:200px">
             <label>Time period</label>
-            <select id="qcPeriodSelect">
-              <option value="last_7_days" selected>Last 7 days</option>
-              <option value="last_30_days">Last 30 days</option>
-              <option value="last_90_days">Last 90 days</option>
-              <option value="custom">Custom range</option>
-            </select>
+            <div class="qc-msel-trigger" id="qcPeriodTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="qcPeriodLabel">Last 7 days</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="qc-msel-menu" id="qcPeriodMenu">
+              <button type="button" class="qc-ssel-option active" data-value="last_7_days" data-label="Last 7 days">Last 7 days<span class="qc-ssel-check">✓</span></button>
+              <button type="button" class="qc-ssel-option" data-value="last_30_days" data-label="Last 30 days">Last 30 days<span class="qc-ssel-check">✓</span></button>
+              <button type="button" class="qc-ssel-option" data-value="last_90_days" data-label="Last 90 days">Last 90 days<span class="qc-ssel-check">✓</span></button>
+              <button type="button" class="qc-ssel-option" data-value="custom" data-label="Custom range">Custom range<span class="qc-ssel-check">✓</span></button>
+            </div>
           </div>
           <div class="qc-field qc-msel">
             <label>Categories</label>

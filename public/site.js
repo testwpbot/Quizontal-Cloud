@@ -373,14 +373,35 @@
       document.addEventListener('click', () => { menu.classList.remove('open'); trigger.classList.remove('open'); });
       update();
     }
-    // period select -> date range
-    const period = document.getElementById('qcPeriodSelect');
+    // period single-select (custom dropdown) -> date range
+    const pTrigger = document.getElementById('qcPeriodTrigger');
+    const pMenu = document.getElementById('qcPeriodMenu');
+    const pLabel = document.getElementById('qcPeriodLabel');
     const range = document.getElementById('qcDateRange');
-    if (period && range) {
-      period.addEventListener('change', () => {
-        const map = { last_7_days: 'Last 7 days', last_30_days: 'Last 30 days', last_90_days: 'Last 90 days', custom: 'Aug 1 — Aug 15, 2026' };
-        range.value = map[period.value];
-        qcToast('Filter updated: ' + range.value, 'info');
+    if (pTrigger && pMenu) {
+      const map = { last_7_days: 'Last 7 days', last_30_days: 'Last 30 days', last_90_days: 'Last 90 days', custom: 'Aug 1 — Aug 15, 2026' };
+      pTrigger.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = pMenu.classList.toggle('open');
+        pTrigger.classList.toggle('open', open);
+        pTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      pMenu.addEventListener('click', e => {
+        const opt = e.target.closest('.qc-ssel-option');
+        if (!opt) return;
+        pMenu.querySelectorAll('.qc-ssel-option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        pLabel.textContent = opt.getAttribute('data-label');
+        pMenu.classList.remove('open');
+        pTrigger.classList.remove('open');
+        pTrigger.setAttribute('aria-expanded', 'false');
+        const val = opt.getAttribute('data-value');
+        if (range) { range.value = map[val]; qcToast('Filter updated: ' + range.value, 'info'); }
+      });
+      document.addEventListener('click', () => {
+        pMenu.classList.remove('open');
+        pTrigger.classList.remove('open');
+        pTrigger.setAttribute('aria-expanded', 'false');
       });
     }
     // toast delegation for [data-qc-toast]
