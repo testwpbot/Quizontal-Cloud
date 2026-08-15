@@ -924,8 +924,8 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
 }
 .qc-announce:hover { border-color: rgba(227,28,100,.38); box-shadow: 0 16px 40px rgba(0,0,0,.5); transform: translateY(-1px); }
 .qc-announce:hover::before { opacity: 1; }
-.qc-announce-logo { flex: none; width: 56px; height: 56px; }
-.qc-announce-logo svg { width: 100%; height: 100%; display: block; border-radius: 14px; box-shadow: 0 8px 20px rgba(227,28,100,.3); }
+.qc-announce-logo { flex: none; width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; }
+.qc-announce-logo svg { width: 100%; height: 100%; display: block; }
 .qc-announce-body { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; min-width: 0; flex: 1; }
 .qc-announce-badge {
   display: inline-flex; align-items: center; gap: 5px;

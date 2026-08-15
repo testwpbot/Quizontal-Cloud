@@ -17,11 +17,8 @@
               <stop offset="100%" stop-color="#22d3ee"/>
             </linearGradient>
           </defs>
-          <rect width="40" height="40" rx="11" fill="url(#qcAnnounceGrad)"/>
-          <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="8.5" y="8.5" width="23" height="11" rx="2.5"/>
-            <rect x="8.5" y="21.5" width="23" height="10" rx="2.5"/>
-            <path d="M12 14h.01M12 26.5h.01"/>
+          <g fill="none" stroke="url(#qcAnnounceGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 28a6 6 0 1 1 1.6-11.8A7 7 0 0 1 26 14a5.5 5.5 0 0 1 3 14"/>
           </g>
         </svg>
       </span>
