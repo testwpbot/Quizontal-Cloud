@@ -74,16 +74,18 @@
   }
   @media (max-width: 700px) {
     .mobile-toggle { display: block !important; margin-left: auto !important; }
-    .nav-menu { position: fixed !important; top: 12px !important; right: 12px !important; bottom: 12px !important; left: auto !important; width: min(372px, calc(100vw - 24px)) !important; height: auto !important; margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0 !important; z-index: 72 !important; background: radial-gradient(120% 60% at 100% 0%, rgba(227, 28, 100, 0.10), transparent 55%), linear-gradient(180deg, rgba(19, 19, 26, 0.97), rgba(7, 7, 11, 0.99)) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 26px !important; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72) !important; transform: translateX(calc(100% + 24px)) !important; transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.28, 1) !important; overflow: hidden !important; will-change: transform !important; }
+    .nav-menu { position: fixed !important; top: 12px !important; right: 12px !important; bottom: 12px !important; left: auto !important; width: min(320px, calc(100vw - 24px)) !important; height: auto !important; margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0 !important; z-index: 72 !important; background: radial-gradient(120% 60% at 100% 0%, rgba(227, 28, 100, 0.10), transparent 55%), linear-gradient(180deg, rgba(19, 19, 26, 0.97), rgba(7, 7, 11, 0.99)) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 26px !important; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72) !important; transform: translateX(calc(100% + 24px)) !important; transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.28, 1) !important; overflow: hidden !important; will-change: transform !important; }
     .nav-menu.open { transform: none !important; right: 12px !important; }
     .nav-menu .drawer-head { display: flex !important; flex: 0 0 auto !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 18px 18px 14px !important; border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important; }
     .nav-menu .drawer-brand { display: flex !important; flex-direction: column !important; gap: 4px !important; min-width: 0 !important; }
     .nav-menu .drawer-brand img { width: 150px !important; height: 40px !important; object-fit: contain !important; }
-    .nav-menu .drawer-brand-tag { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #6b7280; }
     .nav-menu .drawer-close { width: 40px !important; height: 40px !important; flex: none !important; display: grid !important; place-items: center !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; background: rgba(255, 255, 255, 0.04) !important; color: #d7dae2 !important; cursor: pointer !important; }
     .nav-menu .drawer-close svg { width: 18px; height: 18px; }
-    .nav-menu .drawer-body { display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; overflow-y: auto !important; overscroll-behavior: contain !important; padding: 6px 16px 16px !important; gap: 0 !important; }
-    .nav-menu .drawer-body::-webkit-scrollbar { width: 0; }
+    .nav-menu .drawer-body { display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; overflow-y: auto !important; overscroll-behavior: contain !important; padding: 6px 16px 16px !important; gap: 0 !important; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent; }
+    .nav-menu .drawer-body::-webkit-scrollbar { width: 6px; }
+    .nav-menu .drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .nav-menu .drawer-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 999px; }
+    .nav-menu .drawer-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
     .nav-menu .drawer-label { display: block !important; padding: 14px 10px 8px !important; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6270; }
     .nav-menu .drawer-body > a { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 12px !important; margin: 3px 0 !important; padding: 12px !important; border: 1px solid transparent !important; border-radius: 14px !important; background: transparent !important; color: #c3c8d4 !important; font-size: 0.94rem !important; font-weight: 500 !important; text-decoration: none !important; }
     .nav-menu .drawer-body > a::after { content: "\203A" !important; display: block !important; margin-left: auto !important; color: #4b5160 !important; font-size: 1.15rem !important; line-height: 1 !important; background: none !important; border: 0 !important; position: static !important; height: auto !important; width: auto !important; }
@@ -180,7 +182,6 @@
       <div class="drawer-head">
         <div class="drawer-brand">
           <img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud">
-          <span class="drawer-brand-tag">Cloud · Hosting · Domains</span>
         </div>
         <button type="button" class="drawer-close" aria-label="Close menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
