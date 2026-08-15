@@ -601,12 +601,6 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
 /* stat ring (reuse existing .stat-card + .stat-ring; add a compact grid) */
 .qc-demo-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
 
-/* mini bar chart */
-.qc-demo-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
-.qc-demo-bar { flex: 1; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #f78fb4, #fbd2e1); min-height: 4px; }
-.qc-demo-bar.alt { background: linear-gradient(180deg, #22d3ee, #a5ecf8); }
-.qc-demo-axis { display: flex; justify-content: space-between; margin-top: 8px; font-size: .68rem; color: var(--muted-2); }
-
 /* flat table (small) */
 .qc-demo-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .qc-demo-table th {
