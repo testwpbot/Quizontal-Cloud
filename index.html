@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" data-preset="maz-ui" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maz-UI — Standalone Components and Tools Library for Vue & Nuxt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; scroll-behavior: smooth; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--mz-border); border-radius: 10px; }
+  body { font-family: var(--mz-font), sans-serif; background: var(--mz-bg); color: var(--mz-fg); -webkit-font-smoothing: antialiased; transition: background 0.3s ease, color 0.3s ease; }
+  h1, h2, h3, h4, h5, h6 { color: var(--mz-fg); }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: inherit; }
+  ::selection { background: var(--mz-primary); color: var(--mz-primary-fg); }
+
+  /* ================= THEME PRESETS ================= */
+  html[data-preset="maz-ui"] { --mz-font: 'Manrope'; --mz-radius: 0.7rem; --mz-border-w: 1px; }
+  html[data-preset="maz-ui"][data-mode="light"] {
+    --mz-bg: #ffffff; --mz-fg: #21252b; --mz-primary: #1e90ff; --mz-primary-fg: #ffffff;
+    --mz-secondary: #9116fe; --mz-secondary-fg: #ffffff; --mz-accent: #1cce9f; --mz-accent-fg: #ffffff;
+    --mz-success: #84cc16; --mz-success-fg: #21252b; --mz-warning: #fcb831; --mz-warning-fg: #21252b;
+    --mz-destructive: #f4362e; --mz-destructive-fg: #ffffff; --mz-info: #17a4ba; --mz-info-fg: #ffffff;
+    --mz-contrast: #20212c; --mz-contrast-fg: #f2f2f5; --mz-muted: #8a8a8a; --mz-border: #daeaf6; --mz-soft: #f4f8fb;
+  }
+  html[data-preset="maz-ui"][data-mode="dark"] {
+    --mz-bg: #20212c; --mz-fg: #d9d9d9; --mz-primary: #1e90ff; --mz-primary-fg: #ffffff;
+    --mz-secondary: #9116fe; --mz-secondary-fg: #ffffff; --mz-accent: #1cce9f; --mz-accent-fg: #ffffff;
+    --mz-success: #84cc16; --mz-success-fg: #20212c; --mz-warning: #fcb831; --mz-warning-fg: #20212c;
+    --mz-destructive: #ff6e6b; --mz-destructive-fg: #ffffff; --mz-info: #17a4ba; --mz-info-fg: #ffffff;
+    --mz-contrast: #ffffff; --mz-contrast-fg: #20212c; --mz-muted: #8a8a8a; --mz-border: #36354b; --mz-soft: #2a2b38;
+  }
+
+  html[data-preset="pristine"] { --mz-font: 'Inter'; --mz-radius: 0.6rem; --mz-border-w: 1px; }
+  html[data-preset="pristine"][data-mode="light"] {
+    --mz-bg: #fcfcfd; --mz-fg: #1a1a1a; --mz-primary: #1d292f; --mz-primary-fg: #ffffff;
+    --mz-secondary: #e8eaf0; --mz-secondary-fg: #1a1a1a; --mz-accent: #d4d9e1; --mz-accent-fg: #1a1a1a;
+    --mz-success: #27a163; --mz-success-fg: #ffffff; --mz-warning: #e89c2c; --mz-warning-fg: #1a1a1a;
+    --mz-destructive: #d92626; --mz-destructive-fg: #ffffff; --mz-info: #1a5ee6; --mz-info-fg: #ffffff;
+    --mz-contrast: #262626; --mz-contrast-fg: #f2f2f2; --mz-muted: #999999; --mz-border: #e8eaf0; --mz-soft: #f2f3f6;
+  }
+  html[data-preset="pristine"][data-mode="dark"] {
+    --mz-bg: #1a1a1a; --mz-fg: #f2f2f2; --mz-primary: #f2f2f2; --mz-primary-fg: #1a1a1a;
+    --mz-secondary: #2e2e2e; --mz-secondary-fg: #f2f2f2; --mz-accent: #363b42; --mz-accent-fg: #f2f2f2;
+    --mz-success: #27a163; --mz-success-fg: #ffffff; --mz-warning: #e89c2c; --mz-warning-fg: #1a1a1a;
+    --mz-destructive: #dd3c3c; --mz-destructive-fg: #ffffff; --mz-info: #306ee8; --mz-info-fg: #ffffff;
+    --mz-contrast: #e8eaf0; --mz-contrast-fg: #1a1a1a; --mz-muted: #999999; --mz-border: #2e2e2e; --mz-soft: #242424;
+  }
+
+  html[data-preset="ocean"] { --mz-font: 'Poppins'; --mz-radius: 1rem; --mz-border-w: 0.125rem; font-size: 16px; }
+  html[data-preset="ocean"][data-mode="light"] {
+    --mz-bg: #fafcfd; --mz-fg: #181f26; --mz-primary: #2595b8; --mz-primary-fg: #ffffff;
+    --mz-secondary: #e6f1f1; --mz-secondary-fg: #181f26; --mz-accent: #e0ab85; --mz-accent-fg: #181f26;
+    --mz-success: #219171; --mz-success-fg: #ffffff; --mz-warning: #d19842; --mz-warning-fg: #181f26;
+    --mz-destructive: #d9442c; --mz-destructive-fg: #ffffff; --mz-info: #33b3cc; --mz-info-fg: #ffffff;
+    --mz-contrast: #181f26; --mz-contrast-fg: #fafcfd; --mz-muted: #77888f; --mz-border: #c9dcdc; --mz-soft: #eef6f6;
+  }
+  html[data-preset="ocean"][data-mode="dark"] {
+    --mz-bg: #141a20; --mz-fg: #e2edec; --mz-primary: #33cccc; --mz-primary-fg: #141a20;
+    --mz-secondary: #202f38; --mz-secondary-fg: #e2edec; --mz-accent: #d9b08c; --mz-accent-fg: #141a20;
+    --mz-success: #2e9c77; --mz-success-fg: #ffffff; --mz-warning: #cd9a4d; --mz-warning-fg: #141a20;
+    --mz-destructive: #e05a3c; --mz-destructive-fg: #ffffff; --mz-info: #43b7d1; --mz-info-fg: #ffffff;
+    --mz-contrast: #e2edec; --mz-contrast-fg: #141a20; --mz-muted: #8f9aa3; --mz-border: #333f47; --mz-soft: #1c242b;
+  }
+
+  html[data-preset="obsidian"] { --mz-font: 'Inter'; --mz-radius: 0.6rem; --mz-border-w: 1px; }
+  html[data-preset="obsidian"][data-mode="light"] {
+    --mz-bg: #fafafa; --mz-fg: #21252b; --mz-primary: #3399ff; --mz-primary-fg: #ffffff;
+    --mz-secondary: #e3e6ec; --mz-secondary-fg: #21252b; --mz-accent: #a44bff; --mz-accent-fg: #ffffff;
+    --mz-success: #2ea37a; --mz-success-fg: #ffffff; --mz-warning: #ffaa00; --mz-warning-fg: #21252b;
+    --mz-destructive: #e23636; --mz-destructive-fg: #ffffff; --mz-info: #1a66ff; --mz-info-fg: #ffffff;
+    --mz-contrast: #21252b; --mz-contrast-fg: #ffffff; --mz-muted: #767c86; --mz-border: #e3e6ec; --mz-soft: #f0f2f4;
+  }
+  html[data-preset="obsidian"][data-mode="dark"] {
+    --mz-bg: #16181d; --mz-fg: #f2f2f2; --mz-primary: #66b3ff; --mz-primary-fg: #16181d;
+    --mz-secondary: #272b33; --mz-secondary-fg: #f2f2f2; --mz-accent: #a44bff; --mz-accent-fg: #ffffff;
+    --mz-success: #33cc99; --mz-success-fg: #16181d; --mz-warning: #ffb70d; --mz-warning-fg: #16181d;
+    --mz-destructive: #e05252; --mz-destructive-fg: #ffffff; --mz-info: #3377ff; --mz-info-fg: #ffffff;
+    --mz-contrast: #ffffff; --mz-contrast-fg: #16181d; --mz-muted: #8f959f; --mz-border: #2c3038; --mz-soft: #202329;
+  }
+
+  /* ================= NAV ================= */
+  .nav { position: sticky; top: 0; z-index: 1000; width: 100%; background: color-mix(in srgb, var(--mz-bg) 82%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--mz-border); }
+  .nav-inner { max-width: 1280px; margin: 0 auto; height: 64px; padding: 0 24px; display: flex; align-items: center; gap: 8px; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; margin-right: 8px; font-size: 1.05rem; font-weight: 800; color: var(--mz-fg); }
+  .nav-logo svg { width: 34px; height: 34px; flex-shrink: 0; }
+  .nav-logo small { font-size: 0.65rem; font-weight: 600; color: var(--mz-muted); margin-left: 4px; border: 1px solid var(--mz-border); border-radius: 10rem; padding: 2px 8px; }
+  .nav-menu { display: flex; align-items: center; gap: 2px; }
+  .nav-item { position: relative; }
+  .nav-link { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: var(--mz-radius); font-size: 0.88rem; font-weight: 600; color: var(--mz-muted); cursor: pointer; background: none; border: none; transition: background 0.2s, color 0.2s; }
+  .nav-link:hover { background: var(--mz-soft); color: var(--mz-fg); }
+  .nav-link.active { color: var(--mz-primary); background: color-mix(in srgb, var(--mz-primary) 12%, transparent); }
+  .nav-link .chev { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid currentColor; transition: transform 0.2s; }
+  .nav-item.open .chev { transform: rotate(180deg); }
+  .dropdown { position: absolute; top: calc(100% + 8px); left: 0; min-width: 230px; background: var(--mz-bg); border: 1px solid var(--mz-border); border-radius: calc(var(--mz-radius) + 0.3rem); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35); padding: 0.6rem; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.2s, transform 0.2s, visibility 0.2s; z-index: 1100; max-height: 70vh; overflow-y: auto; }
+  .nav-item.open .dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+  .dropdown a { display: block; padding: 7px 10px; border-radius: calc(var(--mz-radius) - 0.1rem); font-size: 0.85rem; font-weight: 500; color: var(--mz-muted); transition: background 0.15s, color 0.15s; }
+  .dropdown a:hover { background: var(--mz-soft); color: var(--mz-primary); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .icon-btn { position: relative; width: 38px; height: 38px; border-radius: var(--mz-radius); background: transparent; border: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--mz-muted); cursor: pointer; transition: background 0.2s, color 0.2s; }
+  .icon-btn:hover { background: var(--mz-soft); color: var(--mz-fg); }
+  .icon-btn svg { width: 19px; height: 19px; }
+  .ghost-btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: var(--mz-radius); border: 1px solid var(--mz-border); background: transparent; color: var(--mz-fg); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+  .ghost-btn:hover { background: var(--mz-soft); border-color: var(--mz-primary); color: var(--mz-primary); }
+  .ghost-btn svg { width: 16px; height: 16px; }
+  .ghost-btn .star-count { color: var(--mz-muted); font-weight: 500; }
+  .ghost-btn:hover .star-count { color: var(--mz-primary); }
+  .hamburger { display: none; border: none; background: none; cursor: pointer; }
+  .hamburger svg { width: 22px; height: 22px; color: var(--mz-fg); }
+  .mobile-menu { display: none; border-bottom: 1px solid var(--mz-border); background: var(--mz-bg); padding: 8px 16px 16px; }
+  .mobile-menu.show { display: block; }
+  .mobile-menu a { display: block; padding: 10px 8px; font-size: 0.9rem; font-weight: 600; color: var(--mz-muted); border-bottom: 1px dashed var(--mz-border); }
+  .mobile-menu a:hover { color: var(--mz-primary); }
+
+  /* ================= MAIN / HERO ================= */
+  main { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+  .hero { padding: 2rem 0 3rem; text-align: center; }
+  .hero-inner { max-width: 48rem; margin: 0 auto; }
+  .hero-tagline { font-size: 1.25rem; color: var(--mz-muted); max-width: none; margin: 0 auto; font-weight: 500; letter-spacing: -0.025em; line-height: 1.6; gap: 0 0.2rem; }
+  .hero-title { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0 0.5rem; font-size: 2.25rem; font-weight: 700; letter-spacing: -0.05em; line-height: 1.1; margin: 1.5rem auto 0; max-width: none; color: var(--mz-fg); }
+  .mz-word { display: inline-flex; will-change: transform, opacity, filter; opacity: 0; animation: mzSlideDownBlur 2000ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  @keyframes mzSlideDownBlur { from { opacity: 0; transform: translateY(-20px); filter: blur(10px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+  .hero-title .gradient { position: relative; display: inline-flex; }
+  .hero-title .gradient::before { content: ""; position: absolute; inset: 0; z-index: 0; opacity: 0.4; filter: blur(16px); background: linear-gradient(to right, var(--mz-primary), var(--mz-info), var(--mz-secondary)); }
+  .hero-title .gradient span { position: relative; }
+  .hero-actions { margin-top: 3rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+  .hero-actions .btn { width: 100%; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; border-radius: var(--mz-radius); border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s; }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { width: 1.05em; height: 1.05em; flex-shrink: 0; }
+  .btn-sm { font-size: 0.8rem; padding: 6px 14px; }
+  .btn-lg { font-size: 0.95rem; padding: 12px 24px; }
+  .btn-primary { background: var(--mz-primary); border-color: var(--mz-primary); color: var(--mz-primary-fg); }
+  .btn-primary:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--mz-primary) 40%, transparent); }
+  .btn-contrast { background: var(--mz-contrast); border-color: var(--mz-contrast); color: var(--mz-contrast-fg); }
+  .btn-contrast:hover { opacity: 0.9; }
+  .btn-outline { background: transparent; border-color: var(--mz-border); color: var(--mz-fg); }
+  .btn-outline:hover { border-color: var(--mz-primary); color: var(--mz-primary); }
+  .btn-block { width: 100%; }
+
+  .hero-demo { margin-top: 3rem; text-align: left; opacity: 0; }
+  .demo-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .demo-tabs { display: inline-flex; background: var(--mz-soft); border-radius: var(--mz-radius); padding: 0.25rem; border: 1px solid var(--mz-border); }
+  .demo-tab { border: none; background: transparent; border-radius: calc(var(--mz-radius) - 0.2rem); padding: 0.45rem 1.1rem; font-size: 0.8rem; font-weight: 700; color: var(--mz-muted); cursor: pointer; transition: all 0.2s ease; }
+  .demo-tab.active { background: var(--mz-primary); color: var(--mz-primary-fg); box-shadow: 0 2px 8px color-mix(in srgb, var(--mz-primary) 40%, transparent); }
+  .demo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .preset-pills { display: inline-flex; gap: 4px; background: var(--mz-soft); border: 1px solid var(--mz-border); border-radius: var(--mz-radius); padding: 4px; }
+  .preset-pill { border: none; background: transparent; border-radius: calc(var(--mz-radius) - 0.25rem); padding: 6px 12px; font-size: 0.72rem; font-weight: 600; color: var(--mz-muted); cursor: pointer; transition: all 0.2s; }
+  .preset-pill.active { background: var(--mz-secondary); color: var(--mz-secondary-fg); }
+  .demo-frame { border: 1px solid var(--mz-border); border-radius: calc(var(--mz-radius) + 0.5rem); overflow: hidden; background: var(--mz-bg); }
+  .demo-panel { display: none; }
+  .demo-panel.active { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ================= SHARED UI ================= */
+  .card { border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); background: var(--mz-bg); }
+  .card-header { background: transparent; border-bottom: 1px solid var(--mz-border); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-body { padding: 1.25rem; }
+  .card-title { font-size: 1.05rem; font-weight: 700; color: var(--mz-fg); }
+  .card-sub { font-size: 0.75rem; color: var(--mz-muted); margin: 0; font-weight: 500; }
+  .text-muted { color: var(--mz-muted); }
+  .text-sm { font-size: 0.82rem; }
+  .badge { display: inline-flex; align-items: center; padding: 0.35em 0.8em; font-size: 0.72rem; font-weight: 700; border-radius: 10rem; line-height: 1; letter-spacing: 0.02em; }
+  .badge-success { background: color-mix(in srgb, var(--mz-success) 15%, transparent); color: var(--mz-success); }
+  .badge-warning { background: color-mix(in srgb, var(--mz-warning) 15%, transparent); color: var(--mz-warning); }
+  .badge-info { background: color-mix(in srgb, var(--mz-info) 15%, transparent); color: var(--mz-info); }
+
+  .mz-select, .mz-input, .mz-input-price, .mz-input-number { display: flex; flex-direction: column; gap: 6px; }
+  .mz-multiselect { position: relative; display: flex; flex-direction: column; gap: 6px; }
+  .mz-multiselect label, .mz-select label, .mz-input label, .mz-input-price label, .mz-input-number label { font-size: 0.75rem; font-weight: 600; color: var(--mz-muted); }
+  .msel-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--mz-bg); border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); font-family: inherit; font-size: 0.85rem; color: var(--mz-fg); cursor: pointer; outline: none; user-select: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .msel-trigger:hover { border-color: var(--mz-primary); }
+  .msel-trigger:focus-visible, .msel-trigger.open { border-color: var(--mz-primary); box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--mz-primary) 18%, transparent); }
+  .msel-trigger span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msel-trigger svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--mz-muted); transition: transform 0.2s; }
+  .msel-trigger.open svg { transform: rotate(180deg); }
+  .msel-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 1300; background: var(--mz-bg); border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); padding: 6px; display: none; }
+  .msel-menu.open { display: block; animation: fadeIn 0.15s ease; }
+  .msel-option { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: calc(var(--mz-radius) - 0.2rem); font-size: 0.85rem; font-weight: 500; color: var(--mz-fg); cursor: pointer; transition: background 0.15s; }
+  .msel-option:hover { background: var(--mz-soft); }
+  .msel-option input { accent-color: var(--mz-primary); width: 15px; height: 15px; cursor: pointer; }
+  .mz-select select, .mz-input input, .mz-input-price input, .mz-input-number input { width: 100%; padding: 10px 12px; background: var(--mz-bg); border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); font-family: inherit; font-size: 0.85rem; color: var(--mz-fg); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .mz-select select:focus, .mz-input input:focus, .mz-input-price input:focus, .mz-input-number input:focus { border-color: var(--mz-primary); box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--mz-primary) 18%, transparent); }
+  .mz-select select option { background: var(--mz-bg); color: var(--mz-fg); }
+  .mz-input.error input { border-color: var(--mz-destructive); }
+  .mz-hint { font-size: 0.72rem; color: var(--mz-destructive); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; }
+  .checkbox-row input[type="checkbox"] { accent-color: var(--mz-contrast); width: 15px; height: 15px; cursor: pointer; }
+  .checkbox-row label { font-size: 0.85rem; color: var(--mz-muted); cursor: pointer; font-weight: 500; }
+  .mz-link { color: var(--mz-primary); font-size: 0.85rem; font-weight: 600; cursor: pointer; background: none; border: none; padding: 0; }
+  .mz-link:hover { text-decoration: underline; }
+
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 10rem; background: var(--mz-soft); outline: none; cursor: pointer; border: 1px solid var(--mz-border); }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--mz-primary); border: 3px solid var(--mz-bg); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); cursor: pointer; }
+  .slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--mz-primary); border: 3px solid var(--mz-bg); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); cursor: pointer; }
+
+  .progress-ring { --ring: var(--mz-primary); width: 3rem; height: 3rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: conic-gradient(var(--ring) calc(var(--val) * 1%), var(--mz-soft) 0); flex-shrink: 0; }
+  .progress-ring-success { --ring: var(--mz-success); }
+  .progress-ring-info { --ring: var(--mz-info); }
+  .progress-ring-warning { --ring: var(--mz-warning); }
+  .progress-ring-destructive { --ring: var(--mz-destructive); }
+  .ring-inner { width: 2.4rem; height: 2.4rem; border-radius: 50%; background: var(--mz-bg); display: inline-flex; align-items: center; justify-content: center; color: var(--ring); font-size: 0.7rem; font-weight: 700; }
+
+  .table-wrap { overflow-x: auto; }
+  .table-flat { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table-flat th { text-align: left; padding: 0.6rem 0.9rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mz-muted); cursor: pointer; user-select: none; border-bottom: 1px solid var(--mz-border); white-space: nowrap; }
+  .table-flat th:hover { color: var(--mz-primary); }
+  .table-flat td { padding: 0.75rem 0.9rem; border-bottom: 1px dashed var(--mz-border); white-space: nowrap; color: var(--mz-fg); }
+  .table-flat tbody tr { transition: background 0.15s; }
+  .table-flat tbody tr:hover { background: var(--mz-soft); }
+  .table-flat tr.selected { background: color-mix(in srgb, var(--mz-primary) 8%, transparent); }
+  .table-flat .sort-ind { display: inline-block; margin-left: 4px; font-size: 0.65rem; }
+  .table-check { accent-color: var(--mz-primary); width: 14px; height: 14px; cursor: pointer; }
+  .table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .table-tools input { width: 220px; padding: 9px 12px; background: var(--mz-bg); border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); font-family: inherit; font-size: 0.85rem; color: var(--mz-fg); outline: none; }
+  .table-tools input:focus { border-color: var(--mz-primary); }
+  .pagination { display: flex; align-items: center; gap: 4px; margin-top: 14px; }
+  .page-btn { min-width: 30px; height: 30px; padding: 0 8px; border: 1px solid var(--mz-border); border-radius: var(--mz-radius); background: var(--mz-bg); color: var(--mz-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .page-btn:hover { border-color: var(--mz-primary); color: var(--mz-primary); }
+  .page-btn.active { background: var(--mz-primary); border-color: var(--mz-primary); color: var(--mz-primary-fg); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-info { font-size: 0.75rem; color: var(--mz-muted); margin-left: auto; }
+
+  .chart-svg { width: 100%; height: auto; display: block; }
+  .chart-legend { display: flex; gap: 16px; align-items: center; font-size: 0.75rem; color: var(--mz-muted); font-weight: 500; margin-top: 6px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+  .gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+  .gallery-main { border-radius: var(--mz-radius); overflow: hidden; border: var(--mz-border-w) solid var(--mz-border); min-height: 220px; position: relative; }
+  .gallery-main img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.3s; }
+  .gallery-thumbs { display: flex; flex-direction: column; gap: 10px; }
+  .gallery-thumb { flex: 1; border-radius: var(--mz-radius); overflow: hidden; border: var(--mz-border-w) solid var(--mz-border); cursor: pointer; opacity: 0.55; transition: opacity 0.2s, border-color 0.2s; padding: 0; background: none; }
+  .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 90px; }
+  .gallery-thumb:hover { opacity: 0.8; }
+  .gallery-thumb.active { opacity: 1; border-color: var(--mz-primary); }
+  .specs-list { list-style: none; }
+  .specs-list li { display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem; color: var(--mz-muted); }
+  .specs-list li + li { border-top: 1px dashed var(--mz-border); }
+  .specs-list li span:last-child { color: var(--mz-fg); font-weight: 600; }
+  .checklist { display: flex; flex-direction: column; gap: 4px; }
+  .checklist-item { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: calc(var(--mz-radius) - 0.2rem); font-size: 0.85rem; color: var(--mz-fg); font-weight: 500; transition: background 0.15s; }
+  .checklist-item:hover { background: var(--mz-soft); }
+  .checklist-item input { accent-color: var(--mz-primary); width: 15px; height: 15px; cursor: pointer; }
+  .checklist-item.disabled input { accent-color: var(--mz-muted); }
+
+  .auth-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 560px; }
+  .auth-brand { background: var(--mz-contrast); color: var(--mz-contrast-fg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 2rem; text-align: center; }
+  .auth-brand p { font-size: 0.9rem; color: color-mix(in srgb, var(--mz-contrast-fg) 70%, transparent); max-width: 280px; }
+  .auth-form-side { padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; max-width: 460px; margin: 0 auto; width: 100%; }
+  .stepper { display: flex; gap: 10px; margin-bottom: 2rem; }
+  .step-item { flex: 1; }
+  .step-badge { display: flex; align-items: center; gap: 10px; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; border: var(--mz-border-w) solid var(--mz-border); color: var(--mz-muted); background: var(--mz-bg); transition: all 0.2s; }
+  .step-item.active .step-num { background: var(--mz-primary); border-color: var(--mz-primary); color: var(--mz-primary-fg); }
+  .step-item.done .step-num { background: var(--mz-success); border-color: var(--mz-success); color: var(--mz-success-fg); }
+  .step-title { font-size: 0.72rem; font-weight: 700; color: var(--mz-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .step-item.active .step-title { color: var(--mz-fg); }
+  .step-sub { font-size: 0.68rem; color: var(--mz-muted); }
+  .form-actions { display: flex; gap: 10px; }
+  .code-inputs { display: flex; gap: 8px; }
+  .code-inputs input { width: 46px; height: 52px; text-align: center; font-size: 1.2rem; font-weight: 700; border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); background: var(--mz-bg); color: var(--mz-fg); outline: none; transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit; }
+  .code-inputs input:focus { border-color: var(--mz-primary); box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--mz-primary) 18%, transparent); }
+  .code-inputs input.error { border-color: var(--mz-destructive); }
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+  .dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); z-index: 1500; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .dialog-overlay.show { display: flex; }
+  .dialog { background: var(--mz-bg); border: var(--mz-border-w) solid var(--mz-border); border-radius: calc(var(--mz-radius) + 0.4rem); padding: 1.75rem; max-width: 380px; width: 100%; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4); animation: fadeIn 0.25s ease; }
+  .dialog h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+  .dialog p { color: var(--mz-muted); font-size: 0.88rem; margin-bottom: 1.25rem; }
+  .dialog .btn { width: 100%; }
+
+  .footer { padding: 1.25rem 0 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8rem; color: var(--mz-muted); }
+  .footer a { color: var(--mz-primary); font-weight: 600; }
+
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+  .toast { display: flex; align-items: center; gap: 10px; background: var(--mz-bg); color: var(--mz-fg); border: var(--mz-border-w) solid var(--mz-border); border-radius: var(--mz-radius); padding: 12px 16px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); min-width: 260px; max-width: 360px; animation: toastIn 0.3s ease; }
+  .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .toast.success svg { color: var(--mz-success); }
+  .toast.info svg { color: var(--mz-primary); }
+  .toast.error svg { color: var(--mz-destructive); }
+  .toast.hide { animation: toastOut 0.3s ease forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(12px); } }
+
+  @media (max-width: 960px) {
+    .nav-menu, .nav-right .ghost-btn, .nav-right .icon-btn:not(.hamburger) { display: none; }
+    .hamburger { display: flex; }
+    .auth-layout { grid-template-columns: 1fr; }
+    .auth-brand { display: none; }
+    .gallery { grid-template-columns: 1fr; }
+    .gallery-thumbs { flex-direction: row; }
+  }
+  @media (min-width: 768px) {
+    .hero { padding: 3rem 0; }
+    .hero-title { font-size: 3rem; }
+    .hero-tagline, .hero-title { display: flex; }
+  }
+  @media (max-width: 720px) {
+    .demo-controls { width: 100%; }
+    .preset-pills { flex: 1; }
+  }
+  @media (min-width: 540px) {
+    .hero-actions { flex-direction: row; }
+    .hero-actions .btn { width: auto; }
+  }
+  @media (min-width: 1024px) {
+    .hero-title { font-size: 3.75rem; }
+    .hero-demo { margin-top: 5rem; }
+  }
+</style>
+</head>
+<body>
+<!-- ============ TOP NAV BAR ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="mzGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e90ff"/>
+            <stop offset="55%" stop-color="#9116fe"/>
+            <stop offset="100%" stop-color="#1cce9f"/>
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="10" fill="url(#mzGrad)"/>
+        <text x="20" y="27" text-anchor="middle" font-family="Manrope, sans-serif" font-size="20" font-weight="800" fill="#fff">M</text>
+      </svg>
+      Maz-UI<small>v4.9.3</small>
+    </a>
+
+    <nav class="nav-menu">
+      <div class="nav-item" data-dropdown>
+        <button class="nav-link">Guide <span class="chev"></span></button>
+        <div class="dropdown">
+          <a href="#hero">Getting Started</a>
+          <a href="#hero">Vue</a>
+          <a href="#hero">Nuxt</a>
+          <a href="#hero">Theming</a>
+          <a href="#hero">Translations (i18n)</a>
+          <a href="#hero">MazUiProvider</a>
+          <a href="#hero">Resolvers (auto-imports)</a>
+          <a href="#hero">Icons</a>
+          <a href="#hero">Migration v3 to v4</a>
+          <a href="#hero">Model Context Protocol (MCP)</a>
+          <a href="#hero">CLI (v3)</a>
+        </div>
+      </div>
+      <div class="nav-item"><a class="nav-link" href="#hero">Components</a></div>
+      <div class="nav-item" data-dropdown>
+        <button class="nav-link">Modules <span class="chev"></span></button>
+        <div class="dropdown">
+          <a href="#hero">Plugins</a>
+          <a href="#hero">Composables</a>
+          <a href="#hero">Directives</a>
+          <a href="#hero">Utils</a>
+        </div>
+      </div>
+      <div class="nav-item"><a class="nav-link" href="#hero">Themes</a></div>
+      <div class="nav-item" data-dropdown>
+        <button class="nav-link" style="color:var(--mz-primary);">v4.9.3 <span class="chev"></span></button>
+        <div class="dropdown">
+          <a href="#hero">Changelog</a>
+          <a href="#hero">v4 announcement</a>
+          <a href="#hero">v3 documentation</a>
+          <a href="#hero">Migration v3 to v4</a>
+          <a href="#hero">Contributing</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="nav-right">
+      <button class="ghost-btn" onclick="toast('Star us on GitHub (demo)','info')" aria-label="Star on GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm1-13h-2v5.2l3.5 3.5 1.4-1.4-2.9-2.9V7Z"/></svg>
+        Star <span class="star-count">3.4k</span>
+      </button>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">
+        <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v2M12 19v2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M3 12h2M19 12h2M5.64 18.36l1.41-1.41M16.95 7.05l1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+      <button class="icon-btn" onclick="toast('Join our Discord (demo)','info')" aria-label="Discord">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.27 5.33A16.93 16.93 0 0 0 15.22 4a10.6 10.6 0 0 0-.5 1.02 15.7 15.7 0 0 0-4.44 0A10.6 10.6 0 0 0 9.78 4a16.9 16.9 0 0 0-4.05 1.33A17.43 17.43 0 0 0 2.48 18.2a17.1 17.1 0 0 0 5.2 2.63 12.6 12.6 0 0 0 1.06-1.7 10.7 10.7 0 0 1-1.68-.8l.4-.32a12.16 12.16 0 0 0 10.08 0l.4.32a10.7 10.7 0 0 1-1.68.8c.32.61.68 1.19 1.06 1.7a17.1 17.1 0 0 0 5.2-2.63 17.4 17.4 0 0 0-3.25-12.87ZM8.68 15.34a2.02 2.02 0 0 1-1.89-2.07 2.02 2.02 0 0 1 1.89-2.08c1.06 0 1.9.93 1.89 2.08a2.02 2.02 0 0 1-1.89 2.07Zm6.64 0a2.02 2.02 0 0 1-1.89-2.07 2.02 2.02 0 0 1 1.89-2.08c1.06 0 1.9.93 1.89 2.08a2.02 2.02 0 0 1-1.89 2.07Z"/></svg>
+      </button>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#hero">Guide</a>
+    <a href="#hero">Components</a>
+    <a href="#hero">Modules</a>
+    <a href="#hero">Themes</a>
+    <a href="#hero">Changelog</a>
+  </div>
+</header>
+
+<!-- ============ MAIN ============ -->
+<main>
+
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <h2 class="hero-tagline" data-animated-text="Collection of standalone components, plugins, directives, composables and more" data-delay="0"></h2>
+      <h1 class="hero-title" data-animated-text="Lightweight and efficient library for" data-last-word="Vue &amp; Nuxt" data-delay="500"></h1>
+    </div>
+    <div class="hero-actions">
+      <a class="btn btn-lg btn-primary" href="#demo" onclick="toast('Opening getting started guide','info');return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986z"/></svg>
+        Get Started
+      </a>
+      <button class="btn btn-lg btn-outline" onclick="toast('Star us on GitHub (demo)','info')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Z"/></svg>
+        3.4k <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--mz-warning);"><path d="M12 3.5 14.7 9l6 .8-4.4 4.2 1.1 6L12 17.1 6.6 20l1.1-6L3.3 9.8l6-.8L12 3.5Z"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== DEMO FRAME ===== -->
+  <section class="hero-demo" id="demo">
+    <div class="demo-bar">
+      <div class="demo-tabs">
+        <button class="demo-tab active" data-tab="dashboard">Dashboard</button>
+        <button class="demo-tab" data-tab="product">Product Page</button>
+        <button class="demo-tab" data-tab="auth">Auth Page</button>
+      </div>
+      <div class="demo-controls">
+        <button class="icon-btn" id="demoThemeToggle" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v2M12 19v2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M3 12h2M19 12h2M5.64 18.36l1.41-1.41M16.95 7.05l1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+        <div class="preset-pills">
+          <button class="preset-pill" data-preset="pristine">Pristine</button>
+          <button class="preset-pill" data-preset="ocean">Ocean</button>
+          <button class="preset-pill" data-preset="obsidian">Obsidian</button>
+          <button class="preset-pill active" data-preset="maz-ui">Maz-UI</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-frame">
+      <div class="demo-panel active" id="panel-dashboard">
+
+        <!-- ===== DASHBOARD DEMO ===== -->
+        <div style="padding:1.5rem;">
+
+          <!-- Filters -->
+          <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:1.4rem;">
+            <div class="mz-select" style="flex:1;min-width:150px;max-width:200px;">
+              <label>Time Period</label>
+              <select id="periodSelect">
+                <option value="last_7_days" selected>Last 7 Days</option>
+                <option value="last_30_days">Last 30 Days</option>
+                <option value="last_90_days">Last 90 Days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="mz-multiselect" style="flex:1;min-width:200px;max-width:260px;">
+              <label>Categories</label>
+              <div class="msel-trigger" id="categoryTrigger" tabindex="0">
+                <span id="categoryLabel">Sales, Customers, Orders</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="msel-menu" id="categoryMenu">
+                <label class="msel-option"><input type="checkbox" value="sales" checked><span>Sales</span></label>
+                <label class="msel-option"><input type="checkbox" value="customers" checked><span>Customers</span></label>
+                <label class="msel-option"><input type="checkbox" value="orders" checked><span>Orders</span></label>
+                <label class="msel-option"><input type="checkbox" value="products"><span>Products</span></label>
+              </div>
+            </div>
+            <div class="mz-input" style="flex:1;min-width:220px;max-width:300px;">
+              <label>Date Range</label>
+              <input type="text" id="dateRangeInput" readonly value="Last 7 days">
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:1.4rem;">
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:14px;">
+                <span class="progress-ring progress-ring-success" style="--val:85"><span class="ring-inner"></span></span>
+                <div style="overflow:hidden;">
+                  <div style="font-size:1.25rem;font-weight:700;" data-count="28945" data-prefix="$">0</div>
+                  <div class="text-muted text-sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Total Revenue</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:14px;">
+                <span class="progress-ring progress-ring-info" style="--val:65"><span class="ring-inner"></span></span>
+                <div style="overflow:hidden;">
+                  <div style="font-size:1.25rem;font-weight:700;" data-count="384">0</div>
+                  <div class="text-muted text-sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">New Orders</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:14px;">
+                <span class="progress-ring progress-ring-warning" style="--val:92"><span class="ring-inner"></span></span>
+                <div style="overflow:hidden;">
+                  <div style="font-size:1.25rem;font-weight:700;" data-count="1482">0</div>
+                  <div class="text-muted text-sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Active Customers</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:14px;">
+                <span class="progress-ring progress-ring-destructive" style="--val:78"><span class="ring-inner"></span></span>
+                <div style="overflow:hidden;">
+                  <div style="font-size:1.25rem;font-weight:700;" data-count="94" data-suffix="%">0</div>
+                  <div class="text-muted text-sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Customer Satisfaction</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Orders Table -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Orders</h3>
+              <span class="badge badge-success">5 selected</span>
+            </div>
+            <div class="card-body">
+              <div class="table-tools">
+                <input type="text" id="orderSearch" placeholder="Search orders...">
+                <span class="text-muted text-sm" id="orderCount">5 rows</span>
+              </div>
+              <div class="table-wrap">
+                <table class="table-flat" id="ordersTable">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" class="table-check" id="checkAll"></th>
+                      <th data-key="id">Order ID <span class="sort-ind"></span></th>
+                      <th data-key="customer">Customer <span class="sort-ind"></span></th>
+                      <th data-key="product">Product <span class="sort-ind"></span></th>
+                      <th data-key="amount">Amount <span class="sort-ind"></span></th>
+                      <th data-key="status">Status <span class="sort-ind"></span></th>
+                      <th data-key="date">Date <span class="sort-ind"></span></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <button class="page-btn" data-page="prev" disabled>&laquo;</button>
+                <button class="page-btn active" data-page="1">1</button>
+                <button class="page-btn" data-page="2">2</button>
+                <button class="page-btn" data-page="next">&raquo;</button>
+                <span class="page-info">Page 1 of 2</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;" class="charts-grid">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Sales Overview</h3></div>
+              <div class="card-body">
+                <svg class="chart-svg" id="salesChart" viewBox="0 0 520 150" preserveAspectRatio="none" style="height:150px;"></svg>
+                <div class="chart-legend">
+                  <span><span class="legend-dot" style="background:#1cd1a1;"></span>Sales</span>
+                  <span><span class="legend-dot" style="background:#1e90ff;"></span>Orders</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Sales Target</h3>
+                <span style="font-size:1.25rem;font-weight:700;" id="targetPercent">75%</span>
+              </div>
+              <div class="card-body" style="display:flex;flex-direction:column;justify-content:space-between;gap:14px;height:100%;">
+                <div>
+                  <input type="range" class="slider" id="targetSlider" min="0" max="100" value="75">
+                  <div class="text-muted text-sm" style="text-align:center;margin-top:0.6rem;">Drag the slider to adjust sales target</div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div>
+                    <p style="font-weight:600;font-size:0.85rem;">Monthly Target</p>
+                    <p class="text-muted text-sm">$<span id="targetMoney">75,000</span></p>
+                  </div>
+                  <div style="text-align:right;">
+                    <p style="font-weight:600;font-size:0.85rem;">Achieved</p>
+                    <p class="text-sm" style="color:var(--mz-success);font-weight:600;">$50,000</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-panel" id="panel-product">
+        <!-- ===== PRODUCT DEMO ===== -->
+        <div style="padding:1.5rem;max-width:1100px;margin:0 auto;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;" class="product-grid">
+            <div>
+              <div class="gallery">
+                <div class="gallery-main">
+                  <img id="galleryMain" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800" alt="Premium Headphones">
+                </div>
+                <div class="gallery-thumbs">
+                  <button class="gallery-thumb active"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300" alt="Headphones"></button>
+                  <button class="gallery-thumb"><img src="https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=300" alt="Headphones"></button>
+                  <button class="gallery-thumb"><img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300" alt="Headphones"></button>
+                  <button class="gallery-thumb"><img src="https://images.unsplash.com/photo-1607294846590-fd005d7973e8?w=300" alt="Headphones"></button>
+                </div>
+              </div>
+              <div style="margin:1.25rem 0;">
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">Description</h2>
+                <p class="text-muted text-sm">Experience premium sound quality with our wireless headphones. Featuring advanced noise cancellation, long battery life and premium materials for ultimate comfort.</p>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3 class="card-title">Technical Specs</h3></div>
+                <div class="card-body">
+                  <ul class="specs-list">
+                    <li><span>Driver Size</span><span>40mm</span></li>
+                    <li><span>Frequency Response</span><span>20Hz - 20kHz</span></li>
+                    <li><span>Impedance</span><span>32 Ohm</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:1.1rem;">
+              <h1 style="font-size:1.9rem;font-weight:800;">Premium Headphones</h1>
+              <div style="font-size:1.9rem;font-weight:800;">€169,99</div>
+              <hr style="border:none;border-top:var(--mz-border-w) solid var(--mz-border);">
+              <div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:0.6rem;">Color</h2>
+                <div class="mz-select" style="max-width:260px;">
+                  <label>Color</label>
+                  <select id="colorSelect">
+                    <option value="Black" selected>Black</option>
+                    <option value="White">White</option>
+                    <option value="Rose Gold">Rose Gold</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:0.6rem;">Choose options</h2>
+                <div class="checklist">
+                  <label class="checklist-item"><input type="checkbox" checked disabled>Active Noise Cancellation</label>
+                  <label class="checklist-item"><input type="checkbox" checked disabled>40h Battery Life</label>
+                  <label class="checklist-item"><input type="checkbox" checked disabled>Premium Audio Drivers</label>
+                  <label class="checklist-item"><input type="checkbox" checked disabled>Bluetooth 5.0</label>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;" class="offer-row">
+                <div class="mz-input-price" style="flex:1;">
+                  <label>Price</label>
+                  <input type="number" id="offerPrice" value="100" min="1" step="1">
+                </div>
+                <button class="btn btn-outline" style="flex:1;" onclick="toast('Offer sent to seller (demo)','info')">Make an offer</button>
+              </div>
+              <div style="display:flex;gap:12px;" class="offer-row">
+                <div class="mz-input-number" style="flex:1;">
+                  <label>Quantity</label>
+                  <input type="number" id="qtyInput" value="1" min="1" step="1">
+                </div>
+                <button class="btn btn-contrast" style="flex:1;" onclick="toast('Added to cart (demo)','success')">Add to Cart</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-panel" id="panel-auth">
+        <!-- ===== AUTH DEMO ===== -->
+        <div class="auth-layout">
+          <div class="auth-brand">
+            <svg viewBox="0 0 40 40" style="width:5.5rem;height:5.5rem;" aria-hidden="true">
+              <defs>
+                <linearGradient id="mzGrad2" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#1e90ff"/>
+                  <stop offset="55%" stop-color="#9116fe"/>
+                  <stop offset="100%" stop-color="#1cce9f"/>
+                </linearGradient>
+              </defs>
+              <rect width="40" height="40" rx="10" fill="url(#mzGrad2)"/>
+              <text x="20" y="27" text-anchor="middle" font-family="Manrope, sans-serif" font-size="20" font-weight="800" fill="#fff">M</text>
+            </svg>
+            <p>Standalone components and tools library for Vue &amp; Nuxt</p>
+          </div>
+          <div class="auth-form-side">
+            <div class="stepper">
+              <div class="step-item active" data-step="1">
+                <div class="step-badge">
+                  <span class="step-num">1</span>
+                  <div>
+                    <div class="step-title">Sign In</div>
+                    <div class="step-sub">Welcome back!</div>
+                  </div>
+                </div>
+              </div>
+              <div class="step-item" data-step="2">
+                <div class="step-badge">
+                  <span class="step-num">2</span>
+                  <div>
+                    <div class="step-title">Two Factor Auth</div>
+                    <div class="step-sub">Verify your identity</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <form class="auth-form" id="signinForm" novalidate>
+              <div class="mz-input" id="emailField">
+                <label>Email</label>
+                <input type="email" id="emailInput" placeholder="john.doe@example.com" autocomplete="email">
+                <span class="mz-hint" id="emailHint" style="display:none;">Email is invalid</span>
+              </div>
+              <div class="mz-input" id="passwordField">
+                <label>Password</label>
+                <input type="password" id="passwordInput" placeholder="********" autocomplete="off">
+                <span class="mz-hint" id="passwordHint" style="display:none;">Password is required</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div class="checkbox-row">
+                  <input type="checkbox" id="rememberMe"><label for="rememberMe">Remember me</label>
+                </div>
+                <button type="button" class="mz-link" onclick="toast('Reset password link sent to your email','info')">Forgot password?</button>
+              </div>
+              <button type="submit" class="btn btn-contrast btn-block" id="signinBtn">Sign In</button>
+              <div class="text-muted text-sm" style="text-align:center;">
+                Don't have an account?
+                <button type="button" class="mz-link" onclick="toast('Registration feature coming soon!','info')">Register</button>
+              </div>
+            </form>
+
+            <div class="auth-form" id="twofaForm" style="display:none;">
+              <div class="text-muted text-sm">Enter the code sent to your email</div>
+              <div class="code-inputs" id="codeInputs"></div>
+              <span class="mz-hint" id="codeHint" style="display:none;">Please enter a valid code</span>
+              <div class="form-actions">
+                <button class="btn btn-outline" style="flex:1;" id="backBtn">Back</button>
+                <button class="btn btn-contrast" style="flex:1;" id="verifyBtn">Verify</button>
+              </div>
+              <button class="btn btn-outline btn-block" id="resendBtn">Resend code</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div>© 2026 Maz-UI. Open source MIT license.</div>
+    <div>
+      <a href="#hero" onclick="event.preventDefault();toast('Guide','info');return false;">Guide</a>
+      <span style="margin:0 6px;color:var(--mz-border);">·</span>
+      <a href="#hero" onclick="event.preventDefault();toast('GitHub','info');return false;">GitHub</a>
+      <span style="margin:0 6px;color:var(--mz-border);">·</span>
+      <a href="#hero" onclick="event.preventDefault();toast('Discord','info');return false;">Discord</a>
+    </div>
+  </footer>
+</main>
+
+<div class="dialog-overlay" id="successDialog">
+  <div class="dialog">
+    <h3>Welcome back!</h3>
+    <p>You have successfully signed in.</p>
+    <button class="btn btn-contrast" onclick="closeDialog()">Continue</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  /* ===== Toast ===== */
+  function toast(msg, type) {
+    var icons = {
+      success: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.2 14.4-3.6-3.6 1.4-1.4 2.2 2.2 5-5 1.4 1.4-6.4 6.4Z"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 14.5h-2v-2h2v2Zm0-4.5h-2v-6h2v6Z"/></svg>'
+    };
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type || 'info');
+    el.innerHTML = (icons[type] || icons.info) + '<span>' + msg + '</span>';
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(function () { el.classList.add('hide'); setTimeout(function () { el.remove(); }, 320); }, 3200);
+  }
+
+  /* ===== Animated text (word by word, like MazAnimatedText) ===== */
+  document.querySelectorAll('[data-animated-text]').forEach(function (el) {
+    var words = el.getAttribute('data-animated-text').split(' ');
+    var lastWord = el.getAttribute('data-last-word') || '';
+    var baseDelay = parseInt(el.getAttribute('data-delay') || '0');
+    var wordDelay = el.classList.contains('hero-tagline') ? 20 : 75;
+    el.textContent = '';
+    var html = '';
+    words.forEach(function (w, i) {
+      html += '<span class="mz-word" style="animation-delay:' + (baseDelay + i * wordDelay) + 'ms;">' + w + '</span>';
+    });
+    if (lastWord) {
+      html += '<span class="mz-word gradient" style="animation-delay:' + (baseDelay + words.length * wordDelay) + 'ms;"><span>' + lastWord + '</span></span>';
+    }
+    el.innerHTML = html;
+  });
+
+  /* ===== Fade-up for actions & demo (like MazAnimatedElement) ===== */
+  document.querySelectorAll('.hero-actions, .hero-demo').forEach(function (el) {
+    el.style.opacity = '0';
+    el.style.animation = 'mzSlideUpBlur 2000ms cubic-bezier(0.16, 1, 0.3, 1) forwards';
+    el.style.animationDelay = el.classList.contains('hero-actions') ? '1000ms' : '1250ms';
+  });
+  var styleTag = document.createElement('style');
+  styleTag.textContent = '@keyframes mzSlideUpBlur { from { opacity: 0; transform: translateY(20px); filter: blur(10px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }';
+  document.head.appendChild(styleTag);
+
+  /* ===== Theme mode ===== */
+  function applyMode(mode) {
+    document.documentElement.setAttribute('data-mode', mode);
+    var dark = mode === 'dark';
+    document.getElementById('themeToggle').querySelector('svg:nth-child(1)').style.display = dark ? 'none' : '';
+    document.getElementById('themeToggle').querySelector('svg:nth-child(2)').style.display = dark ? '' : 'none';
+    document.getElementById('demoThemeToggle').querySelector('svg:nth-child(1)').style.display = dark ? 'none' : '';
+    document.getElementById('demoThemeToggle').querySelector('svg:nth-child(2)').style.display = dark ? '' : 'none';
+  }
+  var isDark = true;
+  function toggleTheme() {
+    isDark = !isDark;
+    applyMode(isDark ? 'dark' : 'light');
+  }
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('demoThemeToggle').addEventListener('click', toggleTheme);
+
+  /* ===== Presets ===== */
+  document.querySelectorAll('.preset-pill').forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      document.querySelectorAll('.preset-pill').forEach(function (p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+      document.documentElement.setAttribute('data-preset', pill.dataset.preset);
+    });
+  });
+
+  /* ===== Dropdowns ===== */
+  function closeAllDrop() {
+    document.querySelectorAll('[data-dropdown].open').forEach(function (el) { el.classList.remove('open'); });
+  }
+  document.querySelectorAll('[data-dropdown]').forEach(function (item) {
+    item.querySelector('.nav-link').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var wasOpen = item.classList.contains('open');
+      closeAllDrop();
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('[data-dropdown]')) closeAllDrop();
+  });
+
+  /* ===== Mobile menu ===== */
+  var hamburger = document.getElementById('hamburger');
+  var mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', function () { mobileMenu.classList.toggle('show'); });
+  mobileMenu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { mobileMenu.classList.remove('show'); }); });
+
+  /* ===== Demo tabs ===== */
+  document.querySelectorAll('.demo-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.demo-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      document.querySelectorAll('.demo-panel').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ===== Counters ===== */
+  function animateCount(el) {
+    var target = parseFloat(el.dataset.count);
+    var prefix = el.dataset.prefix || '';
+    var suffix = el.dataset.suffix || '';
+    var dur = 1200, start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var val = Math.round(target * eased);
+      el.textContent = prefix + val.toLocaleString('en-US') + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  document.querySelectorAll('[data-count]').forEach(animateCount);
+
+  /* ===== Sales chart ===== */
+  (function () {
+    var svg = document.getElementById('salesChart');
+    var W = 520, H = 150, pad = 8;
+    var labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    var sales = [3100, 4200, 2900, 5600, 4900, 6100, 5900];
+    var orders = [410, 520, 340, 690, 590, 780, 710];
+    var max = 7000;
+    var step = (W - pad * 2) / (labels.length - 1);
+    function pathFor(data, color) {
+      var pts = data.map(function (v, i) {
+        return [pad + i * step, H - pad - (v / max) * (H - pad * 2)];
+      });
+      var d = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L');
+      var dots = '';
+      pts.forEach(function (p) { dots += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="' + color + '" stroke="var(--mz-bg)" stroke-width="2"><title>' + data[pts.indexOf(p)] + '</title></circle>'; });
+      return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 3px 6px ' + color + '55);"/>' + dots;
+    }
+    var grid = '';
+    for (var g = 0; g <= 3; g++) {
+      var gy = pad + (g * (H - pad * 2)) / 3;
+      grid += '<line x1="' + pad + '" y1="' + gy.toFixed(1) + '" x2="' + (W - pad) + '" y2="' + gy.toFixed(1) + '" stroke="var(--mz-border)" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3 3"/>';
+    }
+    var xlabels = '';
+    labels.forEach(function (l, i) {
+      var x = pad + i * step;
+      xlabels += '<text x="' + x.toFixed(1) + '" y="' + (H - 2) + '" text-anchor="middle" font-size="9" fill="var(--mz-muted)">' + l + '</text>';
+    });
+    svg.innerHTML = grid + pathFor(sales, '#1cd1a1') + pathFor(orders, '#1e90ff') + xlabels;
+  })();
+
+  /* ===== Orders table ===== */
+  var allOrders = [
+    { id: 1, customer: 'John Doe', product: 'Premium Headphones', amount: 169.99, status: 'completed', date: '2024-03-18' },
+    { id: 2, customer: 'Jane Smith', product: 'Wireless Speaker', amount: 89.99, status: 'pending', date: '2024-03-18' },
+    { id: 3, customer: 'Mike Johnson', product: 'Smart Watch', amount: 299.99, status: 'processing', date: '2024-03-17' },
+    { id: 4, customer: 'Sarah Wilson', product: 'Laptop Stand', amount: 49.99, status: 'completed', date: '2024-03-17' },
+    { id: 5, customer: 'Tom Brown', product: 'USB-C Hub', amount: 79.99, status: 'completed', date: '2024-03-16' },
+    { id: 6, customer: 'Emma Davis', product: 'Mechanical Keyboard', amount: 129.99, status: 'pending', date: '2024-03-16' },
+    { id: 7, customer: 'Alex Turner', product: 'Gaming Mouse', amount: 59.99, status: 'processing', date: '2024-03-15' },
+    { id: 8, customer: 'Lisa Wong', product: '4K Monitor', amount: 449.99, status: 'completed', date: '2024-03-15' },
+    { id: 9, customer: 'Chris Evans', product: 'Webcam HD', amount: 69.99, status: 'completed', date: '2024-03-14' },
+    { id: 10, customer: 'Nina Patel', product: 'Laptop Stand', amount: 49.99, status: 'pending', date: '2024-03-14' }
+  ];
+  var sortKey = 'id', sortAsc = true, page = 1, perPage = 5;
+  var tbody = document.querySelector('#ordersTable tbody');
+  var statusColor = { completed: 'success', pending: 'warning', processing: 'info' };
+  var selectedIds = {};
+
+  function renderTable() {
+    var q = document.getElementById('orderSearch').value.trim().toLowerCase();
+    var rows = allOrders.filter(function (o) {
+      return !q || o.customer.toLowerCase().indexOf(q) !== -1 || o.product.toLowerCase().indexOf(q) !== -1 || o.status.indexOf(q) !== -1;
+    });
+    rows.sort(function (a, b) {
+      var va = a[sortKey], vb = b[sortKey];
+      if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      return (va > vb ? 1 : va < vb ? -1 : 0) * (sortAsc ? 1 : -1);
+    });
+    document.getElementById('orderCount').textContent = rows.length + ' rows';
+    var pages = Math.max(1, Math.ceil(rows.length / perPage));
+    page = Math.min(page, pages);
+    var start = (page - 1) * perPage;
+    var slice = rows.slice(start, start + perPage);
+    tbody.innerHTML = slice.map(function (o) {
+      var sel = selectedIds[o.id] ? ' class="selected"' : '';
+      return '<tr' + sel + '><td><input type="checkbox" class="table-check row-check" data-id="' + o.id + '"' + (selectedIds[o.id] ? ' checked' : '') + '></td>' +
+        '<td><strong>#' + String(o.id).padStart(4, '0') + '</strong></td>' +
+        '<td>' + o.customer + '</td><td>' + o.product + '</td>' +
+        '<td><strong>$' + o.amount.toFixed(2) + '</strong></td>' +
+        '<td><span class="badge badge-' + statusColor[o.status] + '">' + o.status + '</span></td>' +
+        '<td>' + o.date + '</td></tr>';
+    }).join('');
+    document.querySelectorAll('.page-btn').forEach(function (b) {
+      var p = b.dataset.page;
+      b.disabled = p === 'prev' && page === 1 || p === 'next' && page === pages;
+      if (p === '1') { b.classList.toggle('active', page === 1); }
+      if (p === '2') { b.classList.toggle('active', page === 2); b.style.display = pages < 2 ? 'none' : ''; }
+    });
+    document.querySelector('.page-info').textContent = 'Page ' + page + ' of ' + pages;
+    updateSelected();
+  }
+  function updateSelected() {
+    var n = Object.keys(selectedIds).length;
+    var badge = document.querySelector('.card-header .badge');
+    badge.textContent = n + ' selected';
+    badge.style.display = n ? '' : 'none';
+    document.getElementById('checkAll').checked = tbody.querySelectorAll('.row-check:checked').length === tbody.querySelectorAll('.row-check').length && tbody.querySelectorAll('.row-check').length > 0;
+  }
+  tbody.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('row-check')) return;
+    var id = parseInt(e.target.dataset.id);
+    if (e.target.checked) selectedIds[id] = true; else delete selectedIds[id];
+    renderTable();
+  });
+  document.getElementById('checkAll').addEventListener('change', function (e) {
+    tbody.querySelectorAll('.row-check').forEach(function (c) {
+      var id = parseInt(c.dataset.id);
+      if (e.target.checked) selectedIds[id] = true; else delete selectedIds[id];
+    });
+    renderTable();
+  });
+  document.getElementById('orderSearch').addEventListener('input', function () { page = 1; renderTable(); });
+  document.querySelectorAll('.page-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var p = b.dataset.page;
+      if (p === 'prev') page--; else if (p === 'next') page++; else page = parseInt(p);
+      renderTable();
+    });
+  });
+  document.querySelectorAll('.table-flat th[data-key]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var k = th.dataset.key;
+      if (sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = true; }
+      document.querySelectorAll('.table-flat th .sort-ind').forEach(function (s) { s.textContent = ''; });
+      th.querySelector('.sort-ind').textContent = sortAsc ? '\u25B4' : '\u25BE';
+      renderTable();
+    });
+  });
+  renderTable();
+
+  /* ===== Sales target slider ===== */
+  var slider = document.getElementById('targetSlider');
+  slider.addEventListener('input', function () {
+    var v = parseInt(slider.value);
+    document.getElementById('targetPercent').textContent = v + '%';
+    document.getElementById('targetMoney').textContent = (1000 * v).toLocaleString('en-US');
+  });
+
+  /* ===== Filters ===== */
+  var periodSelect = document.getElementById('periodSelect');
+  var rangeInput = document.getElementById('dateRangeInput');
+  periodSelect.addEventListener('change', function () {
+    var map = { last_7_days: 'Last 7 days', last_30_days: 'Last 30 days', last_90_days: 'Last 90 days', custom: 'Mar 1 - Mar 18, 2024' };
+    rangeInput.value = map[periodSelect.value];
+    toast('Filter updated: ' + rangeInput.value, 'info');
+  });
+
+  /* ===== Categories multi-select (MazSelect style) ===== */
+  var mselTrigger = document.getElementById('categoryTrigger');
+  var mselMenu = document.getElementById('categoryMenu');
+  var mselLabel = document.getElementById('categoryLabel');
+  var mselLabels = { sales: 'Sales', customers: 'Customers', orders: 'Orders', products: 'Products' };
+  function updateCategoryLabel() {
+    var checked = mselMenu.querySelectorAll('input:checked');
+    if (!checked.length) { mselLabel.textContent = 'No category'; return; }
+    var names = [];
+    checked.forEach(function (c) { names.push(mselLabels[c.value]); });
+    mselLabel.textContent = names.join(', ');
+  }
+  mselTrigger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    mselTrigger.classList.toggle('open');
+    mselMenu.classList.toggle('open');
+  });
+  mselTrigger.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mselTrigger.click(); }
+  });
+  mselMenu.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (e.target.closest('.msel-option')) updateCategoryLabel();
+  });
+  mselMenu.addEventListener('change', function (e) {
+    if (e.target.matches('input')) {
+      updateCategoryLabel();
+      toast('Filter updated: ' + mselLabel.textContent, 'info');
+    }
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.mz-multiselect')) {
+      mselTrigger.classList.remove('open');
+      mselMenu.classList.remove('open');
+    }
+  });
+
+  /* ===== Product gallery ===== */
+  var galleryImgs = [
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
+    'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800',
+    'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800',
+    'https://images.unsplash.com/photo-1607294846590-fd005d7973e8?w=800'
+  ];
+  document.querySelectorAll('.gallery-thumb').forEach(function (th, i) {
+    th.addEventListener('click', function () {
+      document.querySelectorAll('.gallery-thumb').forEach(function (t) { t.classList.remove('active'); });
+      th.classList.add('active');
+      document.getElementById('galleryMain').src = galleryImgs[i];
+    });
+  });
+  document.getElementById('colorSelect').addEventListener('change', function (e) {
+    toast('Color changed to ' + e.target.value, 'info');
+  });
+
+  /* ===== Auth demo ===== */
+  var step = 1;
+  var signinForm = document.getElementById('signinForm');
+  var twofaForm = document.getElementById('twofaForm');
+  var codeInputs = document.getElementById('codeInputs');
+
+  function buildCodeInputs() {
+    var html = '';
+    for (var i = 0; i < 6; i++) {
+      html += '<input type="text" maxlength="1" inputmode="numeric" data-idx="' + i + '" aria-label="Digit ' + (i + 1) + '">';
+    }
+    codeInputs.innerHTML = html;
+    codeInputs.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value && this.dataset.idx < 5) {
+          codeInputs.querySelectorAll('input')[parseInt(this.dataset.idx) + 1].focus();
+        }
+        if (this.value && parseInt(this.dataset.idx) === 5) {
+          var code = getCode();
+          if (code.length === 6) verifyCode(code);
+        }
+      });
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !this.value && this.dataset.idx > 0) {
+          codeInputs.querySelectorAll('input')[parseInt(this.dataset.idx) - 1].focus();
+        }
+      });
+      inp.addEventListener('paste', function (e) {
+        var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        if (text) {
+          e.preventDefault();
+          codeInputs.querySelectorAll('input').forEach(function (inp2, j) {
+            inp2.value = text[j] || '';
+            if (j === text.length - 1) inp2.focus();
+          });
+          if (text.length === 6) verifyCode(text);
+        }
+      });
+    });
+  }
+  function getCode() {
+    var code = '';
+    codeInputs.querySelectorAll('input').forEach(function (inp) { code += inp.value; });
+    return code;
+  }
+  function goToStep(n) {
+    step = n;
+    document.querySelectorAll('.step-item').forEach(function (s) {
+      var sn = parseInt(s.dataset.step);
+      s.classList.toggle('active', sn === n);
+      s.classList.toggle('done', sn < n);
+    });
+    signinForm.style.display = n === 1 ? '' : 'none';
+    twofaForm.style.display = n === 2 ? '' : 'none';
+    if (n === 2) buildCodeInputs();
+  }
+  signinForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('emailInput').value.trim();
+    var pass = document.getElementById('passwordInput').value;
+    var valid = true;
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    document.getElementById('emailField').classList.toggle('error', !emailOk);
+    document.getElementById('emailHint').style.display = emailOk ? 'none' : '';
+    document.getElementById('passwordField').classList.toggle('error', !pass);
+    document.getElementById('passwordHint').style.display = pass ? 'none' : '';
+    if (!emailOk || !pass) { valid = false; toast('Please fix the form errors', 'error'); }
+    if (valid) goToStep(2);
+  });
+  document.getElementById('backBtn').addEventListener('click', function () { goToStep(1); });
+  document.getElementById('verifyBtn').addEventListener('click', function () { verifyCode(getCode()); });
+  document.getElementById('resendBtn').addEventListener('click', function () {
+    var b = this;
+    b.disabled = true; b.textContent = 'Sending...';
+    setTimeout(function () {
+      b.disabled = false; b.textContent = 'Resend code';
+      toast('New code sent to your email', 'success');
+      codeInputs.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+      codeInputs.querySelectorAll('input')[0].focus();
+    }, 1000);
+  });
+  function verifyCode(code) {
+    var hint = document.getElementById('codeHint');
+    if (code.length !== 6) {
+      hint.style.display = '';
+      codeInputs.querySelectorAll('input').forEach(function (i) { i.classList.add('error'); });
+      toast('Please enter a valid code', 'error');
+      return;
+    }
+    hint.style.display = 'none';
+    codeInputs.querySelectorAll('input').forEach(function (i) { i.classList.remove('error'); });
+    document.getElementById('verifyBtn').disabled = true;
+    document.getElementById('verifyBtn').textContent = 'Verifying...';
+    setTimeout(function () {
+      document.getElementById('verifyBtn').disabled = false;
+      document.getElementById('verifyBtn').textContent = 'Verify';
+      document.getElementById('successDialog').classList.add('show');
+      toast('Successfully signed in', 'success');
+    }, 1000);
+  }
+  function closeDialog() {
+    document.getElementById('successDialog').classList.remove('show');
+    goToStep(1);
+    document.getElementById('signinForm').reset();
+  }
+</script>
+</body>
+</html>
