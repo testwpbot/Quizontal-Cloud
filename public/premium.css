@@ -42,9 +42,7 @@ body.theme-dark::before {
     radial-gradient(42rem 34rem at 60% 120%, rgba(168, 85, 247, .12), transparent 60%);
   pointer-events: none;
 }
-body.theme-dark .site-glow { filter: blur(120px); }
-body.theme-dark .glow-one { background: radial-gradient(circle, rgba(227, 28, 100, .5), transparent 68%); right: -220px; top: 60px; opacity: .45; }
-body.theme-dark .glow-two { background: radial-gradient(circle, rgba(34, 211, 238, .35), transparent 68%); left: -240px; top: 680px; opacity: .3; }
+body.theme-dark .site-glow { display: none; }
 
 /* ---------- typography ---------- */
 body.theme-dark h1, body.theme-dark h2, body.theme-dark h3 { color: var(--text); }
