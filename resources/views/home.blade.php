@@ -23,33 +23,41 @@
   </div>
 </section>
 
-<section class="section container qc-demo" id="demo" style="padding-top:20px">
+<section class="section container qc-demo" id="demo" style="padding-top:20px" data-qc-preset="quizontal">
   <div class="qc-demo-bar">
     <div class="qc-demo-tabs" role="tablist">
       <button class="qc-demo-tab active" data-qc-tab="dashboard" type="button">Dashboard</button>
-      <button class="qc-demo-tab" data-qc-tab="services" type="button">Services</button>
-      <button class="qc-demo-tab" data-qc-tab="billing" type="button">Billing</button>
+      <button class="qc-demo-tab" data-qc-tab="product" type="button">Product</button>
+      <button class="qc-demo-tab" data-qc-tab="auth" type="button">Auth</button>
+    </div>
+    <div class="qc-demo-controls">
+      <div class="qc-preset-pills" role="tablist" aria-label="Accent presets">
+        <button class="qc-preset-pill active" data-qc-preset="quizontal" type="button">Quizontal</button>
+        <button class="qc-preset-pill" data-qc-preset="cyan" type="button">Cyan</button>
+        <button class="qc-preset-pill" data-qc-preset="violet" type="button">Violet</button>
+        <button class="qc-preset-pill" data-qc-preset="emerald" type="button">Emerald</button>
+      </div>
     </div>
   </div>
 
   <div class="qc-demo-frame">
+    {{-- ===== DASHBOARD ===== --}}
     <div class="qc-demo-panel active" data-qc-panel="dashboard">
       <div class="p">
-        {{-- Toolbar --}}
         <div class="qc-demo-toolbar">
-          <div class="qc-field" style="min-width:150px">
+          <div class="qc-field" style="min-width:150px;max-width:200px">
             <label>Time period</label>
             <select id="qcPeriodSelect">
-              <option value="12m" selected>Last 12 months</option>
-              <option value="6m">Last 6 months</option>
-              <option value="3m">Last 3 months</option>
-              <option value="30d">Last 30 days</option>
+              <option value="last_7_days" selected>Last 7 days</option>
+              <option value="last_30_days">Last 30 days</option>
+              <option value="last_90_days">Last 90 days</option>
+              <option value="custom">Custom range</option>
             </select>
           </div>
           <div class="qc-field qc-msel">
             <label>Categories</label>
             <div class="qc-msel-trigger" id="qcCategoryTrigger" tabindex="0">
-              <span id="qcCategoryLabel">All services</span>
+              <span id="qcCategoryLabel">VPS, Hosting, Domains</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
             <div class="qc-msel-menu" id="qcCategoryMenu">
@@ -58,143 +66,217 @@
               <label class="qc-msel-option"><input type="checkbox" value="domains" checked><span>Domains</span></label>
             </div>
           </div>
-          <div class="qc-field" style="flex:1;min-width:180px;max-width:280px">
-            <label>Search services</label>
-            <input type="text" id="qcServiceSearch" placeholder="Search…">
+          <div class="qc-field" style="flex:1;min-width:220px;max-width:300px">
+            <label>Date range</label>
+            <input type="text" id="qcDateRange" readonly value="Last 7 days">
           </div>
         </div>
 
-        {{-- Stat cards with animated counters --}}
         <div class="qc-demo-stats" style="margin-bottom:18px">
           <article class="stat-card">
-            <div class="stat-ring" style="--val:85"><span class="stat-ring-inner">▦</span></div>
-            <div class="stat-meta"><span class="stat-label">Active Services</span><strong class="stat-value"><span class="qc-count" data-count="3">0</span></strong><span class="stat-sub">VPS · hosting · domains</span></div>
+            <div class="stat-ring green" style="--val:85"><span class="stat-ring-inner">₨</span></div>
+            <div class="stat-meta"><span class="stat-label">Total Revenue</span><strong class="stat-value"><span class="qc-count" data-count="184300" data-prefix="LKR ">0</span></strong><span class="stat-sub">All time</span></div>
           </article>
           <article class="stat-card">
-            <div class="stat-ring cyan" style="--val:65"><span class="stat-ring-inner">◎</span></div>
-            <div class="stat-meta"><span class="stat-label">Active Domains</span><strong class="stat-value"><span class="qc-count" data-count="1">0</span></strong><span class="stat-sub">With free WHOIS privacy</span></div>
+            <div class="stat-ring cyan" style="--val:65"><span class="stat-ring-inner">▦</span></div>
+            <div class="stat-meta"><span class="stat-label">Active Services</span><strong class="stat-value"><span class="qc-count" data-count="24">0</span></strong><span class="stat-sub">VPS · hosting · domains</span></div>
           </article>
           <article class="stat-card">
-            <div class="stat-ring amber" style="--val:12"><span class="stat-ring-inner">₨</span></div>
-            <div class="stat-meta"><span class="stat-label">Amount Due</span><strong class="stat-value">LKR <span class="qc-count" data-count="0">0</span>.00</strong><span class="stat-sub">All settled</span></div>
+            <div class="stat-ring amber" style="--val:92"><span class="stat-ring-inner">◫</span></div>
+            <div class="stat-meta"><span class="stat-label">New Invoices</span><strong class="stat-value"><span class="qc-count" data-count="148">0</span></strong><span class="stat-sub">This year</span></div>
           </article>
           <article class="stat-card">
-            <div class="stat-ring green" style="--val:100"><span class="stat-ring-inner">✓</span></div>
-            <div class="stat-meta"><span class="stat-label">Open Tickets</span><strong class="stat-value"><span class="qc-count" data-count="0">0</span></strong><span class="stat-sub">Nothing pending</span></div>
+            <div class="stat-ring" style="--val:78"><span class="stat-ring-inner">♥</span></div>
+            <div class="stat-meta"><span class="stat-label">Customer Satisfaction</span><strong class="stat-value"><span class="qc-count" data-count="94" data-suffix="%">0</span></strong><span class="stat-sub">Based on tickets</span></div>
           </article>
         </div>
 
-        {{-- Charts row --}}
-        <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px" class="qc-demo-split">
-          <div class="qc-demo-card">
-            <div class="qc-demo-card-head">
-              <h3 class="qc-demo-card-title">Your spending</h3>
-              <div class="qc-chart-tabs">
-                <button class="active" data-qc-range="12">12M</button>
-                <button data-qc-range="6">6M</button>
-              </div>
-            </div>
-            <div class="qc-demo-card-body">
-              <svg class="qc-demo-chart" id="qcSpendChart" viewBox="0 0 560 220" preserveAspectRatio="none" aria-label="Spending chart"></svg>
-              <div class="qc-demo-legend">
-                <span><span class="qc-demo-dot" style="background:#f06b9d"></span>Payments</span>
-                <span><span class="qc-demo-dot" style="background:#22d3ee"></span>Service events</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="qc-demo-card">
-            <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Billing overview</h3></div>
-            <div class="qc-demo-card-body" style="display:flex;align-items:center;gap:20px">
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-                <div class="qc-radial" style="--val:78"><span>78%</span></div>
-                <small style="color:var(--muted-2);font-size:.72rem">Invoices settled</small>
-              </div>
-              <div style="flex:1;min-width:0">
-                <div class="qc-bill-row"><span>Next renewal</span><strong>Sep 12, 2026</strong></div>
-                <div class="qc-bill-row"><span>Wallet balance</span><strong>LKR 4,500</strong></div>
-                <div class="qc-bill-row"><span>Total paid</span><strong>LKR 18,300</strong></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Recent services table --}}
-        <div class="qc-demo-card" style="margin-top:14px">
+        <div class="qc-demo-card">
           <div class="qc-demo-card-head">
-            <h3 class="qc-demo-card-title">Recent services</h3>
-            <span class="qc-demo-badge qc-demo-badge-pink">3 active</span>
+            <h3 class="qc-demo-card-title">Recent invoices</h3>
+            <span class="qc-demo-badge qc-demo-badge-pink" id="qcSelBadge" style="display:none">0 selected</span>
           </div>
           <div class="qc-demo-card-body">
             <div class="qc-table-tools">
-              <input type="text" id="qcTableSearch" placeholder="Filter services…">
-              <span class="qc-demo-count" id="qcTableCount">3 rows</span>
+              <input type="text" id="qcInvoiceSearch" placeholder="Search invoices…">
+              <span class="qc-demo-count" id="qcInvoiceCount">10 rows</span>
             </div>
             <div style="overflow-x:auto">
-              <table class="qc-demo-table" id="qcDemoTable">
-                <thead><tr><th>Service</th><th>Type</th><th>Price</th><th>Next renewal</th><th>Status</th></tr></thead>
-                <tbody>
-                  <tr data-qc-search="cloud vps kvm vps">
-                    <td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--pink-soft);color:var(--pink-2)">▦</span><strong>Cloud VPS — KVM 2</strong></span></td>
-                    <td>VPS</td><td><strong>LKR 2,850</strong></td><td>Sep 12, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td>
+              <table class="qc-demo-table" id="qcInvoiceTable">
+                <thead>
+                  <tr>
+                    <th style="cursor:default"><input type="checkbox" class="qc-table-check" id="qcCheckAll"></th>
+                    <th data-key="id">Invoice <span class="qc-sort-ind"></span></th>
+                    <th data-key="customer">Customer <span class="qc-sort-ind"></span></th>
+                    <th data-key="service">Service <span class="qc-sort-ind"></span></th>
+                    <th data-key="amount">Amount <span class="qc-sort-ind"></span></th>
+                    <th data-key="status">Status <span class="qc-sort-ind"></span></th>
+                    <th data-key="date">Date <span class="qc-sort-ind"></span></th>
                   </tr>
-                  <tr data-qc-search="business hosting web hosting">
-                    <td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--green-soft, rgba(32,201,151,.15));color:var(--green)">⚡</span><strong>Business Hosting</strong></span></td>
-                    <td>Hosting</td><td><strong>LKR 999</strong></td><td>Sep 1, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td>
-                  </tr>
-                  <tr data-qc-search="example.com domain">
-                    <td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--cyan-soft, rgba(34,211,238,.15));color:var(--cyan)">◎</span><strong>example.com</strong></span></td>
-                    <td>Domain</td><td><strong>LKR 2,950</strong></td><td>Aug 2027</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td>
-                  </tr>
-                  <tr data-qc-search="storage vps sata vps">
-                    <td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--surface-3);color:var(--muted)">↻</span><strong>Storage VPS — SATA</strong></span></td>
-                    <td>VPS</td><td><strong>LKR 3,400</strong></td><td>—</td><td><span class="qc-demo-badge qc-demo-badge-amber">Setting up</span></td>
-                  </tr>
-                </tbody>
+                </thead>
+                <tbody></tbody>
               </table>
+            </div>
+            <div class="qc-pagination">
+              <button class="qc-page-btn" data-qc-page="prev" disabled>‹</button>
+              <button class="qc-page-btn active" data-qc-page="1">1</button>
+              <button class="qc-page-btn" data-qc-page="2">2</button>
+              <button class="qc-page-btn" data-qc-page="next">›</button>
+              <span class="qc-page-info">Page 1 of 2</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-top:14px" class="qc-demo-split">
+          <div class="qc-demo-card">
+            <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Revenue overview</h3></div>
+            <div class="qc-demo-card-body">
+              <svg class="qc-demo-chart" id="qcSpendChart" viewBox="0 0 560 220" preserveAspectRatio="none" aria-label="Revenue chart"></svg>
+              <div class="qc-demo-legend">
+                <span><span class="qc-demo-dot" id="qcLegendPrimary"></span>Revenue</span>
+                <span><span class="qc-demo-dot" style="background:#22d3ee"></span>New services</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="qc-demo-card">
+            <div class="qc-demo-card-head">
+              <h3 class="qc-demo-card-title">Revenue target</h3>
+              <span style="font-size:1.25rem;font-weight:800;color:var(--text)" id="qcTargetPercent">75%</span>
+            </div>
+            <div class="qc-demo-card-body" style="display:flex;flex-direction:column;justify-content:space-between;gap:14px">
+              <div>
+                <input type="range" class="qc-slider" id="qcTargetSlider" min="0" max="100" value="75">
+                <div style="text-align:center;margin-top:8px;font-size:.75rem;color:var(--muted-2)">Drag the slider to adjust target</div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><p style="font-weight:700;font-size:.85rem;margin:0;color:var(--text)">Monthly target</p><p style="margin:0;font-size:.8rem;color:var(--muted-2)">LKR <span id="qcTargetMoney">75,000</span></p></div>
+                <div style="text-align:right"><p style="font-weight:700;font-size:.85rem;margin:0;color:var(--text)">Achieved</p><p style="margin:0;font-size:.8rem;color:var(--green);font-weight:700">LKR 50,000</p></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="qc-demo-panel" data-qc-panel="services">
-      <div class="p">
-        <div class="qc-demo-card">
-          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Your services</h3></div>
-          <div class="qc-demo-card-body" style="padding:6px 18px 14px">
-            <table class="qc-demo-table">
-              <thead><tr><th>Service</th><th>Type</th><th>Price</th><th>Next renewal</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--pink-soft);color:var(--pink-2)">▦</span><strong>Cloud VPS — KVM 2</strong></span></td><td>VPS</td><td><strong>LKR 2,850</strong></td><td>Sep 12, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
-                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--green-soft, rgba(32,201,151,.15));color:var(--green)">⚡</span><strong>Business Hosting</strong></span></td><td>Hosting</td><td><strong>LKR 999</strong></td><td>Sep 1, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
-                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--cyan-soft, rgba(34,211,238,.15));color:var(--cyan)">◎</span><strong>example.com</strong></span></td><td>Domain</td><td><strong>LKR 2,950</strong></td><td>Aug 2027</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
-                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--surface-3);color:var(--muted)">↻</span><strong>Storage VPS — SATA</strong></span></td><td>VPS</td><td><strong>LKR 3,400</strong></td><td>—</td><td><span class="qc-demo-badge qc-demo-badge-amber">Setting up</span></td></tr>
-              </tbody>
-            </table>
+    {{-- ===== PRODUCT ===== --}}
+    <div class="qc-demo-panel" data-qc-panel="product">
+      <div class="p" style="max-width:1100px;margin:0 auto">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem" class="qc-product-grid">
+          <div>
+            <div class="qc-gallery">
+              <div class="qc-gallery-main"><img id="qcGalleryMain" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800" alt="Cloud server"></div>
+              <div class="qc-gallery-thumbs">
+                <button class="qc-gallery-thumb active" type="button"><img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300" alt="Server rack"></button>
+                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=300" alt="Network"></button>
+                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=300" alt="Hardware"></button>
+                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300" alt="Cloud"></button>
+              </div>
+            </div>
+            <div style="margin:1.25rem 0">
+              <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)">Description</h3>
+              <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin:0">Deploy a KVM virtual server with dedicated resources, full root access and your choice of OS — provisioned in minutes from three US locations.</p>
+            </div>
+            <div class="qc-demo-card">
+              <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Technical specs</h3></div>
+              <div class="qc-demo-card-body">
+                <ul class="qc-specs">
+                  <li><span>vCPU</span><span>4 cores</span></li>
+                  <li><span>RAM</span><span>8 GB</span></li>
+                  <li><span>NVMe SSD</span><span>160 GB</span></li>
+                  <li><span>Bandwidth</span><span>4 TB</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1.1rem">
+            <h3 style="font-size:1.9rem;font-weight:800;margin:0;color:var(--text)">Cloud VPS — KVM 4</h3>
+            <div style="font-size:1.9rem;font-weight:800;color:var(--text)">LKR 5,700<small style="font-size:.8rem;color:var(--muted-2);font-weight:600"> /mo</small></div>
+            <hr style="border:none;border-top:1px solid var(--line);margin:0">
+            <div>
+              <div style="font-weight:700;margin-bottom:.6rem;font-size:1rem;color:var(--text)">Location</div>
+              <div class="qc-field" style="max-width:260px">
+                <label>Datacenter</label>
+                <select id="qcLocationSelect">
+                  <option selected>New Jersey, USA</option>
+                  <option>Los Angeles, USA</option>
+                  <option>Dallas, USA</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight:700;margin-bottom:.6rem;font-size:1rem;color:var(--text)">Included</div>
+              <div class="qc-checklist">
+                <label class="qc-checklist-item"><input type="checkbox" checked disabled>NVMe SSD storage</label>
+                <label class="qc-checklist-item"><input type="checkbox" checked disabled>Full root access</label>
+                <label class="qc-checklist-item"><input type="checkbox" checked disabled>DDoS protection</label>
+                <label class="qc-checklist-item"><input type="checkbox" checked disabled>99.9% uptime SLA</label>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px" class="qc-offer-row">
+              <div class="qc-field" style="flex:1">
+                <label>Quantity</label>
+                <input type="number" id="qcQty" value="1" min="1" step="1">
+              </div>
+              <button class="qc-demo-primary" style="flex:1;align-self:flex-end" type="button" data-qc-toast="Server added to cart (demo)" data-qc-toast-type="success">Deploy server</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="qc-demo-panel" data-qc-panel="billing">
-      <div class="p">
-        <div class="qc-demo-stats" style="margin-bottom:18px">
-          <article class="stat-card"><div class="stat-ring" style="--val:100"><span class="stat-ring-inner">₨</span></div><div class="stat-meta"><span class="stat-label">Wallet balance</span><strong class="stat-value">LKR 4,500</strong><span class="stat-sub">Ready to spend</span></div></article>
-          <article class="stat-card"><div class="stat-ring green" style="--val:100"><span class="stat-ring-inner">✓</span></div><div class="stat-meta"><span class="stat-label">Paid invoices</span><strong class="stat-value">7</strong><span class="stat-sub">All time</span></div></article>
+    {{-- ===== AUTH ===== --}}
+    <div class="qc-demo-panel" data-qc-panel="auth">
+      <div class="qc-auth-demo">
+        <div class="qc-auth-brand">
+          <img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud">
+          <p>Domains, hosting and cloud servers — all managed from one secure client area.</p>
         </div>
-        <div class="qc-demo-card">
-          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Recent invoices</h3></div>
-          <div class="qc-demo-card-body" style="padding:6px 18px 14px">
-            <table class="qc-demo-table">
-              <thead><tr><th>Invoice</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr><td><strong>#10008</strong></td><td>Aug 3, 2026</td><td><strong>LKR 2,850</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
-                <tr><td><strong>#10007</strong></td><td>Jul 2, 2026</td><td><strong>LKR 999</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
-                <tr><td><strong>#10006</strong></td><td>Jun 5, 2026</td><td><strong>LKR 2,950</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
-              </tbody>
-            </table>
+        <div class="qc-auth-side">
+          <div class="qc-stepper">
+            <div class="qc-step active" data-qc-step="1">
+              <div class="qc-step-badge">
+                <span class="qc-step-num">1</span>
+                <div><div class="qc-step-title">Sign in</div><div class="qc-step-sub">Welcome back</div></div>
+              </div>
+            </div>
+            <div class="qc-step" data-qc-step="2">
+              <div class="qc-step-badge">
+                <span class="qc-step-num">2</span>
+                <div><div class="qc-step-title">Two-factor</div><div class="qc-step-sub">Verify identity</div></div>
+              </div>
+            </div>
           </div>
+
+          <form class="qc-auth-form" id="qcSigninForm" novalidate>
+            <div class="qc-field" id="qcEmailField">
+              <label>Email</label>
+              <input type="email" id="qcEmailInput" placeholder="you@example.com" autocomplete="email">
+              <span class="qc-hint" id="qcEmailHint" style="display:none">Email is invalid</span>
+            </div>
+            <div class="qc-field" id="qcPasswordField">
+              <label>Password</label>
+              <input type="password" id="qcPasswordInput" placeholder="••••••••" autocomplete="off">
+              <span class="qc-hint" id="qcPasswordHint" style="display:none">Password is required</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <label class="qc-check-row"><input type="checkbox" id="qcRemember">Remember me</label>
+              <button type="button" class="qc-link" data-qc-toast="Reset link sent to your email">Forgot password?</button>
+            </div>
+            <button type="submit" class="qc-demo-primary" id="qcSigninBtn">Sign in</button>
+            <div style="text-align:center;font-size:.82rem;color:var(--muted-2)">Don't have an account? <button type="button" class="qc-link" data-qc-toast="Registration coming soon">Register</button></div>
+          </form>
+
+          <form class="qc-auth-form" id="qcTwofaForm" style="display:none">
+            <div style="font-size:.82rem;color:var(--muted-2)">Enter the 6-digit code sent to your email</div>
+            <div class="qc-code-inputs" id="qcCodeInputs"></div>
+            <span class="qc-hint" id="qcCodeHint" style="display:none">Please enter a valid code</span>
+            <div style="display:flex;gap:10px">
+              <button class="qc-demo-ghost" style="flex:1" type="button" id="qcBackBtn">Back</button>
+              <button class="qc-demo-primary" style="flex:1" type="button" id="qcVerifyBtn">Verify</button>
+            </div>
+            <button class="qc-demo-ghost" type="button" id="qcResendBtn">Resend code</button>
+          </form>
         </div>
       </div>
     </div>
