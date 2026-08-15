@@ -34,6 +34,35 @@
 
     {% block head %}{% endblock %}
     {% block js %}{% endblock %}
+    {# Critical inline styles: render the spinner loader and constrain the logo
+       immediately so no unstyled flash (FOUC) shows a full-size logo splash. #}
+    <style>
+        #loading {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            transition: opacity .45s ease, visibility .45s ease;
+        }
+        #loading.hide { opacity: 0; visibility: hidden; }
+        .loader-box { text-align: center; }
+        .loader-spinner {
+            background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
+            width: 92px; height: 92px;
+            margin: 0 auto 1.5rem; border-radius: 50%;
+            filter: blur(1px);
+            box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+            animation: qcSpin 1.7s linear infinite;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .loader-spinner-core {
+            background-color: rgb(36, 36, 36);
+            width: 92px; height: 92px; border-radius: 50%;
+            filter: blur(10px);
+        }
+        @keyframes qcSpin { to { transform: rotate(360deg); } }
+        .iq-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; }
+        .iq-sidebar .logo-img { height: 52px; width: auto; }
+        .footer-logo { height: 22px; width: auto; }
+    </style>
 </head>
 
 <body class="{% block body_class %}{% endblock %}{{ client ? ' qc-authed qc-app' : '' }}">
@@ -119,7 +148,7 @@
     <aside class="iq-sidebar" id="iq-sidebar">
         <div class="iq-sidebar-logo">
             <a href="{{ '/'|link }}" class="header-logo">
-                <img class="logo-img" src="{{ qc_logo_url }}" alt="Quizontal Cloud">
+                <img class="logo-img" src="{{ qc_logo_url }}" alt="Quizontal Cloud" style="height:52px;width:auto">
             </a>
             <div class="iq-menu-bt-sidebar">
                 <button class="sidebar-close" id="sidebar-close" type="button" aria-label="{{ 'Close menu'|trans }}">
@@ -388,7 +417,7 @@
         </div>
         <footer class="footer">
             <span class="d-inline-flex align-items-center gap-2">
-                <img class="footer-logo" src="{{ qc_logo_url }}" alt="Quizontal Cloud">
+                <img class="footer-logo" src="{{ qc_logo_url }}" alt="Quizontal Cloud" style="height:22px;width:auto">
                 <span>&copy; {{ 'now'|date('Y') }} {{ settings.footer_signature|default(company.signature|default(company.name)) }} {{ 'All rights reserved.'|trans }}</span>
             </span>
             <span>
