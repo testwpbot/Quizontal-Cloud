@@ -18,7 +18,11 @@
             </linearGradient>
           </defs>
           <rect width="40" height="40" rx="11" fill="url(#qcAnnounceGrad)"/>
-          <text x="20" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="800" fill="#fff">Q</text>
+          <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8.5" y="8.5" width="23" height="11" rx="2.5"/>
+            <rect x="8.5" y="21.5" width="23" height="10" rx="2.5"/>
+            <path d="M12 14h.01M12 26.5h.01"/>
+          </g>
         </svg>
       </span>
       <span class="qc-announce-body">
