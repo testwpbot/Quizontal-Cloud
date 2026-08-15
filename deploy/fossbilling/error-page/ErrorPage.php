@@ -172,8 +172,6 @@ class ErrorPage
         $title = htmlspecialchars($error['title'], ENT_QUOTES, 'UTF-8');
         $category = htmlspecialchars((string) $error['category'], ENT_QUOTES, 'UTF-8');
         $instance = htmlspecialchars((string) $instanceID, ENT_QUOTES, 'UTF-8');
-        $linkLabel = htmlspecialchars((string) $error['link']['label'], ENT_QUOTES, 'UTF-8');
-        $linkHref = htmlspecialchars((string) $error['link']['href'], ENT_QUOTES, 'UTF-8');
         $homeEsc = htmlspecialchars((string) $homeUrl, ENT_QUOTES, 'UTF-8');
         $year = date('Y');
 
@@ -372,7 +370,6 @@ class ErrorPage
                             <a class="qc-btn qc-btn-primary" href="' . $homeEsc . '">Return to the client area</a>
                             ' . $storefrontButton . '
                             <button id="toggle" class="qc-btn qc-btn-ghost" onclick="toggle()">Show original message</button>
-                            <a class="qc-btn qc-btn-ghost" target="_blank" rel="noopener" href="' . $linkHref . '">' . $linkLabel . '</a>
                         </div>
 
                         <div class="qc-meta">
