@@ -553,3 +553,82 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
   .qc-hero-actions { flex-direction: column; }
   .qc-hero-actions .button { width: 100%; }
 }
+
+/* ============================================================
+   Dashboard preview frame (Maz-UI demo style)
+   ============================================================ */
+.qc-demo { margin-top: 3rem; }
+.qc-demo-bar {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 14px; margin-bottom: 14px;
+}
+.qc-demo-tabs {
+  display: inline-flex; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 12px; padding: 4px;
+}
+.qc-demo-tab {
+  border: 0; background: transparent; border-radius: 9px;
+  padding: 8px 18px; font-size: .8rem; font-weight: 700;
+  color: var(--muted-2); cursor: pointer; transition: all .2s ease;
+}
+.qc-demo-tab.active { background: var(--pink); color: #fff; box-shadow: 0 2px 8px rgba(227,28,100,.4); }
+.qc-demo-frame {
+  border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+  background: var(--surface); box-shadow: 0 24px 60px rgba(0,0,0,.45);
+}
+.qc-demo-panel { display: none; }
+.qc-demo-panel.active { display: block; animation: qcFadeIn .4s ease; }
+@keyframes qcFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.qc-demo-panel > .p { padding: 1.5rem; }
+
+.qc-demo-card { border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.qc-demo-card-head {
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.qc-demo-card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; }
+.qc-demo-card-body { padding: 18px; }
+
+.qc-demo-badge {
+  padding: 4px 10px; border-radius: 10rem; font-size: .72rem; font-weight: 700;
+}
+.qc-demo-badge-green { background: var(--green-soft, rgba(32,201,151,.15)); color: var(--green); }
+.qc-demo-badge-pink { background: var(--pink-soft); color: var(--pink-2); }
+.qc-demo-badge-amber { background: var(--amber-soft, rgba(255,188,53,.16)); color: var(--amber); }
+.qc-demo-badge-grey { background: var(--surface-3); color: var(--muted); }
+
+/* stat ring (reuse existing .stat-card + .stat-ring; add a compact grid) */
+.qc-demo-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+/* mini bar chart */
+.qc-demo-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+.qc-demo-bar { flex: 1; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #f78fb4, #fbd2e1); min-height: 4px; }
+.qc-demo-bar.alt { background: linear-gradient(180deg, #22d3ee, #a5ecf8); }
+.qc-demo-axis { display: flex; justify-content: space-between; margin-top: 8px; font-size: .68rem; color: var(--muted-2); }
+
+/* flat table (small) */
+.qc-demo-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.qc-demo-table th {
+  text-align: left; padding: 10px 12px; font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--muted-2);
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.qc-demo-table td { padding: 11px 12px; border-bottom: 1px dashed var(--line); white-space: nowrap; color: var(--muted); }
+.qc-demo-table td strong { color: var(--text); }
+.qc-demo-table tbody tr { transition: background .15s; }
+.qc-demo-table tbody tr:hover { background: var(--surface-3); }
+.qc-demo-table .qc-cell { display: flex; align-items: center; gap: 10px; }
+.qc-demo-table .qc-cell-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex: none;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+
+/* legend */
+.qc-demo-legend { display: flex; gap: 16px; align-items: center; font-size: .74rem; color: var(--muted); font-weight: 500; margin-top: 8px; }
+.qc-demo-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+@media (max-width: 700px) {
+  .qc-demo-tabs { width: 100%; }
+  .qc-demo-tab { flex: 1; padding: 8px 10px; }
+  .qc-demo-table { display: block; overflow-x: auto; }
+}

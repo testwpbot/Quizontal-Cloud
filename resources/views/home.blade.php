@@ -23,6 +23,106 @@
   </div>
 </section>
 
+<section class="section container qc-demo" id="demo" style="padding-top:20px">
+  <div class="qc-demo-bar">
+    <div class="qc-demo-tabs" role="tablist">
+      <button class="qc-demo-tab active" data-qc-tab="dashboard" type="button">Dashboard</button>
+      <button class="qc-demo-tab" data-qc-tab="services" type="button">Services</button>
+      <button class="qc-demo-tab" data-qc-tab="billing" type="button">Billing</button>
+    </div>
+  </div>
+
+  <div class="qc-demo-frame">
+    <div class="qc-demo-panel active" data-qc-panel="dashboard">
+      <div class="p">
+        <div class="qc-demo-stats" style="margin-bottom:18px">
+          <article class="stat-card"><div class="stat-ring" style="--val:85"><span class="stat-ring-inner">▦</span></div><div class="stat-meta"><span class="stat-label">Active Services</span><strong class="stat-value">2</strong><span class="stat-sub">VPS + hosting</span></div></article>
+          <article class="stat-card"><div class="stat-ring cyan" style="--val:65"><span class="stat-ring-inner">◎</span></div><div class="stat-meta"><span class="stat-label">Active Domains</span><strong class="stat-value">1</strong><span class="stat-sub">Registered</span></div></article>
+          <article class="stat-card"><div class="stat-ring amber" style="--val:12"><span class="stat-ring-inner">₨</span></div><div class="stat-meta"><span class="stat-label">Amount Due</span><strong class="stat-value">LKR 0.00</strong><span class="stat-sub">All settled</span></div></article>
+          <article class="stat-card"><div class="stat-ring green" style="--val:100"><span class="stat-ring-inner">✓</span></div><div class="stat-meta"><span class="stat-label">Open Tickets</span><strong class="stat-value">0</strong><span class="stat-sub">Nothing pending</span></div></article>
+        </div>
+
+        <div class="qc-demo-card">
+          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Recent Services</h3><span class="qc-demo-badge qc-demo-badge-pink">3 active</span></div>
+          <div class="qc-demo-card-body" style="padding:6px 18px 14px">
+            <table class="qc-demo-table">
+              <thead><tr><th>Service</th><th>Type</th><th>Next renewal</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--pink-soft);color:var(--pink-2)">▦</span><strong>Cloud VPS — KVM 2</strong></span></td><td>VPS</td><td>Sep 12, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--green-soft, rgba(32,201,151,.15));color:var(--green)">⚡</span><strong>Business Hosting</strong></span></td><td>Hosting</td><td>Sep 1, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--cyan-soft, rgba(34,211,238,.15));color:var(--cyan)">◎</span><strong>example.com</strong></span></td><td>Domain</td><td>Aug 2027</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="qc-demo-card" style="margin-top:14px">
+          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Spending — last 12 months</h3></div>
+          <div class="qc-demo-card-body">
+            <div class="qc-demo-bars" id="qcDemoBars">
+              <div class="qc-demo-bar" style="height:38%"></div>
+              <div class="qc-demo-bar alt" style="height:54%"></div>
+              <div class="qc-demo-bar" style="height:30%"></div>
+              <div class="qc-demo-bar alt" style="height:66%"></div>
+              <div class="qc-demo-bar" style="height:48%"></div>
+              <div class="qc-demo-bar alt" style="height:74%"></div>
+              <div class="qc-demo-bar" style="height:58%"></div>
+              <div class="qc-demo-bar alt" style="height:88%"></div>
+              <div class="qc-demo-bar" style="height:70%"></div>
+              <div class="qc-demo-bar alt" style="height:94%"></div>
+              <div class="qc-demo-bar" style="height:62%"></div>
+              <div class="qc-demo-bar alt" style="height:100%"></div>
+            </div>
+            <div class="qc-demo-axis"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span><span>Sep</span><span>Nov</span></div>
+            <div class="qc-demo-legend"><span><span class="qc-demo-dot" style="background:#f78fb4"></span>Payments</span><span><span class="qc-demo-dot" style="background:#22d3ee"></span>Service events</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qc-demo-panel" data-qc-panel="services">
+      <div class="p">
+        <div class="qc-demo-card">
+          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Your services</h3></div>
+          <div class="qc-demo-card-body" style="padding:6px 18px 14px">
+            <table class="qc-demo-table">
+              <thead><tr><th>Service</th><th>Type</th><th>Price</th><th>Next renewal</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--pink-soft);color:var(--pink-2)">▦</span><strong>Cloud VPS — KVM 2</strong></span></td><td>VPS</td><td><strong>LKR 2,850</strong></td><td>Sep 12, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--green-soft, rgba(32,201,151,.15));color:var(--green)">⚡</span><strong>Business Hosting</strong></span></td><td>Hosting</td><td><strong>LKR 999</strong></td><td>Sep 1, 2026</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--cyan-soft, rgba(34,211,238,.15));color:var(--cyan)">◎</span><strong>example.com</strong></span></td><td>Domain</td><td><strong>LKR 2,950</strong></td><td>Aug 2027</td><td><span class="qc-demo-badge qc-demo-badge-green">Active</span></td></tr>
+                <tr><td><span class="qc-cell"><span class="qc-cell-ico" style="background:var(--surface-3);color:var(--muted)">↻</span><strong>Storage VPS — SATA</strong></span></td><td>VPS</td><td><strong>LKR 3,400</strong></td><td>—</td><td><span class="qc-demo-badge qc-demo-badge-amber">Setting up</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qc-demo-panel" data-qc-panel="billing">
+      <div class="p">
+        <div class="qc-demo-stats" style="margin-bottom:18px">
+          <article class="stat-card"><div class="stat-ring" style="--val:100"><span class="stat-ring-inner">₨</span></div><div class="stat-meta"><span class="stat-label">Wallet balance</span><strong class="stat-value">LKR 4,500</strong><span class="stat-sub">Ready to spend</span></div></article>
+          <article class="stat-card"><div class="stat-ring green" style="--val:100"><span class="stat-ring-inner">✓</span></div><div class="stat-meta"><span class="stat-label">Paid invoices</span><strong class="stat-value">7</strong><span class="stat-sub">All time</span></div></article>
+        </div>
+        <div class="qc-demo-card">
+          <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Recent invoices</h3></div>
+          <div class="qc-demo-card-body" style="padding:6px 18px 14px">
+            <table class="qc-demo-table">
+              <thead><tr><th>Invoice</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><strong>#10008</strong></td><td>Aug 3, 2026</td><td><strong>LKR 2,850</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
+                <tr><td><strong>#10007</strong></td><td>Jul 2, 2026</td><td><strong>LKR 999</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
+                <tr><td><strong>#10006</strong></td><td>Jun 5, 2026</td><td><strong>LKR 2,950</strong></td><td><span class="qc-demo-badge qc-demo-badge-green">Paid</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section container" id="stats" style="padding-top:0">
   <div class="stat-grid">
     <article class="stat-card reveal">

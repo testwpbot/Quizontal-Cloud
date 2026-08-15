@@ -127,9 +127,24 @@
     initHeader();
     initReveals();
     initAnimatedText();
+    initDemoTabs();
     initPremiumButtons();
     QC.loadConfig().then(applyClientLinks);
   });
+
+  /* ---------- Dashboard preview tabs ---------- */
+  function initDemoTabs() {
+    const tabs = document.querySelectorAll('.qc-demo-tab');
+    const panels = document.querySelectorAll('.qc-demo-panel');
+    if (!tabs.length || !panels.length) return;
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-qc-panel') === tab.getAttribute('data-qc-tab')));
+      });
+    });
+  }
 
   /* ---------- Word-by-word animated hero text ---------- */
   function initAnimatedText() {
