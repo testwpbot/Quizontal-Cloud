@@ -27,7 +27,7 @@
                     <label class="form-label" for="first-name">{{ 'First Name'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
-                        <input class="form-control" id="first-name" type="text" name="first_name" value="{{ request.first_name }}" required="required"/>
+                        <input class="form-control" id="first-name" type="text" name="first_name" value="{{ request.first_name }}" placeholder="{{ 'Enter your first name'|trans }}" required="required"/>
                     </div>
                 </div>
                 {% if 'last_name' in r %}
@@ -35,7 +35,7 @@
                     <label class="form-label" for="last_name">{{ 'Last Name'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
-                        <input class="form-control" id="last_name" type="text" name="last_name" value="{{ request.last_name }}" required="required"/>
+                        <input class="form-control" id="last_name" type="text" name="last_name" value="{{ request.last_name }}" placeholder="{{ 'Enter your last name'|trans }}" required="required"/>
                     </div>
                 </div>
                 {% endif %}
@@ -43,7 +43,7 @@
                     <label class="form-label" for="reg-email">{{ 'Email Address'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-                        <input class="form-control" id="reg-email" type="email" name="email" value="{{ request.email }}" required="required"/>
+                        <input class="form-control" id="reg-email" type="email" name="email" value="{{ request.email }}" placeholder="{{ 'you@example.com'|trans }}" required="required"/>
                     </div>
                 </div>
                 {% if 'company' in r %}
@@ -51,7 +51,7 @@
                     <label class="form-label" for="company">{{ 'Company'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16"/><path d="M15 9h3a2 2 0 0 1 2 2v10"/><path d="M2 21h20"/><path d="M8 8h2M8 12h2M8 16h2M12 8h.01M12 12h.01M12 16h.01"/></svg>
-                        <input class="form-control" id="company" type="text" name="company" value="{{ request.company }}" required="required"/>
+                        <input class="form-control" id="company" type="text" name="company" value="{{ request.company }}" placeholder="{{ 'Your company name'|trans }}" required="required"/>
                     </div>
                 </div>
                 {% endif %}
@@ -78,19 +78,19 @@
                 {% if 'address_1' in r %}
                 <div class="col-12">
                     <label class="form-label" for="address_1">{{ 'Address'|trans }}</label>
-                    <input class="form-control" id="address_1" type="text" name="address_1" value="{{ request.address_1 }}"/>
+                    <input class="form-control" id="address_1" type="text" name="address_1" value="{{ request.address_1 }}" placeholder="{{ 'Street address'|trans }}"/>
                 </div>
                 {% endif %}
                 {% if 'address_2' in r %}
                 <div class="col-12">
                     <label class="form-label" for="address_2">{{ 'Address 2'|trans }}</label>
-                    <input class="form-control" id="address_2" type="text" name="address_2" value="{{ request.address_2 }}"/>
+                    <input class="form-control" id="address_2" type="text" name="address_2" value="{{ request.address_2 }}" placeholder="{{ 'Apartment, suite, etc.'|trans }}"/>
                 </div>
                 {% endif %}
                 {% if 'city' in r %}
                 <div class="col-md-6">
                     <label class="form-label" for="city">{{ 'City'|trans }}</label>
-                    <input class="form-control" id="city" type="text" name="city" value="{{ request.city }}"/>
+                    <input class="form-control" id="city" type="text" name="city" value="{{ request.city }}" placeholder="{{ 'Your city'|trans }}"/>
                 </div>
                 {% endif %}
                 {% if 'country' in r %}
@@ -107,13 +107,13 @@
                 {% if 'state' in r %}
                 <div class="col-md-6">
                     <label class="form-label" for="state">{{ 'State'|trans }}</label>
-                    <input class="form-control" id="state" type="text" name="state" value="{{ request.state }}"/>
+                    <input class="form-control" id="state" type="text" name="state" value="{{ request.state }}" placeholder="{{ 'Your state / region'|trans }}"/>
                 </div>
                 {% endif %}
                 {% if 'postcode' in r %}
                 <div class="col-md-6">
                     <label class="form-label" for="postcode">{{ 'Zip/Postal Code'|trans }}</label>
-                    <input class="form-control" id="postcode" type="text" name="postcode" value="{{ request.postcode }}"/>
+                    <input class="form-control" id="postcode" type="text" name="postcode" value="{{ request.postcode }}" placeholder="{{ 'e.g. 20000'|trans }}"/>
                 </div>
                 {% endif %}
                 {% if 'phone' in r %}
@@ -123,7 +123,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>
                         <div class="input-group">
                             <input class="form-control" style="width:25%" type="text" name="phone_cc" value="" placeholder="{{ '+94'|trans }}"/>
-                            <input class="form-control" style="width:75%" id="phone" type="text" name="phone" value="{{ request.phone }}"/>
+                            <input class="form-control" style="width:75%" id="phone" type="text" name="phone" value="{{ request.phone }}" placeholder="{{ '71 234 5678'|trans }}"/>
                         </div>
                     </div>
                 </div>
@@ -143,14 +143,14 @@
                     <label class="form-label" for="reg-password">{{ 'Password'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2"/></svg>
-                        <input class="form-control" id="reg-password" type="password" name="password" value="" required="required"/>
+                        <input class="form-control" id="reg-password" type="password" name="password" value="" placeholder="{{ 'Create a password'|trans }}" required="required"/>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="password-confirm">{{ 'Password confirm'|trans }}</label>
                     <div class="qc-ico">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2"/></svg>
-                        <input class="form-control" id="password-confirm" type="password" name="password_confirm" value="" required="required"/>
+                        <input class="form-control" id="password-confirm" type="password" name="password_confirm" value="" placeholder="{{ 'Repeat your password'|trans }}" required="required"/>
                     </div>
                 </div>
             </div>
