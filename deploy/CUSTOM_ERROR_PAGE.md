@@ -7,7 +7,7 @@ logo and a link back to the storefront):
 
 | Surface | Stock file | What renders it | How it is replaced |
 |---|---|---|---|
-| Hardcoded error page | `library/FOSSBilling/ErrorPage.php` (`renderPage()`) | Uncaught exceptions in production (the dark "Powered by FOSSBilling" page) | Drop-in `ErrorPage.php` shipped under `deploy/fossbilling/error-page/` |
+| Hardcoded error page | `library/FOSSBilling/ErrorPage.php` (`generatePage()` on older releases, `renderPage()` on newer) | Uncaught exceptions in production (the dark "Powered by FOSSBilling" page) | Drop-in `ErrorPage.php` shipped under `deploy/fossbilling/error-page/` |
 | Client-area error template | `themes/huraga/html/error.html.twig` | 404s and app-level errors (`show404()` / `errorResponse()`) | `error.html.twig` shipped under `deploy/fossbilling/theme-overrides/` |
 
 > The client-area template already inherits the Quizontal `layout_default.html.twig`
@@ -123,9 +123,16 @@ sudo -E FOSSBILLING_DIR=/var/www/billing bash deploy/install-custom-error-page.s
 ```
 
 If a future FOSSBilling release changes the internals of the `ErrorPage` class (the
-error-code tables, category ranges, or the `renderPage()` signature), the branded copy
-kept in this repository may need to be re-synced with the new upstream file — only the
-HTML inside `renderPage()` is customized, so the diff is intentionally small.
+error-code tables, category ranges, or the `generatePage()`/`renderPage()` signature), the
+branded copy kept in this repository may need to be re-synced with the new upstream file —
+only the HTML inside the page-rendering method is customized, so the diff is intentionally
+small.
+
+> **Important:** the method name must match your release. Older FOSSBilling builds call
+> `generatePage()` (which `echo`es and `exit`s); the current `main` branch calls
+> `renderPage()` (which returns a string). The file in this repository targets the
+> `generatePage()` version — if you are on a newer build that calls `renderPage()`, use
+> your own `ErrorPage.php` as the base and only swap the HTML.
 
 ## Notes
 

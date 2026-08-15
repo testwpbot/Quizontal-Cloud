@@ -91,7 +91,9 @@ fi
 
 # Safety: only replace the file when it is recognisably a FOSSBilling ErrorPage.
 [[ -f "$ERROR_PAGE" ]] || { echo "ErrorPage.php not found at $ERROR_PAGE; is FOSSBilling installed?" >&2; exit 1; }
-grep -q 'class ErrorPage' "$ERROR_PAGE" && grep -q 'renderPage' "$ERROR_PAGE" || {
+# Accept either method name: older releases use generatePage() (echo + exit),
+# newer ones use renderPage() (returns a string).
+grep -q 'class ErrorPage' "$ERROR_PAGE" && { grep -q 'renderPage' "$ERROR_PAGE" || grep -q 'generatePage' "$ERROR_PAGE"; } || {
     echo "Refusing to replace $ERROR_PAGE: it does not look like FOSSBilling's ErrorPage class." >&2
     exit 1
 }
