@@ -137,6 +137,7 @@
     initDemoProduct();
     initDemoAuth();
     initPremiumButtons();
+    initSpotlight();
     QC.loadConfig().then(applyClientLinks);
   });
 
@@ -514,6 +515,17 @@
         html += '<span class="mz-word gradient" style="animation-delay:' + (baseDelay + words.length * wordDelay) + 'ms;"><span>' + lastWord + '</span></span>';
       }
       el.innerHTML = html;
+    });
+  }
+
+  /* ---------- Spotlight cards (cursor-following glow, like MazCardSpotlight) ---------- */
+  function initSpotlight() {
+    document.querySelectorAll('.qc-announce').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--sx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--sy', (e.clientY - r.top) + 'px');
+      });
     });
   }
 

@@ -9,12 +9,27 @@
 <section class="hero qc-hero container">
   <div class="qc-hero-inner">
     <a class="qc-announce" href="{{ route('vps') }}">
-      <span class="qc-announce-mark">▦</span>
-      <span class="qc-announce-text">
-        <strong>New · Cloud VPS is live</strong>
-        <span>Deploy KVM servers across 3 US locations in minutes.</span>
+      <span class="qc-announce-logo">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <defs>
+            <linearGradient id="qcAnnounceGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e31c64"/>
+              <stop offset="55%" stop-color="#a855f7"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <rect width="40" height="40" rx="11" fill="url(#qcAnnounceGrad)"/>
+          <text x="20" y="27" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="800" fill="#fff">Q</text>
+        </svg>
       </span>
-      <span class="qc-announce-cta">Deploy now <i aria-hidden="true">→</i></span>
+      <span class="qc-announce-body">
+        <span class="qc-announce-badge">✨ New</span>
+        <strong class="qc-announce-title">Cloud VPS is now live</strong>
+        <span class="qc-announce-desc">Deploy KVM servers across 3 US locations in minutes — managed from your client area.</span>
+      </span>
+      <span class="qc-announce-btn">Deploy now
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+      </span>
     </a>
     <h2 class="qc-hero-tagline" data-animated-text="Domains · Hosting · Cloud servers — one platform" data-delay="0"></h2>
     <h1 class="qc-hero-title" data-animated-text="Everything your project needs on the" data-last-word="internet." data-delay="400"></h1>
