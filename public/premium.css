@@ -883,3 +883,36 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
   .qc-demo-split { grid-template-columns: 1fr !important; }
   .qc-code-inputs input { width: 40px; height: 46px; }
 }
+
+/* ---------- announcement banner (Maz-UI style) ---------- */
+.qc-announce {
+  display: inline-flex; align-items: center; gap: 13px;
+  max-width: 100%; padding: 9px 10px 9px 11px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(180deg, rgba(227,28,100,.07), var(--surface));
+  box-shadow: var(--shadow); text-decoration: none;
+  margin: 0 0 1.75rem;
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.qc-announce:hover { border-color: rgba(227,28,100,.4); transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,0,0,.5); }
+.qc-announce-mark {
+  width: 34px; height: 34px; border-radius: 9px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pink-soft); color: var(--pink-2); font-size: 16px;
+}
+.qc-announce-text { display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0; }
+.qc-announce-text strong { color: var(--text); font-size: .9rem; font-weight: 700; }
+.qc-announce-text span { color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.qc-announce-cta {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 9px;
+  background: var(--pink); color: #fff; font-size: .82rem; font-weight: 700;
+  transition: background .2s ease;
+}
+.qc-announce:hover .qc-announce-cta { background: var(--pink-2); }
+.qc-announce-cta i { font-style: normal; transition: transform .2s ease; }
+.qc-announce:hover .qc-announce-cta i { transform: translateX(2px); }
+@media (max-width: 560px) {
+  .qc-announce { flex-wrap: wrap; }
+  .qc-announce-text span { display: none; }
+}

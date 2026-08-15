@@ -8,6 +8,14 @@
 @section('content')
 <section class="hero qc-hero container">
   <div class="qc-hero-inner">
+    <a class="qc-announce" href="{{ route('vps') }}">
+      <span class="qc-announce-mark">▦</span>
+      <span class="qc-announce-text">
+        <strong>New · Cloud VPS is live</strong>
+        <span>Deploy KVM servers across 3 US locations in minutes.</span>
+      </span>
+      <span class="qc-announce-cta">Deploy now <i aria-hidden="true">→</i></span>
+    </a>
     <h2 class="qc-hero-tagline" data-animated-text="Domains · Hosting · Cloud servers — one platform" data-delay="0"></h2>
     <h1 class="qc-hero-title" data-animated-text="Everything your project needs on the" data-last-word="internet." data-delay="400"></h1>
     <p class="qc-hero-sub">Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
