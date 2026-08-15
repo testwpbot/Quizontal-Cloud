@@ -23,13 +23,8 @@
   </div>
 </section>
 
-<section class="section container qc-demo" id="demo" style="padding-top:20px" data-qc-preset="quizontal">
+<section class="section container qc-demo" id="demo" style="padding-top:0" data-qc-preset="quizontal">
   <div class="qc-demo-bar">
-    <div class="qc-demo-tabs" role="tablist">
-      <button class="qc-demo-tab active" data-qc-tab="dashboard" type="button">Dashboard</button>
-      <button class="qc-demo-tab" data-qc-tab="product" type="button">Product</button>
-      <button class="qc-demo-tab" data-qc-tab="auth" type="button">Auth</button>
-    </div>
     <div class="qc-demo-controls">
       <div class="qc-preset-pills" role="tablist" aria-label="Accent presets">
         <button class="qc-preset-pill active" data-qc-preset="quizontal" type="button">Quizontal</button>
@@ -159,127 +154,6 @@
       </div>
     </div>
 
-    {{-- ===== PRODUCT ===== --}}
-    <div class="qc-demo-panel" data-qc-panel="product">
-      <div class="p" style="max-width:1100px;margin:0 auto">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem" class="qc-product-grid">
-          <div>
-            <div class="qc-gallery">
-              <div class="qc-gallery-main"><img id="qcGalleryMain" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800" alt="Cloud server"></div>
-              <div class="qc-gallery-thumbs">
-                <button class="qc-gallery-thumb active" type="button"><img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300" alt="Server rack"></button>
-                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=300" alt="Network"></button>
-                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=300" alt="Hardware"></button>
-                <button class="qc-gallery-thumb" type="button"><img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300" alt="Cloud"></button>
-              </div>
-            </div>
-            <div style="margin:1.25rem 0">
-              <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)">Description</h3>
-              <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin:0">Deploy a KVM virtual server with dedicated resources, full root access and your choice of OS — provisioned in minutes from three US locations.</p>
-            </div>
-            <div class="qc-demo-card">
-              <div class="qc-demo-card-head"><h3 class="qc-demo-card-title">Technical specs</h3></div>
-              <div class="qc-demo-card-body">
-                <ul class="qc-specs">
-                  <li><span>vCPU</span><span>4 cores</span></li>
-                  <li><span>RAM</span><span>8 GB</span></li>
-                  <li><span>NVMe SSD</span><span>160 GB</span></li>
-                  <li><span>Bandwidth</span><span>4 TB</span></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1.1rem">
-            <h3 style="font-size:1.9rem;font-weight:800;margin:0;color:var(--text)">Cloud VPS — KVM 4</h3>
-            <div style="font-size:1.9rem;font-weight:800;color:var(--text)">LKR 5,700<small style="font-size:.8rem;color:var(--muted-2);font-weight:600"> /mo</small></div>
-            <hr style="border:none;border-top:1px solid var(--line);margin:0">
-            <div>
-              <div style="font-weight:700;margin-bottom:.6rem;font-size:1rem;color:var(--text)">Location</div>
-              <div class="qc-field" style="max-width:260px">
-                <label>Datacenter</label>
-                <select id="qcLocationSelect">
-                  <option selected>New Jersey, USA</option>
-                  <option>Los Angeles, USA</option>
-                  <option>Dallas, USA</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <div style="font-weight:700;margin-bottom:.6rem;font-size:1rem;color:var(--text)">Included</div>
-              <div class="qc-checklist">
-                <label class="qc-checklist-item"><input type="checkbox" checked disabled>NVMe SSD storage</label>
-                <label class="qc-checklist-item"><input type="checkbox" checked disabled>Full root access</label>
-                <label class="qc-checklist-item"><input type="checkbox" checked disabled>DDoS protection</label>
-                <label class="qc-checklist-item"><input type="checkbox" checked disabled>99.9% uptime SLA</label>
-              </div>
-            </div>
-            <div style="display:flex;gap:12px" class="qc-offer-row">
-              <div class="qc-field" style="flex:1">
-                <label>Quantity</label>
-                <input type="number" id="qcQty" value="1" min="1" step="1">
-              </div>
-              <button class="qc-demo-primary" style="flex:1;align-self:flex-end" type="button" data-qc-toast="Server added to cart (demo)" data-qc-toast-type="success">Deploy server</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {{-- ===== AUTH ===== --}}
-    <div class="qc-demo-panel" data-qc-panel="auth">
-      <div class="qc-auth-demo">
-        <div class="qc-auth-brand">
-          <img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud">
-          <p>Domains, hosting and cloud servers — all managed from one secure client area.</p>
-        </div>
-        <div class="qc-auth-side">
-          <div class="qc-stepper">
-            <div class="qc-step active" data-qc-step="1">
-              <div class="qc-step-badge">
-                <span class="qc-step-num">1</span>
-                <div><div class="qc-step-title">Sign in</div><div class="qc-step-sub">Welcome back</div></div>
-              </div>
-            </div>
-            <div class="qc-step" data-qc-step="2">
-              <div class="qc-step-badge">
-                <span class="qc-step-num">2</span>
-                <div><div class="qc-step-title">Two-factor</div><div class="qc-step-sub">Verify identity</div></div>
-              </div>
-            </div>
-          </div>
-
-          <form class="qc-auth-form" id="qcSigninForm" novalidate>
-            <div class="qc-field" id="qcEmailField">
-              <label>Email</label>
-              <input type="email" id="qcEmailInput" placeholder="you@example.com" autocomplete="email">
-              <span class="qc-hint" id="qcEmailHint" style="display:none">Email is invalid</span>
-            </div>
-            <div class="qc-field" id="qcPasswordField">
-              <label>Password</label>
-              <input type="password" id="qcPasswordInput" placeholder="••••••••" autocomplete="off">
-              <span class="qc-hint" id="qcPasswordHint" style="display:none">Password is required</span>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <label class="qc-check-row"><input type="checkbox" id="qcRemember">Remember me</label>
-              <button type="button" class="qc-link" data-qc-toast="Reset link sent to your email">Forgot password?</button>
-            </div>
-            <button type="submit" class="qc-demo-primary" id="qcSigninBtn">Sign in</button>
-            <div style="text-align:center;font-size:.82rem;color:var(--muted-2)">Don't have an account? <button type="button" class="qc-link" data-qc-toast="Registration coming soon">Register</button></div>
-          </form>
-
-          <form class="qc-auth-form" id="qcTwofaForm" style="display:none">
-            <div style="font-size:.82rem;color:var(--muted-2)">Enter the 6-digit code sent to your email</div>
-            <div class="qc-code-inputs" id="qcCodeInputs"></div>
-            <span class="qc-hint" id="qcCodeHint" style="display:none">Please enter a valid code</span>
-            <div style="display:flex;gap:10px">
-              <button class="qc-demo-ghost" style="flex:1" type="button" id="qcBackBtn">Back</button>
-              <button class="qc-demo-primary" style="flex:1" type="button" id="qcVerifyBtn">Verify</button>
-            </div>
-            <button class="qc-demo-ghost" type="button" id="qcResendBtn">Resend code</button>
-          </form>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
