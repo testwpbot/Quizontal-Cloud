@@ -7,8 +7,7 @@
 
 @section('content')
 <section class="hero qc-hero container">
-  <div class="qc-hero-inner">
-    <a class="qc-announce" href="{{ route('vps') }}">
+  <a class="qc-announce" href="{{ route('vps') }}">
       <span class="qc-announce-logo">
         <svg viewBox="0 0 40 40" aria-hidden="true">
           <defs>
@@ -31,6 +30,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
       </span>
     </a>
+  <div class="qc-hero-inner">
     <h2 class="qc-hero-tagline" data-animated-text="Domains · Hosting · Cloud servers — one platform" data-delay="0"></h2>
     <h1 class="qc-hero-title" data-animated-text="Everything your project needs on the" data-last-word="internet." data-delay="400"></h1>
     <p class="qc-hero-sub">Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
