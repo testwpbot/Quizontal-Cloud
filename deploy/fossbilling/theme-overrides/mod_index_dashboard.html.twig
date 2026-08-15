@@ -231,7 +231,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div id="qc-spend-chart"></div>
+                    <div id="qc-spend-chart" style="overflow:hidden"></div>
                 </div>
             </div>
         </div>
@@ -244,7 +244,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div id="qc-billing-chart"></div>
+                    <div id="qc-billing-chart" style="overflow:hidden"></div>
                     <div class="mt-2">
                         <div class="earning-legend mb-2">
                             <span class="d-inline-flex align-items-center gap-2"><span class="dot" style="background:var(--iq-primary)"></span><span class="label">{{ 'Paid'|trans }}</span></span>
@@ -273,7 +273,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div id="qc-activity-chart"></div>
+                    <div id="qc-activity-chart" style="overflow:hidden"></div>
                 </div>
             </div>
         </div>
@@ -477,117 +477,150 @@
     {# ================= charts + live search ================= #}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    (function () {
         // Topbar search -> live-filters the services table on this page.
-        var input = document.querySelector('.search-box input');
-        var table = document.getElementById('qcServiceTable');
-        if (input && table) {
-            input.addEventListener('input', function () {
-                var q = input.value.trim().toLowerCase();
-                table.querySelectorAll('tbody tr').forEach(function (row) {
-                    row.style.display = !q || (row.dataset.name || '').indexOf(q) !== -1 ? '' : 'none';
+        function bindSearch() {
+            var input = document.querySelector('.search-box input');
+            var table = document.getElementById('qcServiceTable');
+            if (input && table) {
+                input.addEventListener('input', function () {
+                    var q = input.value.trim().toLowerCase();
+                    table.querySelectorAll('tbody tr').forEach(function (row) {
+                        row.style.display = !q || (row.dataset.name || '').indexOf(q) !== -1 ? '' : 'none';
+                    });
                 });
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindSearch);
+        } else {
+            bindSearch();
+        }
+
+        var qcCharts = [];
+
+        function qcInitCharts() {
+            if (typeof ApexCharts === 'undefined') return; // CDN offline -> leave cards clean
+
+            var PINK = '#E31C64', CYAN = '#22d3ee';
+            var axisStyle = { colors: '#9aa0ac', fontSize: '12px', fontWeight: 500 };
+            var lbl = {{ qc_lbl|json_encode|raw }};
+            var sum = {{ qc_sum|json_encode|raw }};
+            var pays = {{ qc_pay|json_encode|raw }};
+            var acts = {{ qc_act|json_encode|raw }};
+
+            var spendOptions = {
+                series: [{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }],
+                chart: { height: 340, width: '100%', type: 'area', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+                colors: [PINK],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 4 },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 95, 100],
+                        colorStops: [
+                            { offset: 0, color: PINK, opacity: 0.35 },
+                            { offset: 100, color: PINK, opacity: 0.02 }
+                        ]
+                    }
+                },
+                markers: { size: 0, hover: { size: 6 } },
+                grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4, padding: { left: 8, right: 8 } },
+                xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
+                yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.round(v * 100) / 100; } } },
+                tooltip: { theme: 'dark', y: { formatter: function (v) { return Math.round(v * 100) / 100; } } }
+            };
+            var spendEl = document.querySelector('#qc-spend-chart');
+            var spendChart = spendEl ? new ApexCharts(spendEl, spendOptions) : null;
+            if (spendChart) { spendChart.render(); qcCharts.push(spendChart); }
+
+            var tabs = document.querySelectorAll('#qcSpendTabs button');
+            tabs.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    tabs.forEach(function (b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    if (!spendChart) return;
+                    if (btn.getAttribute('data-range') === '6') {
+                        spendChart.updateOptions({ xaxis: { categories: lbl.slice(6) } }, false, false);
+                        spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum.slice(6) }]);
+                    } else {
+                        spendChart.updateOptions({ xaxis: { categories: lbl } }, false, false);
+                        spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }]);
+                    }
+                });
+            });
+
+            var billPct = {{ qc_bill_pct }};
+            var billOptions = {
+                series: [billPct],
+                chart: { height: 275, width: '100%', type: 'radialBar', fontFamily: 'Inter, sans-serif' },
+                colors: [PINK],
+                plotOptions: {
+                    radialBar: {
+                        hollow: { size: '62%' },
+                        track: { background: '#1d1d22', strokeWidth: '100%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { show: true, fontSize: '30px', fontWeight: '700', color: '#f5f6f8', offsetY: 2, formatter: function (v) { return Math.round(v) + '%'; } }
+                        }
+                    }
+                },
+                stroke: { lineCap: 'round' },
+                labels: [{{ 'Settled'|trans|json_encode|raw }}]
+            };
+            var billEl = document.querySelector('#qc-billing-chart');
+            if (billEl) { var billChart = new ApexCharts(billEl, billOptions); billChart.render(); qcCharts.push(billChart); }
+
+            var activityOptions = {
+                series: [
+                    { name: {{ 'Service events'|trans|json_encode|raw }}, data: acts },
+                    { name: {{ 'Payments'|trans|json_encode|raw }}, data: pays }
+                ],
+                chart: { type: 'bar', height: 330, width: '100%', stacked: true, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+                plotOptions: {
+                    bar: { horizontal: false, columnWidth: '38%', borderRadius: 4, borderRadiusApplication: 'end' }
+                },
+                colors: [PINK, CYAN],
+                dataLabels: { enabled: false },
+                fill: { opacity: 1 },
+                legend: {
+                    position: 'bottom', horizontalAlign: 'center', fontSize: '12px', fontWeight: 500,
+                    labels: { colors: '#9ca3af' },
+                    markers: { width: 10, height: 10, radius: 10, strokeWidth: 0 },
+                    itemMargin: { horizontal: 12 }
+                },
+                grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+                xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
+                yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.floor(v) === v ? v : Math.round(v); } } },
+                tooltip: { theme: 'dark' }
+            };
+            var activityEl = document.querySelector('#qc-activity-chart');
+            if (activityEl) { var activityChart = new ApexCharts(activityEl, activityOptions); activityChart.render(); qcCharts.push(activityChart); }
+        }
+
+        // Render charts only after the page has fully loaded and the layout has
+        // settled. Rendering on DOMContentLoaded measured the card before the
+        // sidebar, webfonts and scrollbar were final, so the SVG and its lines
+        // could overflow into the neighbouring card on first paint.
+        if (document.readyState === 'complete') {
+            requestAnimationFrame(qcInitCharts);
+        } else {
+            window.addEventListener('load', function () {
+                requestAnimationFrame(qcInitCharts);
             });
         }
 
-        if (typeof ApexCharts === 'undefined') return; // CDN offline -> leave cards clean
-
-        var PINK = '#E31C64', CYAN = '#22d3ee';
-        var axisStyle = { colors: '#9aa0ac', fontSize: '12px', fontWeight: 500 };
-        var lbl = {{ qc_lbl|json_encode|raw }};
-        var sum = {{ qc_sum|json_encode|raw }};
-        var pays = {{ qc_pay|json_encode|raw }};
-        var acts = {{ qc_act|json_encode|raw }};
-
-        var spendOptions = {
-            series: [{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }],
-            chart: { height: 340, type: 'area', toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-            colors: [PINK],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 4 },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 95, 100],
-                    colorStops: [
-                        { offset: 0, color: PINK, opacity: 0.35 },
-                        { offset: 100, color: PINK, opacity: 0.02 }
-                    ]
-                }
-            },
-            markers: { size: 0, hover: { size: 6 } },
-            grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4, padding: { left: 8, right: 8 } },
-            xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
-            yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.round(v * 100) / 100; } } },
-            tooltip: { theme: 'dark', y: { formatter: function (v) { return Math.round(v * 100) / 100; } } }
-        };
-        var spendEl = document.querySelector('#qc-spend-chart');
-        var spendChart = spendEl ? new ApexCharts(spendEl, spendOptions) : null;
-        if (spendChart) spendChart.render();
-
-        var tabs = document.querySelectorAll('#qcSpendTabs button');
-        tabs.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                tabs.forEach(function (b) { b.classList.remove('active'); });
-                btn.classList.add('active');
-                if (!spendChart) return;
-                if (btn.getAttribute('data-range') === '6') {
-                    spendChart.updateOptions({ xaxis: { categories: lbl.slice(6) } }, false, false);
-                    spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum.slice(6) }]);
-                } else {
-                    spendChart.updateOptions({ xaxis: { categories: lbl } }, false, false);
-                    spendChart.updateSeries([{ name: {{ 'Spent'|trans|json_encode|raw }}, data: sum }]);
-                }
+        // Re-measure after webfonts load — font metrics shift the axis text
+        // width and can leave the chart a hair too wide.
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+                requestAnimationFrame(function () {
+                    qcCharts.forEach(function (c) { try { c.updateOptions({}, false, false); } catch (e) {} });
+                });
             });
-        });
-
-        var billPct = {{ qc_bill_pct }};
-        var billOptions = {
-            series: [billPct],
-            chart: { height: 275, type: 'radialBar', fontFamily: 'Inter, sans-serif' },
-            colors: [PINK],
-            plotOptions: {
-                radialBar: {
-                    hollow: { size: '62%' },
-                    track: { background: '#1d1d22', strokeWidth: '100%' },
-                    dataLabels: {
-                        name: { show: false },
-                        value: { show: true, fontSize: '30px', fontWeight: '700', color: '#f5f6f8', offsetY: 2, formatter: function (v) { return Math.round(v) + '%'; } }
-                    }
-                }
-            },
-            stroke: { lineCap: 'round' },
-            labels: [{{ 'Settled'|trans|json_encode|raw }}]
-        };
-        var billEl = document.querySelector('#qc-billing-chart');
-        if (billEl) new ApexCharts(billEl, billOptions).render();
-
-        var activityOptions = {
-            series: [
-                { name: {{ 'Service events'|trans|json_encode|raw }}, data: acts },
-                { name: {{ 'Payments'|trans|json_encode|raw }}, data: pays }
-            ],
-            chart: { type: 'bar', height: 330, stacked: true, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-            plotOptions: {
-                bar: { horizontal: false, columnWidth: '38%', borderRadius: 4, borderRadiusApplication: 'end' }
-            },
-            colors: [PINK, CYAN],
-            dataLabels: { enabled: false },
-            fill: { opacity: 1 },
-            legend: {
-                position: 'bottom', horizontalAlign: 'center', fontSize: '12px', fontWeight: 500,
-                labels: { colors: '#9ca3af' },
-                markers: { width: 10, height: 10, radius: 10, strokeWidth: 0 },
-                itemMargin: { horizontal: 12 }
-            },
-            grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
-            xaxis: { categories: lbl, axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: axisStyle } },
-            yaxis: { labels: { style: axisStyle, formatter: function (v) { return Math.floor(v) === v ? v : Math.round(v); } } },
-            tooltip: { theme: 'dark' }
-        };
-        var activityEl = document.querySelector('#qc-activity-chart');
-        if (activityEl) new ApexCharts(activityEl, activityOptions).render();
-    });
+        }
+    })();
     </script>
 {% else %}
     <div class="qcd-empty"><p>{{ 'Please sign in to view your dashboard.'|trans }}</p></div>
