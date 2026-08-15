@@ -467,3 +467,89 @@ body.theme-dark .check-progress-track { background: var(--surface-3); }
 /* domain hero copy (uses .domain-hero-copy, not .hero-copy) */
 body.theme-dark .domain-hero-copy > p { color: var(--muted); }
 body.theme-dark .domain-hero-copy h1 { color: var(--text); }
+
+/* ============================================================
+   Maz-UI-inspired navbar + animated hero
+   ============================================================ */
+
+/* ---- logo badge ---- */
+.brand { gap: 10px; }
+.qc-nav-badge {
+  font-size: .62rem; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 10rem;
+  padding: 2px 8px; white-space: nowrap;
+}
+
+/* ---- pill nav links (desktop) ---- */
+@media (min-width: 701px) {
+  .nav-menu { gap: 4px; }
+  .nav-menu > a::after { display: none; }
+  .nav-menu > a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 10px;
+    font-size: .86rem; font-weight: 600; color: var(--muted);
+    background: transparent;
+    transition: background .2s ease, color .2s ease;
+  }
+  .nav-menu > a:hover { background: var(--surface-2); color: var(--text); }
+  .nav-menu > a.nav-active { background: var(--pink-soft); color: var(--pink-2); }
+  .nav-menu .nav-icon { display: none; }
+}
+
+/* ---- centered animated hero ---- */
+.qc-hero {
+  display: block; text-align: center;
+  padding-top: 96px; padding-bottom: 60px;
+  min-height: 0;
+}
+.qc-hero-inner { max-width: 52rem; margin: 0 auto; }
+.qc-hero-tagline {
+  font-size: 1.15rem; color: var(--muted); font-weight: 500;
+  letter-spacing: -.02em; line-height: 1.6; margin: 0 auto;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .3rem;
+}
+.qc-hero-title {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .5rem;
+  font-family: var(--display);
+  font-size: clamp(2.5rem, 6vw, 4.4rem);
+  font-weight: 700; letter-spacing: -.05em; line-height: 1.08;
+  margin: 1.5rem auto 0; color: var(--text);
+}
+.qc-hero-sub {
+  max-width: 44rem; margin: 1.5rem auto 0;
+  color: var(--muted); font-size: 1.1rem; line-height: 1.7;
+}
+.qc-hero-actions {
+  margin-top: 2.5rem; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+}
+.qc-hero-chips { margin-top: 2.25rem; }
+
+/* word-by-word reveal */
+.mz-word {
+  display: inline-flex; will-change: transform, opacity, filter;
+  opacity: 0;
+  animation: mzSlideDownBlur 2s cubic-bezier(.16, 1, .3, 1) forwards;
+}
+@keyframes mzSlideDownBlur {
+  from { opacity: 0; transform: translateY(-20px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* gradient last word (glow behind + gradient text) */
+.qc-hero-title .gradient { position: relative; display: inline-flex; }
+.qc-hero-title .gradient::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  opacity: .45; filter: blur(18px);
+  background: linear-gradient(to right, var(--pink), var(--cyan), var(--violet, #a855f7));
+}
+.qc-hero-title .gradient span {
+  position: relative;
+  background: linear-gradient(100deg, #ff7bac, #ee3d80 45%, #a855f7);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+@media (max-width: 700px) {
+  .qc-hero { padding-top: 64px; }
+  .qc-hero-actions { flex-direction: column; }
+  .qc-hero-actions .button { width: 100%; }
+}

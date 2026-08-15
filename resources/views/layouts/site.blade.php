@@ -34,7 +34,7 @@
 <div class="site-glow glow-one"></div><div class="site-glow glow-two"></div>
 <header class="site-header">
   <nav class="container nav-shell">
-    <a href="{{ route('home') }}" class="brand" aria-label="Quizontal Cloud home"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud"></a>
+    <a href="{{ route('home') }}" class="brand" aria-label="Quizontal Cloud home"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud"><span class="qc-nav-badge">Sri Lanka</span></a>
     <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="nav-menu" id="navLinks">
       <div class="drawer-head"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud"><button type="button" class="drawer-close" aria-label="Close menu">✕</button></div>
@@ -48,7 +48,7 @@
     </div>
     <div class="nav-ctas">
       <a id="clientArea" data-client-link class="button button-ghost" href="{{ route('client-area') }}">Client area</a>
-      <a class="button button-primary desktop-cta" href="{{ route('pricing') }}">View pricing</a>
+      <a class="button button-primary desktop-cta" href="{{ route('pricing') }}">Get started</a>
     </div>
   </nav>
 </header>

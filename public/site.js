@@ -126,9 +126,29 @@
     placeMenuForViewport();
     initHeader();
     initReveals();
+    initAnimatedText();
     initPremiumButtons();
     QC.loadConfig().then(applyClientLinks);
   });
+
+  /* ---------- Word-by-word animated hero text ---------- */
+  function initAnimatedText() {
+    document.querySelectorAll('[data-animated-text]').forEach(function (el) {
+      var words = el.getAttribute('data-animated-text').split(' ');
+      var lastWord = el.getAttribute('data-last-word') || '';
+      var baseDelay = parseInt(el.getAttribute('data-delay') || '0', 10);
+      var wordDelay = el.classList.contains('qc-hero-tagline') ? 20 : 75;
+      el.textContent = '';
+      var html = '';
+      words.forEach(function (w, i) {
+        html += '<span class="mz-word" style="animation-delay:' + (baseDelay + i * wordDelay) + 'ms;">' + w + '</span>';
+      });
+      if (lastWord) {
+        html += '<span class="mz-word gradient" style="animation-delay:' + (baseDelay + words.length * wordDelay) + 'ms;"><span>' + lastWord + '</span></span>';
+      }
+      el.innerHTML = html;
+    });
+  }
 
   /* ---------- Premium buttons (white -> rose letter-swap) ---------- */
   function initPremiumButtons() {

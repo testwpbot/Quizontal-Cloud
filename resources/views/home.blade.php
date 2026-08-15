@@ -6,31 +6,20 @@
 @section('meta_description', 'Register domains, launch fast NVMe web hosting and deploy cloud VPS — all priced in Sri Lankan Rupees with one wallet and one dashboard.')
 
 @section('content')
-<section class="hero container">
-  <div class="hero-copy">
-    <div class="eyebrow"><span></span> Domains · Hosting · Cloud servers — one platform</div>
-    <h1>Everything your project<br><em>needs on the internet.</em></h1>
-    <p>Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
-    <div class="hero-actions">
-      <a href="{{ route('pricing') }}" class="premium-btn">Explore pricing</a>
+<section class="hero qc-hero container">
+  <div class="qc-hero-inner">
+    <h2 class="qc-hero-tagline" data-animated-text="Domains · Hosting · Cloud servers — one platform" data-delay="0"></h2>
+    <h1 class="qc-hero-title" data-animated-text="Everything your project needs on the" data-last-word="internet." data-delay="400"></h1>
+    <p class="qc-hero-sub">Register your domain, launch fast web hosting and scale to full cloud servers — priced honestly in Sri Lankan Rupees and managed from one simple dashboard.</p>
+    <div class="qc-hero-actions">
+      <a href="{{ route('pricing') }}" class="premium-btn">Get started</a>
       <a id="heroClientArea" data-client-link href="{{ route('client-area') }}" class="button button-ghost button-large">Open client area</a>
     </div>
-    <div class="chip-stat-row" style="justify-content:flex-start;margin-top:34px">
+    <div class="chip-stat-row qc-hero-chips">
       <span class="chip-stat"><i>▦</i>VPS from <b id="heroFromPrice">—</b>/mo</span>
       <span class="chip-stat"><i>⚡</i>Hosting from <b>Rs. 499</b>/mo</span>
       <span class="chip-stat"><i>◎</i>20+ domain extensions</span>
     </div>
-  </div>
-  <div class="hero-visual" aria-label="Cloud infrastructure overview illustration">
-    <div class="visual-card server-console">
-      <div class="console-head"><span class="console-icon">Q</span><div><strong>Cloud server</strong><small>Operational</small></div><span class="live-dot">Live</span></div>
-      <div class="console-chart"><span style="height:25%"></span><span style="height:42%"></span><span style="height:33%"></span><span style="height:62%"></span><span style="height:48%"></span><span style="height:77%"></span><span style="height:58%"></span><span style="height:88%"></span><span style="height:70%"></span><span style="height:94%"></span></div>
-      <div class="console-metrics"><div><small>CPU load</small><strong>18%</strong></div><div><small>Network</small><strong>1.2 Gb/s</strong></div><div><small>Status</small><strong class="online">Online</strong></div></div>
-    </div>
-    <div class="visual-card location-float"><span class="flag">🇺🇸</span><div><small>Deployed in</small><strong>New Jersey</strong></div></div>
-    <div class="hero-float hosting-float"><span class="hf-dot"></span><div><small>Web hosting</small><strong>From Rs. 499/mo</strong></div></div>
-    <div class="visual-card price-float"><small>VPS plans from</small><strong id="fromPrice">—</strong><span>/ month</span></div>
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
   </div>
 </section>
 
