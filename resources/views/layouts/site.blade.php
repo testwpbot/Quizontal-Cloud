@@ -44,7 +44,13 @@
       <a href="{{ route('vps') }}" @if(request()->routeIs('vps')) class="nav-active" @endif><span class="nav-icon">▦</span>Cloud VPS</a>
       <a href="{{ route('domains') }}" @if(request()->routeIs('domains')) class="nav-active" @endif><span class="nav-icon">◎</span>Domains</a>
       <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) class="nav-active" @endif><span class="nav-icon">₨</span>Pricing</a>
-      <div class="mobile-account"><small>Already have an account?</small><a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary">Open client area</a></div>
+      <div class="mobile-account">
+        <span class="ma-icon">▦</span>
+        <h6>Client area</h6>
+        <p>Manage domains, hosting & servers — all in one place.</p>
+        <a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary">Open client area</a>
+      </div>
+      <div class="drawer-footer">Quizontal Cloud · {{ date('Y') }}</div>
     </div>
     <div class="nav-ctas">
       <a id="clientArea" data-client-link class="button button-ghost" href="{{ route('client-area') }}">Client area</a>

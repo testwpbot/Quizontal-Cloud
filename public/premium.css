@@ -277,18 +277,75 @@ body.theme-dark .footer-grid a:hover { color: var(--pink-2); }
 body.theme-dark .footer-meta { border-top-color: var(--line); color: var(--muted-2); }
 body.theme-dark .footer-status { color: var(--muted); }
 
-/* ---------- mobile drawer ---------- */
+/* ---------- mobile drawer (FOSSBilling sidebar style) ---------- */
 @media (max-width: 700px) {
-  body.theme-dark .nav-menu { background: #0a0a10; border-left: 1px solid var(--line); box-shadow: -24px 0 60px rgba(0,0,0,.6); }
-  body.theme-dark .drawer-head { border-bottom: 1px solid var(--line); }
-  body.theme-dark .drawer-close { background: var(--surface-2); border-color: var(--line); color: var(--text); }
-  body.theme-dark .nav-menu > a { color: #c6cbd4; }
-  body.theme-dark .nav-menu > a:hover { background: var(--pink-soft); border-color: rgba(227,28,100,.18); }
-  body.theme-dark .nav-menu > a.nav-active { background: var(--pink-soft); border-color: rgba(227,28,100,.22); color: var(--pink-2); }
-  body.theme-dark .nav-icon { background: var(--pink-soft); color: var(--pink-2); }
+  body.theme-dark .nav-menu {
+    background: #050507;
+    border-left: 1px solid var(--line);
+    box-shadow: -24px 0 60px rgba(0,0,0,.6);
+    padding: 0 0.75rem;
+  }
+  body.theme-dark .drawer-head { border-bottom: 1px solid var(--line); margin: 0 -0.75rem; padding: 16px 20px; }
+  body.theme-dark .drawer-close {
+    background: var(--pink-soft); border: 0; color: #f06b9d;
+    border-radius: 0.5rem;
+  }
+  body.theme-dark .drawer-close:hover { background: var(--pink); color: #fff; }
+  body.theme-dark .drawer-label {
+    padding: 1rem 0.9rem 0.4rem;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #5b6270;
+  }
+  body.theme-dark .nav-menu > a {
+    display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.72rem 0.9rem; margin: 2px 0;
+    border: 0; border-radius: 0.5rem;
+    color: #a6aebb; font-weight:500; font-size: 0.9rem;
+    transition: background .25s ease, color .25s ease, box-shadow .25s ease;
+  }
+  body.theme-dark .nav-menu > a::after { display: none; }
+  body.theme-dark .nav-menu > a:hover { background: #15151a; color: var(--pink-2); }
+  body.theme-dark .nav-menu > a.nav-active {
+    background: linear-gradient(90deg, var(--pink-soft), rgba(227,28,100,.03));
+    color: #f06b9d;
+    box-shadow: inset 3px 0 0 var(--pink);
+  }
+  body.theme-dark .nav-icon {
+    width: 22px; height: 22px; border-radius: 0;
+    background: transparent; color: inherit; font-size: 18px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
   body.theme-dark .mobile-toggle span { background: #e8eaf0; }
-  body.theme-dark .mobile-account { background: linear-gradient(135deg, var(--pink), var(--pink-dark)); }
-  body.theme-dark .mobile-account .button { background: #fff; border-color: #fff; color: var(--pink); }
+
+  /* upgrade / client-area card */
+  body.theme-dark .mobile-account {
+    position: relative; overflow: hidden;
+    margin: auto 0 0.5rem; padding: 1.25rem; border: 0; border-radius: 1rem;
+    background: linear-gradient(135deg, #E31C64 0%, #8f1046 100%);
+    color: #fff; text-align: center;
+  }
+  body.theme-dark .mobile-account::before,
+  body.theme-dark .mobile-account::after {
+    content: ""; position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,.08);
+  }
+  body.theme-dark .mobile-account::before { width: 110px; height: 110px; top: -40px; right: -30px; }
+  body.theme-dark .mobile-account::after { width: 70px; height: 70px; bottom: -25px; left: -20px; background: rgba(34,211,238,.15); }
+  body.theme-dark .mobile-account .ma-icon {
+    width: 42px; height: 42px; margin: 0 auto 0.75rem;
+    background: rgba(255,255,255,.15); border-radius: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; position: relative;
+  }
+  body.theme-dark .mobile-account h6 { color: #fff; font-weight: 700; margin: 0 0 0.35rem; position: relative; }
+  body.theme-dark .mobile-account p { font-size: .75rem; color: rgba(255,255,255,.75); margin: 0 0 .9rem; position: relative; }
+  body.theme-dark .mobile-account small { display: none; }
+  body.theme-dark .mobile-account .button { width: 100%; background: #fff; border-color: #fff; color: var(--pink); position: relative; }
+
+  body.theme-dark .drawer-footer {
+    padding: 0.5rem 0.9rem 1rem; font-size: 0.72rem;
+    color: #5b6270; text-align: center;
+  }
   body.theme-dark .site-glow { display: none; }
 }
 
