@@ -39,13 +39,13 @@
     <div class="nav-menu" id="navLinks">
       <div class="drawer-head"><img src="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png" alt="Quizontal Cloud"><button type="button" class="drawer-close" aria-label="Close menu">✕</button></div>
       <span class="drawer-label">Menu</span>
-      <a href="{{ route('home') }}" @if(request()->routeIs('home')) class="nav-active" @endif><span class="nav-icon">⌂</span>Home</a>
-      <a href="{{ route('hosting') }}" @if(request()->routeIs('hosting')) class="nav-active" @endif><span class="nav-icon">⚡</span>Web Hosting</a>
-      <a href="{{ route('vps') }}" @if(request()->routeIs('vps')) class="nav-active" @endif><span class="nav-icon">▦</span>Cloud VPS</a>
-      <a href="{{ route('domains') }}" @if(request()->routeIs('domains')) class="nav-active" @endif><span class="nav-icon">◎</span>Domains</a>
-      <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) class="nav-active" @endif><span class="nav-icon">₨</span>Pricing</a>
+      <a href="{{ route('home') }}" @if(request()->routeIs('home')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg></span>Home</a>
+      <a href="{{ route('hosting') }}" @if(request()->routeIs('hosting')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M7.5 7.5h.01M7.5 16.5h.01"/></svg></span>Web Hosting</a>
+      <a href="{{ route('vps') }}" @if(request()->routeIs('vps')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 13.5a4 4 0 0 1 0 8H7z"/></svg></span>Cloud VPS</a>
+      <a href="{{ route('domains') }}" @if(request()->routeIs('domains')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg></span>Domains</a>
+      <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-7 7-9-9z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>Pricing</a>
       <div class="mobile-account">
-        <span class="ma-icon">▦</span>
+        <span class="ma-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>
         <h6>Client area</h6>
         <p>Manage domains, hosting & servers — all in one place.</p>
         <a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary">Open client area</a>
