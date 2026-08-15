@@ -23,18 +23,7 @@
   </div>
 </section>
 
-<section class="section container qc-demo" id="demo" style="padding-top:0" data-qc-preset="quizontal">
-  <div class="qc-demo-bar">
-    <div class="qc-demo-controls">
-      <div class="qc-preset-pills" role="tablist" aria-label="Accent presets">
-        <button class="qc-preset-pill active" data-qc-preset="quizontal" type="button">Quizontal</button>
-        <button class="qc-preset-pill" data-qc-preset="cyan" type="button">Cyan</button>
-        <button class="qc-preset-pill" data-qc-preset="violet" type="button">Violet</button>
-        <button class="qc-preset-pill" data-qc-preset="emerald" type="button">Emerald</button>
-      </div>
-    </div>
-  </div>
-
+<section class="section container qc-demo" id="demo" style="padding-top:0">
   <div class="qc-demo-frame">
     {{-- ===== DASHBOARD ===== --}}
     <div class="qc-demo-panel active" data-qc-panel="dashboard">
