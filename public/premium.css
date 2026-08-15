@@ -640,16 +640,26 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
   font-size: .72rem; font-weight: 700; color: var(--muted-2);
   text-transform: uppercase; letter-spacing: .05em;
 }
-.qc-field select, .qc-field input {
+.qc-field input {
   background: var(--surface-2); border: 1px solid var(--line);
   color: var(--text); border-radius: 10px;
   padding: 10px 12px; font: inherit; font-size: .85rem; outline: none;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
+.qc-field select {
+  -webkit-appearance: none; appearance: none;
+  background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ee3d80' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+  border: 1px solid var(--line);
+  color: var(--text); border-radius: 10px;
+  padding: 10px 36px 10px 12px; font: inherit; font-size: .85rem; outline: none;
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.qc-field select:hover { border-color: rgba(227, 28, 100, .5); }
 .qc-field select:focus, .qc-field input:focus {
   border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-soft);
 }
-.qc-field select option { background: var(--surface-2); color: var(--text); }
+.qc-field select option { background: var(--surface-2); color: var(--text); cursor: pointer; }
 
 /* multiselect */
 .qc-msel { position: relative; }
