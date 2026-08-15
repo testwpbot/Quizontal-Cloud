@@ -95,16 +95,13 @@
     .nav-menu .drawer-body > a.nav-active .nav-icon { background: var(--pink) !important; color: #fff !important; }
     .nav-menu .nav-icon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 38px !important; height: 38px !important; flex: none !important; border-radius: 11px !important; background: rgba(255, 255, 255, 0.05) !important; color: #b8beca !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; }
     .nav-menu .nav-icon svg { width: 19px; height: 19px; }
-    .nav-menu .mobile-account { display: block !important; position: relative; overflow: hidden; width: 100% !important; box-sizing: border-box !important; margin: 0 0 12px !important; padding: 1.1rem 1.1rem !important; border: 1px solid rgba(255, 255, 255, 0.10) !important; border-radius: 16px !important; background: radial-gradient(120% 120% at 100% 0%, rgba(34, 211, 238, 0.18), transparent 50%), linear-gradient(135deg, #E31C64 0%, #8f1046 100%) !important; color: #fff !important; text-align: center !important; }
-    .nav-menu .mobile-account .ma-icon { width: 44px; height: 44px; margin: 0 auto 0.8rem !important; background: rgba(255, 255, 255, 0.16); border-radius: 12px; display: flex !important; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.18); }
-    .nav-menu .mobile-account .ma-icon svg { width: 22px; height: 22px; }
-    .nav-menu .mobile-account h6 { color: #fff !important; font-weight: 700; margin: 0 0 0.35rem; font-size: 1rem; }
-    .nav-menu .mobile-account p { font-size: 0.76rem; color: rgba(255, 255, 255, 0.8); margin: 0 0 0.95rem; line-height: 1.5; }
-    .nav-menu .mobile-account .button { width: 100% !important; background: #fff !important; border-color: #fff !important; color: var(--pink) !important; font-weight: 700; }
-    .nav-menu .drawer-footer { display: flex !important; flex: 0 0 auto !important; flex-direction: column !important; gap: 5px; align-items: center; padding: 12px 18px 16px !important; border-top: 1px solid rgba(255, 255, 255, 0.06) !important; }
-    .nav-menu .drawer-footer .footer-status { display: inline-flex !important; align-items: center; gap: 7px; font-size: 0.72rem; font-weight: 600; color: #9aa3b2; }
+    .nav-menu .drawer-footer { display: flex !important; flex: 0 0 auto !important; flex-direction: column !important; gap: 8px !important; align-items: stretch !important; padding: 14px 16px 16px !important; border-top: 1px solid rgba(255, 255, 255, 0.06) !important; background: rgba(255, 255, 255, 0.015) !important; }
+    .nav-menu .drawer-cta { display: flex !important; width: 100% !important; box-sizing: border-box !important; align-items: center !important; justify-content: center !important; gap: 10px !important; padding: 13px 18px !important; font-weight: 700 !important; }
+    .nav-menu .drawer-cta svg { width: 19px; height: 19px; flex: none; }
+    .nav-menu .drawer-cta-arrow { margin-left: 2px; font-size: 1.05rem; line-height: 1; }
+    .nav-menu .drawer-footer .footer-status { display: inline-flex !important; align-items: center; justify-content: center; gap: 7px; font-size: 0.72rem; font-weight: 600; color: #9aa3b2; }
     .nav-menu .drawer-footer .footer-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(32, 201, 151, 0.18); }
-    .nav-menu .drawer-footer .footer-copy { font-size: 0.7rem; color: #5b6270; }
+    .nav-menu .drawer-footer .footer-copy { font-size: 0.7rem; color: #5b6270; text-align: center; }
   }
   </style>
   <script type="application/ld+json">
@@ -196,12 +193,11 @@
         <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-7 7-9-9z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span><span class="nav-text">Pricing</span></a>
       </div>
       <div class="drawer-footer">
-        <div class="mobile-account">
-          <span class="ma-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>
-          <h6>Client area</h6>
-          <p>Manage domains, hosting &amp; servers — all in one place.</p>
-          <a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary">Open client area <span>→</span></a>
-        </div>
+        <a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary drawer-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+          <span>Client area</span>
+          <span class="drawer-cta-arrow">→</span>
+        </a>
         <span class="footer-status"><i></i> All systems operational</span>
         <span class="footer-copy">Quizontal Cloud · {{ date('Y') }}</span>
       </div>
