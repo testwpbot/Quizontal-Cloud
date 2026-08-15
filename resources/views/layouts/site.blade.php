@@ -74,8 +74,8 @@
   }
   @media (max-width: 700px) {
     .mobile-toggle { display: block !important; margin-left: auto !important; }
-    .nav-menu { position: fixed !important; top: 12px !important; right: 12px !important; bottom: 12px !important; left: auto !important; width: min(320px, calc(100vw - 24px)) !important; height: auto !important; margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0 !important; z-index: 72 !important; background: radial-gradient(120% 60% at 100% 0%, rgba(227, 28, 100, 0.10), transparent 55%), linear-gradient(180deg, rgba(19, 19, 26, 0.97), rgba(7, 7, 11, 0.99)) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 26px !important; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72) !important; transform: translateX(calc(100% + 24px)) !important; transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.28, 1) !important; overflow: hidden !important; will-change: transform !important; }
-    .nav-menu.open { transform: none !important; right: 12px !important; }
+    .nav-menu { position: fixed !important; top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important; width: min(320px, 88vw) !important; height: 100vh !important; height: 100dvh !important; margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0 !important; z-index: 72 !important; background: radial-gradient(120% 60% at 100% 0%, rgba(227, 28, 100, 0.10), transparent 55%), linear-gradient(180deg, rgba(17, 17, 23, 0.98), rgba(7, 7, 11, 0.99)) !important; border: 0 !important; border-left: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 0 !important; box-shadow: -24px 0 60px rgba(0, 0, 0, 0.6) !important; transform: translateX(100%) !important; transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.28, 1) !important; overflow: hidden !important; will-change: transform !important; }
+    .nav-menu.open { transform: none !important; }
     .nav-menu .drawer-head { display: flex !important; flex: 0 0 auto !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 18px 18px 14px !important; border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important; }
     .nav-menu .drawer-brand { display: flex !important; flex-direction: column !important; gap: 4px !important; min-width: 0 !important; }
     .nav-menu .drawer-brand img { width: 150px !important; height: 40px !important; object-fit: contain !important; }
@@ -95,7 +95,7 @@
     .nav-menu .drawer-body > a.nav-active .nav-icon { background: var(--pink) !important; color: #fff !important; }
     .nav-menu .nav-icon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 38px !important; height: 38px !important; flex: none !important; border-radius: 11px !important; background: rgba(255, 255, 255, 0.05) !important; color: #b8beca !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; }
     .nav-menu .nav-icon svg { width: 19px; height: 19px; }
-    .nav-menu .mobile-account { display: block !important; position: relative; overflow: hidden; margin: 18px 2px 4px !important; padding: 1.35rem 1.25rem !important; border: 1px solid rgba(255, 255, 255, 0.10) !important; border-radius: 18px !important; background: radial-gradient(120% 120% at 100% 0%, rgba(34, 211, 238, 0.18), transparent 50%), linear-gradient(135deg, #E31C64 0%, #8f1046 100%) !important; color: #fff !important; text-align: center !important; }
+    .nav-menu .mobile-account { display: block !important; position: relative; overflow: hidden; width: 100% !important; box-sizing: border-box !important; margin: 0 0 12px !important; padding: 1.1rem 1.1rem !important; border: 1px solid rgba(255, 255, 255, 0.10) !important; border-radius: 16px !important; background: radial-gradient(120% 120% at 100% 0%, rgba(34, 211, 238, 0.18), transparent 50%), linear-gradient(135deg, #E31C64 0%, #8f1046 100%) !important; color: #fff !important; text-align: center !important; }
     .nav-menu .mobile-account .ma-icon { width: 44px; height: 44px; margin: 0 auto 0.8rem !important; background: rgba(255, 255, 255, 0.16); border-radius: 12px; display: flex !important; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.18); }
     .nav-menu .mobile-account .ma-icon svg { width: 22px; height: 22px; }
     .nav-menu .mobile-account h6 { color: #fff !important; font-weight: 700; margin: 0 0 0.35rem; font-size: 1rem; }
@@ -194,15 +194,14 @@
         <a href="{{ route('vps') }}" @if(request()->routeIs('vps')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 13.5a4 4 0 0 1 0 8H7z"/></svg></span><span class="nav-text">Cloud VPS</span></a>
         <a href="{{ route('domains') }}" @if(request()->routeIs('domains')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg></span><span class="nav-text">Domains</span></a>
         <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) class="nav-active" @endif><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-7 7-9-9z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span><span class="nav-text">Pricing</span></a>
-
+      </div>
+      <div class="drawer-footer">
         <div class="mobile-account">
           <span class="ma-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>
           <h6>Client area</h6>
           <p>Manage domains, hosting &amp; servers — all in one place.</p>
           <a id="mobileClientArea" data-client-link href="{{ route('client-area') }}" class="button button-primary">Open client area <span>→</span></a>
         </div>
-      </div>
-      <div class="drawer-footer">
         <span class="footer-status"><i></i> All systems operational</span>
         <span class="footer-copy">Quizontal Cloud · {{ date('Y') }}</span>
       </div>
