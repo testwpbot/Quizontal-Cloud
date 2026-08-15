@@ -557,7 +557,7 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
 /* ============================================================
    Dashboard preview frame (Maz-UI demo style)
    ============================================================ */
-.qc-demo { margin-top: 0; }
+.qc-demo { margin-top: 1.75rem; }
 .qc-demo-bar {
   display: flex; flex-wrap: wrap; align-items: center;
   justify-content: space-between; gap: 14px; margin-bottom: 14px;

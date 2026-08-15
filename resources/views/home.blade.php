@@ -18,7 +18,7 @@
     <div class="chip-stat-row qc-hero-chips">
       <span class="chip-stat"><i>▦</i>VPS from <b id="heroFromPrice">—</b>/mo</span>
       <span class="chip-stat"><i>⚡</i>Hosting from <b>Rs. 499</b>/mo</span>
-      <span class="chip-stat"><i>◎</i>20+ domain extensions</span>
+      <span class="chip-stat"><i>◎</i>800+ domain extensions</span>
     </div>
   </div>
 </section>
@@ -198,7 +198,7 @@
       <div class="trio-icon">◎</div>
       <h3>Domain Names</h3>
       <span class="trio-tag">Live availability search across every extension we sell — with free WHOIS privacy included.</span>
-      <span class="trio-from">Extensions<b>20+<small> & growing</small></b></span>
+      <span class="trio-from">Extensions<b>800+<small> & growing</small></b></span>
       <ul class="trio-feats">
         <li><span class="check">✓</span>Free WHOIS privacy, on by default</li>
         <li><span class="check">✓</span>Honest renewal prices shown upfront</li>
