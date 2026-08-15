@@ -571,7 +571,8 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
   padding: 8px 18px; font-size: .8rem; font-weight: 700;
   color: var(--muted-2); cursor: pointer; transition: all .2s ease;
 }
-.qc-demo-tab.active { background: var(--pink); color: #fff; box-shadow: 0 2px 8px rgba(227,28,100,.4); }
+.qc-demo-tab:hover { color: var(--text); }
+.qc-demo-tab.active { background: var(--surface-3); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 .qc-demo-frame {
   border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
   background: var(--surface); box-shadow: 0 24px 60px rgba(0,0,0,.45);
