@@ -29,7 +29,7 @@
     }
   </script>
   @stack('jsonld')
-  {# Critical loader styles — render the gradient spinner immediately to avoid any unstyled flash. #}
+  {{-- Critical loader styles — render the gradient spinner immediately to avoid any unstyled flash. --}}
   <style>
     #loading {
       position: fixed; inset: 0; z-index: 9999;
