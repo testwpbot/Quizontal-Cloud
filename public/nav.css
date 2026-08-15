@@ -1,0 +1,223 @@
+/* ============================================================================
+   Quizontal Cloud — navigation (definitive)
+   Loaded LAST. Overrides every legacy nav rule in styles/modern/premium.css.
+   ============================================================================ */
+
+/* ---------- Desktop (>= 701px): horizontal pill nav ---------- */
+@media (min-width: 701px) {
+  .mobile-toggle { display: none !important; }
+
+  .nav-menu {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .nav-menu .drawer-body {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .nav-menu .drawer-head,
+  .nav-menu .drawer-label,
+  .nav-menu .drawer-footer,
+  .nav-menu .mobile-account,
+  .nav-menu .nav-icon {
+    display: none !important;
+  }
+
+  .nav-menu .drawer-body > a {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    color: var(--muted) !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+  }
+  .nav-menu .drawer-body > a::after { content: none !important; display: none !important; }
+  .nav-menu .drawer-body > a:hover { background: var(--surface-2) !important; color: var(--text) !important; }
+  .nav-menu .drawer-body > a.nav-active { background: var(--pink-soft) !important; color: var(--pink-2) !important; }
+}
+
+/* ---------- Mobile (<= 700px): floating glass drawer ---------- */
+@media (max-width: 700px) {
+  .mobile-toggle { display: block !important; margin-left: auto !important; }
+
+  .nav-menu {
+    position: fixed !important;
+    top: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    left: auto !important;
+    width: min(372px, calc(100vw - 24px)) !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    z-index: 72 !important;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(227, 28, 100, 0.10), transparent 55%),
+      linear-gradient(180deg, rgba(19, 19, 26, 0.97), rgba(7, 7, 11, 0.99)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 26px !important;
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72) !important;
+    transform: translateX(calc(100% + 24px)) !important;
+    transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.28, 1) !important;
+    overflow: hidden !important;
+    will-change: transform !important;
+  }
+  .nav-menu.open { transform: none !important; right: 12px !important; }
+
+  /* header */
+  .nav-menu .drawer-head {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 18px 18px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+  .nav-menu .drawer-brand { display: flex !important; flex-direction: column !important; gap: 4px !important; min-width: 0 !important; }
+  .nav-menu .drawer-brand img { width: 150px !important; height: 40px !important; object-fit: contain !important; }
+  .nav-menu .drawer-brand-tag { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #6b7280; }
+  .nav-menu .drawer-close {
+    width: 40px !important; height: 40px !important; flex: none !important;
+    display: grid !important; place-items: center !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #d7dae2 !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease !important;
+  }
+  .nav-menu .drawer-close svg { width: 18px; height: 18px; }
+  .nav-menu .drawer-close:hover { background: var(--pink) !important; color: #fff !important; transform: rotate(90deg) !important; }
+
+  /* scrollable body — links stack vertically */
+  .nav-menu .drawer-body {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    padding: 6px 16px 16px !important;
+    gap: 0 !important;
+  }
+  .nav-menu .drawer-body::-webkit-scrollbar { width: 0; }
+
+  .nav-menu .drawer-label {
+    display: block !important;
+    padding: 14px 10px 8px !important;
+    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #5b6270;
+  }
+
+  .nav-menu .drawer-body > a {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin: 3px 0 !important;
+    padding: 12px !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: #c3c8d4 !important;
+    font-size: 0.94rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+  }
+  .nav-menu .drawer-body > a::after {
+    content: "\203A" !important; /* › */
+    display: block !important;
+    margin-left: auto !important;
+    color: #4b5160 !important;
+    font-size: 1.15rem !important;
+    line-height: 1 !important;
+    background: none !important;
+    border: 0 !important;
+    position: static !important;
+    height: auto !important;
+    width: auto !important;
+  }
+  .nav-menu .drawer-body > a:hover { background: rgba(255, 255, 255, 0.04) !important; color: #fff !important; }
+  .nav-menu .drawer-body > a.nav-active {
+    background: linear-gradient(90deg, rgba(227, 28, 100, 0.16), rgba(227, 28, 100, 0.05)) !important;
+    border-color: rgba(227, 28, 100, 0.24) !important;
+    color: #fff !important;
+  }
+  .nav-menu .drawer-body > a.nav-active::after { color: var(--pink-2) !important; }
+  .nav-menu .drawer-body > a.nav-active .nav-icon { background: var(--pink) !important; color: #fff !important; }
+
+  .nav-menu .nav-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important; height: 38px !important; flex: none !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #b8beca !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+  .nav-menu .nav-icon svg { width: 19px; height: 19px; }
+
+  /* client-area card */
+  .nav-menu .mobile-account {
+    display: block !important;
+    position: relative; overflow: hidden;
+    margin: 18px 2px 4px !important;
+    padding: 1.35rem 1.25rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 18px !important;
+    background:
+      radial-gradient(120% 120% at 100% 0%, rgba(34, 211, 238, 0.18), transparent 50%),
+      linear-gradient(135deg, #E31C64 0%, #8f1046 100%) !important;
+    color: #fff !important;
+    text-align: center !important;
+  }
+  .nav-menu .mobile-account .ma-icon {
+    width: 44px; height: 44px; margin: 0 auto 0.8rem !important;
+    background: rgba(255, 255, 255, 0.16); border-radius: 12px;
+    display: flex !important; align-items: center; justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  .nav-menu .mobile-account .ma-icon svg { width: 22px; height: 22px; }
+  .nav-menu .mobile-account h6 { color: #fff !important; font-weight: 700; margin: 0 0 0.35rem; font-size: 1rem; }
+  .nav-menu .mobile-account p { font-size: 0.76rem; color: rgba(255, 255, 255, 0.8); margin: 0 0 0.95rem; line-height: 1.5; }
+  .nav-menu .mobile-account .button { width: 100% !important; background: #fff !important; border-color: #fff !important; color: var(--pink) !important; font-weight: 700; }
+
+  /* footer */
+  .nav-menu .drawer-footer {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    gap: 5px; align-items: center;
+    padding: 12px 18px 16px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  }
+  .nav-menu .drawer-footer .footer-status { display: inline-flex !important; align-items: center; gap: 7px; font-size: 0.72rem; font-weight: 600; color: #9aa3b2; }
+  .nav-menu .drawer-footer .footer-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(32, 201, 151, 0.18); }
+  .nav-menu .drawer-footer .footer-copy { font-size: 0.7rem; color: #5b6270; }
+}

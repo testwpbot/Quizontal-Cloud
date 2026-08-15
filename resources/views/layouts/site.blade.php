@@ -58,6 +58,7 @@
   <link rel="stylesheet" href="/styles.css?v={{ filemtime(public_path('styles.css')) }}">
   <link rel="stylesheet" href="/modern.css?v={{ filemtime(public_path('modern.css')) }}">
   <link rel="stylesheet" href="/premium.css?v={{ filemtime(public_path('premium.css')) }}">
+  <link rel="stylesheet" href="/nav.css?v={{ filemtime(public_path('nav.css')) }}">
   @stack('page-styles')
   <script type="application/ld+json">
     {
