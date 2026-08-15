@@ -67,6 +67,28 @@
 
 <body class="{% block body_class %}{% endblock %}{{ client ? ' qc-authed qc-app' : '' }}">
 
+{# ---- page loader (all pages: guest + client) ---- #}
+{# Rendered unconditionally BEFORE any content so an opaque branded spinner covers
+   the viewport from the very first paint. Content is only revealed once the page
+   (styles, scripts, images and fonts) has fully loaded — no flash of unstyled or
+   half-loaded checkout content on a cold cache. #}
+<div id="loading">
+    <div class="loader-box">
+        <div class="loader-spinner"><div class="loader-spinner-core"></div></div>
+    </div>
+</div>
+<script>
+(function () {
+    var qcHideLoader = function () {
+        var el = document.getElementById('loading');
+        if (el) el.classList.add('hide');
+    };
+    if (document.readyState === 'complete') { setTimeout(qcHideLoader, 250); }
+    else { window.addEventListener('load', function () { setTimeout(qcHideLoader, 250); }); }
+    setTimeout(qcHideLoader, 3500); // failsafe — never trap the user on a spinner
+})();
+</script>
+
 {% block body %}
 {% if not client and settings.require_login %}
     <script>
@@ -134,13 +156,6 @@
         <symbol id="i-chevron" viewBox="0 0 16 16"><path fill="currentColor" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></symbol>
         <symbol id="i-close" viewBox="0 0 24 24"><path fill="currentColor" d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.41z"/></symbol>
     </svg>
-
-    {# ---- page loader ---- #}
-    <div id="loading">
-        <div class="loader-box">
-            <div class="loader-spinner"><div class="loader-spinner-core"></div></div>
-        </div>
-    </div>
 
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
@@ -1517,15 +1532,6 @@
     {% if client %}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Page loader (hidden once everything — charts included — is up)
-        var hideLoader = function () {
-            var el = document.getElementById('loading');
-            if (el) el.classList.add('hide');
-        };
-        if (document.readyState === 'complete') { setTimeout(hideLoader, 250); }
-        window.addEventListener('load', function () { setTimeout(hideLoader, 250); });
-        setTimeout(hideLoader, 3500); // failsafe — never trap the user on a spinner
-
         // Sidebar toggles
         var menuToggle = document.getElementById('menu-toggle');
         if (menuToggle) {
