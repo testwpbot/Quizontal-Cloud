@@ -27,6 +27,7 @@
 .qc-bank-logo-box { background: rgba(255,255,255,.04); border: 1px solid var(--iq-line, rgba(255,255,255,.06)); border-radius: .75rem; }
 </style>
 {% if request.submitted %}<div class="alert alert-success">{% if invoice_kind|default('deposit') == 'service' %}Receipt submitted — we verify it and activate your service right after approval.{% else %}Receipt submitted. Quizontal Cloud will credit your wallet after the transfer is verified.{% endif %}</div>{% endif %}
+{% if error|default('') %}<div class="alert alert-danger">{{ error|e }}</div>{% endif %}
 <div class="row g-3">
   <div class="col-lg-6">
     <div class="card h-100">

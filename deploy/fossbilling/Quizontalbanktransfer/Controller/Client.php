@@ -26,7 +26,10 @@ class Client implements \FOSSBilling\InjectionAwareInterface
         $hash = trim((string) $this->di['request']->query->get('invoice_hash', ''));
         if ($hash !== '') return $this->renderInvoice($app, $hash);
 
-        return $app->render('mod_quizontalbanktransfer_index', ['config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig()]);
+        return $app->render('mod_quizontalbanktransfer_index', [
+            'config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig(),
+            'error' => trim((string) $this->di['request']->query->get('error', '')),
+        ]);
     }
 
     public function get_invoice(\Box_App $app, $hash): string
@@ -51,6 +54,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             'config' => $this->di['mod_service']('quizontalbanktransfer')->getConfig(),
             'deposit_invoice' => $this->di['mod_service']('Invoice')->toApiArray($invoice, true, $this->di['loggedin_client']),
             'invoice_kind' => $isDeposit ? 'deposit' : 'service',
+            'error' => trim((string) $this->di['request']->query->get('error', '')),
         ]);
     }
 
@@ -59,13 +63,27 @@ class Client implements \FOSSBilling\InjectionAwareInterface
         $this->di['is_client_logged'];
         $this->checkCsrf();
         $request = $this->di['request'];
-        $result = $this->di['mod_service']('quizontalbanktransfer')->submit(
-            $this->di['loggedin_client'],
-            $request->request->get('amount'),
-            (string) $request->request->get('reference', ''),
-            $request->files->get('receipt'),
-            ($hash = trim((string) $request->request->get('invoice_hash', ''))) !== '' ? $hash : null
-        );
+        $hash = trim((string) $request->request->get('invoice_hash', ''));
+        $hash = $hash !== '' ? $hash : null;
+
+        try {
+            $result = $this->di['mod_service']('quizontalbanktransfer')->submit(
+                $this->di['loggedin_client'],
+                $request->request->get('amount'),
+                (string) $request->request->get('reference', ''),
+                $request->files->get('receipt'),
+                $hash
+            );
+        } catch (InformationException $exception) {
+            // Return the customer to the slip screen with a friendly inline
+            // message instead of FOSSBilling's generic error page (e.g. a
+            // duplicate receipt, an already-paid invoice, or a bad amount).
+            $target = $hash !== null
+                ? 'quizontalbanktransfer/invoice/'.$hash
+                : 'quizontalbanktransfer';
+            return $app->redirect($target.'?error='.rawurlencode($exception->getMessage()));
+        }
+
         // Deposits land on the wallet page; order payments go back to the
         // invoice so the customer immediately sees "awaiting verification".
         $target = !empty($result['is_deposit'])
