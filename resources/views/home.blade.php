@@ -5,6 +5,37 @@
 @section('title', 'Quizontal Cloud — Domains, Web Hosting & Cloud VPS priced in LKR')
 @section('meta_description', 'Register domains, launch fast NVMe web hosting and deploy cloud VPS — all priced in Sri Lankan Rupees with one wallet and one dashboard.')
 
+@push('jsonld')
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@@type": "Question",
+      "name": "How do I pay? Do you accept cards?",
+      "acceptedAnswer": { "@@type": "Answer", "text": "Add funds to your Quizontal Cloud wallet by manual bank transfer with slip verification. Once credited, your wallet pays for domains, hosting, VPS and renewals." }
+    },
+    {
+      "@@type": "Question",
+      "name": "What's the difference between web hosting and a VPS?",
+      "acceptedAnswer": { "@@type": "Answer", "text": "Web hosting is a managed space for websites — we handle the server. A VPS gives you a full virtual server with root access — you control everything. Most sites start on hosting." }
+    },
+    {
+      "@@type": "Question",
+      "name": "How fast is activation after payment?",
+      "acceptedAnswer": { "@@type": "Answer", "text": "Automatic. Domains register, hosting accounts create and VPS provisioning begins as soon as your invoice is paid — no manual waiting." }
+    },
+    {
+      "@@type": "Question",
+      "name": "Can I manage everything from one account?",
+      "acceptedAnswer": { "@@type": "Answer", "text": "Yes — domains, DNS, hosting, servers, invoices, wallet history, email records and support tickets all live in the same client area." }
+    }
+  ]
+}
+</script>
+@endpush
+
 @section('content')
 <section class="hero qc-hero container">
   <a class="qc-announce" href="{{ route('vps') }}">

@@ -1,15 +1,55 @@
 <!doctype html>
 <html lang="en" data-theme="light">
 <head>
+  @php
+    // Canonical / OG URL: absolute, scheme-correct, and free of query strings,
+    // tracking params and trailing slashes so Google and social scrapers always
+    // resolve the single authoritative URL for each page.
+    $seoBase = rtrim((string) config('app.url'), '/');
+    $seoPath = trim((string) request()->path(), '/');
+    $seoUrl = $seoBase . ($seoPath === '' ? '/' : '/' . $seoPath);
+
+    $seoTitle = trim((string) $__env->yieldContent('title', 'Quizontal Cloud — Domains, Hosting & Cloud VPS'));
+    $seoDescription = trim((string) $__env->yieldContent('meta_description', 'Register domains, launch fast NVMe web hosting and deploy cloud VPS — all priced in Sri Lankan Rupees with one wallet and one dashboard.'));
+    $seoOgTitle = trim((string) $__env->yieldContent('og_title', $seoTitle));
+    $seoOgDescription = trim((string) $__env->yieldContent('og_description', $seoDescription));
+    $seoOgType = trim((string) $__env->yieldContent('og_type', 'website'));
+    $seoImage = trim((string) $__env->yieldContent('og_image', asset('images/og-cover.jpg')));
+    $seoImageAlt = trim((string) $__env->yieldContent('og_image_alt', 'Quizontal Cloud — domains, web hosting and cloud VPS'));
+  @endphp
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="@yield('meta_description', 'Quizontal Cloud — domains, web hosting and cloud VPS with transparent LKR pricing, one wallet and one dashboard.')">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="@yield('meta_title', 'Quizontal Cloud — domains, hosting & cloud VPS priced in LKR')">
-  <meta property="og:description" content="@yield('meta_description', 'Quizontal Cloud — domains, web hosting and cloud VPS with transparent LKR pricing, one wallet and one dashboard.')">
-  <meta property="og:image" content="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png">
-  <link rel="canonical" href="{{ url()->current() }}">
-  <title>@yield('title', 'Quizontal Cloud — Domains, Hosting & Cloud VPS')</title>
+
+  {{-- Primary / basic --}}
+  <title>{{ $seoTitle }}</title>
+  <meta name="description" content="{{ $seoDescription }}">
+  <link rel="canonical" href="{{ $seoUrl }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="Quizontal Cloud">
+  <meta name="theme-color" content="#050508">
+
+  {{-- Open Graph (Facebook, LinkedIn, WhatsApp, Slack, etc.) --}}
+  <meta property="og:type" content="{{ $seoOgType }}">
+  <meta property="og:site_name" content="Quizontal Cloud">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="{{ $seoOgTitle }}">
+  <meta property="og:description" content="{{ $seoOgDescription }}">
+  <meta property="og:url" content="{{ $seoUrl }}">
+  <meta property="og:image" content="{{ $seoImage }}">
+  <meta property="og:image:secure_url" content="{{ $seoImage }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ $seoImageAlt }}">
+  <meta property="og:image:type" content="image/jpeg">
+
+  {{-- Twitter / X card --}}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ $seoOgTitle }}">
+  <meta name="twitter:description" content="{{ $seoOgDescription }}">
+  <meta name="twitter:image" content="{{ $seoImage }}">
+  <meta name="twitter:image:alt" content="{{ $seoImageAlt }}">
+  <meta name="twitter:url" content="{{ $seoUrl }}">
+
   <link rel="icon" type="image/png" href="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786782955/favicon-quizontal_ps696w.png">
   <link rel="apple-touch-icon" href="https://res.cloudinary.com/dt1sdefd6/image/upload/v1786782955/favicon-quizontal_ps696w.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,10 +62,34 @@
   <script type="application/ld+json">
     {
       "@@context": "https://schema.org",
-      "@@type": "Organization",
-      "name": "Quizontal Cloud",
-      "url": "{{ url('/') }}",
-      "logo": "https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png"
+      "@@graph": [
+        {
+          "@@type": "Organization",
+          "@@id": "{{ $seoBase }}/#organization",
+          "name": "Quizontal Cloud",
+          "url": "{{ $seoBase }}/",
+          "logo": {
+            "@@type": "ImageObject",
+            "url": "https://res.cloudinary.com/dt1sdefd6/image/upload/v1786643376/ChatGPT_Image_Aug_13_2026_11_17_40_PM-remove-bg-io_y5zxiu.png"
+          }
+        },
+        {
+          "@@type": "WebSite",
+          "@@id": "{{ $seoBase }}/#website",
+          "url": "{{ $seoBase }}/",
+          "name": "Quizontal Cloud",
+          "description": "{{ $seoDescription }}",
+          "publisher": { "@@id": "{{ $seoBase }}/#organization" },
+          "potentialAction": {
+            "@@type": "SearchAction",
+            "target": {
+              "@@type": "EntryPoint",
+              "urlTemplate": "{{ $seoBase }}/domains?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
     }
   </script>
   @stack('jsonld')

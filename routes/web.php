@@ -12,10 +12,13 @@ use App\Http\Controllers\HostingProductsController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\VpsController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\StorefrontConfigController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/domains', DomainsController::class)->name('domains');
 Route::get('/vps', VpsController::class)->name('vps');
 Route::get('/hosting', HostingController::class)->name('hosting');

@@ -1,3 +1,0 @@
-User-agent: *
-Disallow:
-Sitemap: https://quizontal.site/sitemap.xml
