@@ -68,6 +68,16 @@ Create a separate MySQL database/user first, complete FossBilling's web installe
 
 An installable FossBilling module for private receipt uploads and administrator approval is included in `deploy/fossbilling/Quizontalbanktransfer`. Customers pay the exact order invoice by bank transfer and the service activates on approval; standalone wallet top-ups remain supported. Follow [`deploy/QUIZONTAL_BANK_TRANSFER.md`](deploy/QUIZONTAL_BANK_TRANSFER.md) to install and configure it.
 
+## Branded error page
+
+FOSSBilling's default error pages carry FOSSBilling branding (including the dark "Powered by FOSSBilling" page). This repository ships a Quizontal Cloud branded replacement for both the hardcoded `ErrorPage` and the client-area error template. Install it on the billing host:
+
+```bash
+sudo -E FOSSBILLING_DIR=/var/www/billing bash deploy/install-custom-error-page.sh
+```
+
+The installer backs up the original file (roll back any time with `--restore`) and should be re-run after every FOSSBilling upgrade. No shell access? The same two files can be placed with the DirectAdmin File Manager — see the "DirectAdmin / no SSH" section in [deploy/CUSTOM_ERROR_PAGE.md](deploy/CUSTOM_ERROR_PAGE.md).
+
 ## Scheduled updates
 
 Run this daily as the web-server user after Laravel is installed:

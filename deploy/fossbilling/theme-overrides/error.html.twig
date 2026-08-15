@@ -1,0 +1,87 @@
+{#
+    Quizontal Cloud branded error page (client area).
+
+    Overrides FOSSBilling's stock themes/huraga/html/error.html.twig through the
+    <theme>/html_custom override loader used by this repository's deploy scripts.
+    Keeps the same layout_default.html.twig base (itself rebranded), so the page
+    inherits the Quizontal header, footer and fonts while replacing the generic
+    "Whoops!" body with an on-brand panel.
+
+    Relies on the `exception` variable injected by Box_App::errorResponse() /
+    show404(). The "Back to Quizontal Cloud" button URL is set inline in the
+    `qc_store_url` variable below — edit it directly in DirectAdmin File Manager.
+#}
+{% extends "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'Error'|trans }} {{ exception.getCode|default(500) }}{% endblock %}
+
+{% block body_class %}error-page qc-error-page{% endblock %}
+
+{% block breadcrumb %}{% endblock %}
+
+{% block content %}
+    {# Your Quizontal Cloud storefront URL, e.g. https://quizontalcloud.lk.
+       Leave empty ('') to hide the "Back to Quizontal Cloud" button. #}
+    {% set qc_store_url = '' %}
+    {% set qc_code = exception.getCode|default(500) %}
+
+    <style>
+        .qc-error-panel {
+            max-width: 720px;
+            margin: 2.5rem auto;
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+        }
+        .qc-error-panel .qc-error-code {
+            font-family: "Space Grotesk", "DM Sans", sans-serif;
+            font-size: 6rem;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, rgb(186, 66, 255) 20%, rgb(0, 225, 255));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .qc-error-panel .qc-error-title {
+            font-family: "Space Grotesk", "DM Sans", sans-serif;
+            font-size: 1.65rem;
+            font-weight: 600;
+            margin: 0 0 0.6rem;
+        }
+        .qc-error-panel .qc-error-copy {
+            color: var(--iq-body, #9a9ab0);
+            max-width: 460px;
+            margin: 0 auto 0.4rem;
+        }
+        .qc-error-panel .qc-error-detail {
+            color: var(--iq-body, #9a9ab0);
+            font-size: 0.9rem;
+            word-break: break-word;
+            max-width: 520px;
+            margin: 0.6rem auto 0;
+        }
+        .qc-error-panel .qc-error-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 1.75rem;
+        }
+    </style>
+
+    <div class="qc-error-panel">
+        <div class="qc-error-code">{{ qc_code }}</div>
+        <h1 class="qc-error-title">{{ 'Something went wrong on our side'|trans }}</h1>
+        <p class="qc-error-copy">{{ 'We hit an unexpected problem while serving this page. Please try again in a moment — if it keeps happening, our team has been notified.'|trans }}</p>
+        {% if exception.getMessage %}
+            <p class="qc-error-detail">{{ exception.getMessage }}</p>
+        {% endif %}
+        <div class="qc-error-actions">
+            <a class="btn btn-primary" href="{{ '/'|link }}">{{ 'Return to the client area'|trans }}</a>
+            {% if qc_store_url %}
+                <a class="btn btn-outline-primary" href="{{ qc_store_url }}">{{ 'Back to Quizontal Cloud'|trans }}</a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
