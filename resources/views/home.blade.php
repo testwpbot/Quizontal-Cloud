@@ -58,8 +58,8 @@
 
         <div class="qc-demo-stats" style="margin-bottom:18px">
           <article class="stat-card">
-            <div class="stat-ring green" style="--val:85"><span class="stat-ring-inner">₨</span></div>
-            <div class="stat-meta"><span class="stat-label">Total Revenue</span><strong class="stat-value"><span class="qc-count" data-count="184300" data-prefix="LKR ">0</span></strong><span class="stat-sub">All time</span></div>
+            <div class="stat-ring green" style="--val:99"><span class="stat-ring-inner">↗</span></div>
+            <div class="stat-meta"><span class="stat-label">Server Uptime</span><strong class="stat-value">99.9%</strong><span class="stat-sub">Network uptime target</span></div>
           </article>
           <article class="stat-card">
             <div class="stat-ring cyan" style="--val:65"><span class="stat-ring-inner">▦</span></div>
