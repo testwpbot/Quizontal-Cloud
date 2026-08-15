@@ -550,7 +550,7 @@ body.theme-dark .domain-hero-copy h1 { color: var(--text); }
   .nav-menu > a:hover { background: var(--surface-2); color: var(--text); }
   .nav-menu > a.nav-active { background: var(--pink-soft); color: var(--pink-2); }
   .nav-menu .nav-icon { display: none; }
-  .drawer-head, .drawer-label, .mobile-account { display: none; }
+  .drawer-head, .drawer-label, .mobile-account, .drawer-footer { display: none; }
 }
 
 /* ---- centered animated hero ---- */
