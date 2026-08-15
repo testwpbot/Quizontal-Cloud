@@ -2,6 +2,17 @@
 (function () {
   const $ = s => document.querySelector(s);
 
+  /* ---------- Page loader (gradient spinner, hidden on load) ---------- */
+  function initLoader() {
+    const el = document.getElementById('loading');
+    if (!el) return;
+    const hide = () => el.classList.add('hide');
+    if (document.readyState === 'complete') { setTimeout(hide, 250); }
+    window.addEventListener('load', () => setTimeout(hide, 250));
+    setTimeout(hide, 3500); // failsafe — never trap the user on a spinner
+  }
+  initLoader();
+
   /* ---------- Shared config (one fetch per page, reused by page engines) ---------- */
   window.QC = window.QC || {};
   QC.config = { clientAreaUrl: '/client-area', orderUrl: '' };

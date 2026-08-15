@@ -29,8 +29,38 @@
     }
   </script>
   @stack('jsonld')
+  {# Critical loader styles — render the gradient spinner immediately to avoid any unstyled flash. #}
+  <style>
+    #loading {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #050508; display: flex; align-items: center; justify-content: center;
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+    #loading.hide { opacity: 0; visibility: hidden; }
+    .loader-box { text-align: center; }
+    .loader-spinner {
+      background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
+      width: 92px; height: 92px;
+      margin: 0 auto; border-radius: 50%;
+      filter: blur(1px);
+      box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+      animation: qcSpin 1.7s linear infinite;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loader-spinner-core {
+      background-color: #050508;
+      width: 92px; height: 92px; border-radius: 50%;
+      filter: blur(10px);
+    }
+    @keyframes qcSpin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body class="@yield('body_class')">
+<div id="loading" aria-hidden="true">
+  <div class="loader-box">
+    <div class="loader-spinner"><div class="loader-spinner-core"></div></div>
+  </div>
+</div>
 <div class="site-glow glow-one"></div><div class="site-glow glow-two"></div>
 <header class="site-header">
   <nav class="container nav-shell">
