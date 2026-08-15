@@ -161,11 +161,41 @@ class SyncDomainTldsToFossBilling extends Command
         try {
             $list = $this->adminCall($url, $apiKey, 'servicedomain/registrar_get_list', ['per_page' => 100]);
             $rows = $list['list'] ?? $list ?? [];
+
+            $seen = [];
             foreach ((array) $rows as $row) {
-                $adapter = strtolower((string) ($row['registrar'] ?? ''));
+                $adapter = strtolower((string) ($row['registrar'] ?? $row['adapter'] ?? ''));
                 $name = strtolower((string) ($row['title'] ?? $row['name'] ?? ''));
-                if ($adapter === 'porkbun' || str_contains($name, 'porkbun')) {
+                $config = (array) ($row['config'] ?? []);
+
+                // Porkbun API keys always start with "pk1_" (live) or "pk1_sb_" (sandbox).
+                $hasPorkbunKey = str_starts_with(strtolower((string) ($config['api-key'] ?? '')), 'pk1_');
+
+                $isPorkbun = str_contains($adapter, 'porkbun') || str_contains($name, 'porkbun') || $hasPorkbunKey;
+
+                $seen[] = [
+                    'id' => (string) ($row['id'] ?? ''),
+                    'title' => (string) ($row['title'] ?? $row['name'] ?? '?'),
+                    'adapter' => (string) ($row['registrar'] ?? $row['adapter'] ?? ''),
+                    'isPorkbun' => $isPorkbun,
+                ];
+
+                if ($isPorkbun) {
                     return ['id' => (string) ($row['id'] ?? ''), 'title' => (string) ($row['title'] ?? $row['name'] ?? 'Porkbun')];
+                }
+            }
+
+            // Nothing matched — show every registrar so the operator can see why.
+            if ($seen !== []) {
+                $this->line('Registrars found in FOSSBilling:');
+                foreach ($seen as $r) {
+                    $this->line(sprintf(
+                        '  #%s "%s" (adapter: %s)%s',
+                        $r['id'] !== '' ? $r['id'] : '?',
+                        $r['title'],
+                        $r['adapter'] !== '' ? $r['adapter'] : 'none',
+                        $r['isPorkbun'] ? '  <-- matches' : ''
+                    ));
                 }
             }
         } catch (\RuntimeException $exception) {
