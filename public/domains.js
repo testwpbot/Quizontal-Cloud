@@ -111,7 +111,13 @@ async function search(name) {
   $('#resultsTitle').textContent = `Searching “${name}”…`;
   $('#resultsSub').textContent = 'Comparing prices across every extension we sell…';
   $('#resultsList').innerHTML = skeletonRows(8);
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Auto-scroll to the results. Deferred a frame because the section was just
+  // unhidden (`hidden` -> visible) in this same tick: the browser needs the
+  // element to have a layout box before it can compute the scroll target,
+  // otherwise the smooth scroll silently no-ops (seen in Safari/Chrome).
+  requestAnimationFrame(() => {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   try {
     const response = await fetch(`/api/domains/search?name=${encodeURIComponent(name)}`);
