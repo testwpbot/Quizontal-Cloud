@@ -1,0 +1,113 @@
+{% set platform = product.config.platform|default('kvm') %}
+{% set is_windows = platform == 'hyperv' %}
+<style>
+#quizontal-vps-config{position:relative;--qc-accent:#e31c64;--qc-accent-soft:rgba(227,28,100,.16);--qc-border:rgba(255,255,255,.08);--qc-text:#f5f6f8;--qc-muted:#8b93a3}
+#quizontal-vps-config .qc-location-card{position:relative;background:rgba(255,255,255,.03)!important;border:1px solid var(--qc-border)!important;color:var(--qc-text)!important;min-height:72px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease}
+#quizontal-vps-config .qc-location-card:hover{background:var(--qc-accent-soft)!important;border-color:var(--qc-accent)!important;color:var(--qc-text)!important;transform:translateY(-1px);box-shadow:0 5px 16px rgba(227,28,100,.22)}
+#quizontal-vps-config .btn-check:checked+.qc-location-card{background:var(--qc-accent-soft)!important;border:2px solid var(--qc-accent)!important;color:var(--qc-text)!important;box-shadow:0 0 0 3px rgba(227,28,100,.18)}
+#quizontal-vps-config .btn-check:checked+.qc-location-card:after{content:'✓';position:absolute;right:10px;top:8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--qc-accent);color:#fff;font-size:12px;font-weight:700}
+#quizontal-vps-config .btn-check:focus+.qc-location-card{box-shadow:0 0 0 3px rgba(227,28,100,.25)!important}
+#quizontal-vps-config .qc-os-trigger{background:rgba(255,255,255,.03)!important;border:1px solid var(--qc-border)!important;color:var(--qc-text)!important;min-height:76px;transition:border-color .18s ease,box-shadow .18s ease}
+#quizontal-vps-config .qc-os-trigger:hover,#quizontal-vps-config .qc-os-trigger:focus,#quizontal-vps-config .qc-os-trigger[aria-expanded=true]{background:var(--qc-accent-soft)!important;border-color:var(--qc-accent)!important;color:var(--qc-text)!important;box-shadow:0 0 0 3px rgba(227,28,100,.15)!important}
+#quizontal-vps-config .qc-os-trigger strong,#quizontal-vps-config .qc-os-option strong{color:var(--qc-text)!important}
+#quizontal-vps-config .qc-os-trigger small,#quizontal-vps-config .qc-os-option small,#quizontal-vps-config .qc-location-card small{color:var(--qc-muted)!important}
+#quizontal-vps-config .qc-os-menu{background:#101014;border:1px solid var(--qc-border);border-radius:12px;max-height:330px;overflow-y:auto}
+#quizontal-vps-config .qc-os-option{color:var(--qc-text)!important;border:1px solid transparent;transition:background .15s ease,border-color .15s ease}
+#quizontal-vps-config .qc-os-option:hover,#quizontal-vps-config .qc-os-option:focus{background:var(--qc-accent-soft)!important;border-color:rgba(227,28,100,.3)!important;color:var(--qc-text)!important}
+#quizontal-vps-config #qc-hostname:focus{border-color:var(--qc-accent);box-shadow:0 0 0 3px rgba(227,28,100,.18)}
+#quizontal-vps-config .qc-order-loading{display:none;position:absolute;inset:0;z-index:8;background:rgba(0,0,0,.88);padding:28px;border-radius:12px}
+#quizontal-vps-config.qc-submitting .qc-order-loading{display:block}
+#quizontal-vps-config .qc-skeleton{height:18px;border-radius:7px;margin-bottom:14px;background:linear-gradient(90deg,#14141c 25%,#1e1e28 50%,#14141c 75%);background-size:200% 100%;animation:qc-order-shimmer 1.15s infinite}
+@keyframes qc-order-shimmer{to{background-position:-200% 0}}
+/* The FOSSBilling API client also appends a centered spinner (and the order
+   layer toggles a full-screen GIF) on every request. While a Quizontal overlay
+   is active it is the only loader shown. */
+body.qc-busy>.spinner-border,body.qc-busy .loading,body.qc-busy .wait{display:none!important}
+</style>
+<div class="card border-0 bg-transparent mb-3" id="quizontal-vps-config">
+  <div class="card-body p-3 p-md-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="rounded-circle border p-2" style="background:var(--qc-accent-soft);color:#f06b9d"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01M11 7h7M11 17h7"/></svg></div>
+      <div><h4 class="mb-1" style="color:var(--qc-text)">Configure your cloud server</h4><div class="small text-muted">Choose a location, operating system, and hostname.</div></div>
+    </div>
+
+    <label class="form-label fw-bold">Server location</label>
+    <div class="row g-2 mb-4">
+      {% for id, name in {1:'New Jersey', 2:'Los Angeles', 3:'Dallas, TX'} %}
+      <div class="col-12 col-md-4">
+        <input class="btn-check qc-location" type="radio" name="location" id="qc-location-{{ id }}" value="{{ id }}" {% if id == 1 %}checked{% endif %}>
+        <label class="btn qc-location-card w-100 d-flex align-items-center gap-2 p-3 text-start" for="qc-location-{{ id }}">
+          <img src="{{ 'us-flag.svg'|mod_asset_url('cloudvps') }}" width="34" height="22" alt="United States flag" style="object-fit:cover;border-radius:3px">
+          <span><strong class="d-block">{{ name }}</strong><small class="text-muted">United States</small></span>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <label class="form-label fw-bold">Operating system</label>
+    <div class="dropdown mb-4">
+      <button class="btn qc-os-trigger w-100 d-flex align-items-center justify-content-between p-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="qc-os-button">
+        <span class="d-flex align-items-center gap-3"><img id="qc-os-icon" src="{{ (is_windows ? 'windows.svg' : 'ubuntu.svg')|mod_asset_url('cloudvps') }}" width="34" height="34" alt=""><span class="text-start"><strong id="qc-os-title">{{ is_windows ? 'Windows Server 2022' : 'Ubuntu 24.04 LTS' }}</strong><small class="text-muted d-block">64-bit server image</small></span></span>
+        <span>▾</span>
+      </button>
+      <ul class="dropdown-menu qc-os-menu w-100 shadow p-2">
+        {% if is_windows %}
+          {% set systems = {
+            'windows|Windows2019Standard|Windows Server 2019|windows.svg': 'Long-term support',
+            'windows|Windows2022|Windows Server 2022|windows.svg': 'Recommended',
+            'windows|Windows2025Standard|Windows Server 2025|windows.svg': 'Latest Windows Server'
+          } %}
+        {% else %}
+          {% set systems = {
+            'ubuntu|ubuntu24|Ubuntu 24.04 LTS|ubuntu.svg': 'Recommended',
+            'ubuntu|ubuntu-22.04|Ubuntu 22.04 LTS|ubuntu.svg': 'Long-term support',
+            'debian|debian12|Debian 12|debian.svg': 'Stable and lightweight',
+            'debian|debian13|Debian 13|debian.svg': 'Latest Debian',
+            'almalinux|almalinux9|AlmaLinux 9|almalinux.svg': 'Enterprise Linux',
+            'almalinux|alma10|AlmaLinux 10|almalinux.svg': 'Latest AlmaLinux'
+          } %}
+        {% endif %}
+        {% for value, description in systems %}
+          {% set parts = value|split('|') %}
+          <li><button class="dropdown-item rounded d-flex align-items-center gap-3 p-2 qc-os-option" type="button" data-distro="{{ parts[0] }}" data-version="{{ parts[1] }}" data-title="{{ parts[2] }}" data-icon="{{ parts[3]|mod_asset_url('cloudvps') }}"><img src="{{ parts[3]|mod_asset_url('cloudvps') }}" width="30" height="30" alt=""><span><strong class="d-block">{{ parts[2] }}</strong><small class="text-muted">{{ description }}</small></span></button></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <input type="hidden" name="period" value="1M">
+    <input type="hidden" name="osDistro" id="qc-os-distro" value="{{ is_windows ? 'windows' : 'ubuntu' }}">
+    <input type="hidden" name="osVersion" id="qc-os-version" value="{{ is_windows ? 'Windows2022' : 'ubuntu24' }}">
+    <input type="hidden" name="controlPanel" value="none">
+
+    <label class="form-label fw-bold" for="qc-hostname">Server hostname</label>
+    <input class="form-control form-control-lg" id="qc-hostname" type="text" name="hostname" required pattern="(?=.{4,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}" placeholder="server1.yourdomain.com">
+    <div class="form-text">Use a full hostname such as <strong>server1.example.com</strong>. Each server needs its own unique hostname.</div>
+    <div class="qc-order-loading" aria-live="polite"><div class="d-flex align-items-center gap-2 mb-4"><span class="spinner-border spinner-border-sm" style="color:#e31c64"></span><strong>Preparing your cloud order…</strong></div><div class="qc-skeleton" style="width:48%"></div><div class="qc-skeleton" style="width:100%;height:72px"></div><div class="qc-skeleton" style="width:100%;height:72px"></div><div class="qc-skeleton" style="width:68%"></div></div>
+  </div>
+</div>
+<script>
+document.querySelectorAll('.qc-os-option').forEach(function(option) {
+  option.addEventListener('click', function() {
+    document.getElementById('qc-os-distro').value = this.dataset.distro;
+    document.getElementById('qc-os-version').value = this.dataset.version;
+    document.getElementById('qc-os-title').textContent = this.dataset.title;
+    document.getElementById('qc-os-icon').src = this.dataset.icon;
+  });
+});
+var qcOrderPanel = document.getElementById('quizontal-vps-config');
+var qcOrderForm = qcOrderPanel ? qcOrderPanel.closest('form') : null;
+function qcOrderBusy(on) {
+  qcOrderPanel.classList.toggle('qc-submitting', on);
+  document.body.classList.toggle('qc-busy', on);
+}
+if (qcOrderForm) qcOrderForm.addEventListener('submit', function() {
+  if (this.checkValidity()) qcOrderBusy(true);
+});
+/* When the API request ends, FOSSBilling removes its injected body-level
+   spinner. Use that as the completion signal: on success the page redirects,
+   on failure (for example a hostname that is already in use) the form becomes
+   usable again immediately next to the error message. */
+new MutationObserver(function() {
+  if (!document.body.querySelector(':scope > .spinner-border')) qcOrderBusy(false);
+}).observe(document.body, { childList: true });
+setTimeout(function() { qcOrderBusy(false); }, 45000);
+</script>
