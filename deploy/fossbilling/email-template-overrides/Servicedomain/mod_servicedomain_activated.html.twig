@@ -1,4 +1,24 @@
-{% block subject %}Your domain {{ order.title }} is active | Quizontal Cloud{% endblock %}
+{% block subject %}Your domain {{ order.title }} is active{% endblock %}
 {% block content %}
-<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b"><div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden"><div style="height:5px;background:#e31c64"></div><div style="padding:30px"><div style="font-size:22px;font-weight:700">Quizontal <span style="color:#e31c64">Cloud</span></div><h1 style="font-size:25px;margin:26px 0 8px">Your domain is active</h1><p style="color:#6b7280;line-height:1.65">Hello {{ c.first_name }}, your domain <strong>{{ order.title }}</strong> has been registered and is ready to use.</p><table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px"><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Domain</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ service.domain }}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Registered</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ order.created_at|format_date }}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Registration period</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ service.period }} {{ service.period == 1 ? 'year' : 'years' }}</td></tr>{% if order.expires_at %}<tr><td style="padding:12px;color:#6b7280">Expires on</td><td style="padding:12px;text-align:right;font-weight:700">{{ order.expires_at|format_date }}</td></tr>{% endif %}</table><p style="color:#6b7280;line-height:1.65">Please note your domain may not be visible online instantly — DNS propagation can take up to 48 hours. Manage nameservers, DNS and contacts from your dashboard at any time.</p><a href="{{ 'order/service/manage'|link }}/{{ order.id }}" style="display:inline-block;padding:12px 20px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Manage my domain</a><p style="margin:28px 0 0;color:#8a8f98;font-size:13px">This is an automated service notification from Quizontal Cloud.</p></div></div></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f8;padding:24px 0;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;">
+<tr><td style="padding:20px 24px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#111827;">QUIZONTAL CLOUD</td></tr>
+<tr><td style="padding:0 24px 24px 24px;font-family:Arial,Helvetica,sans-serif;">
+<h1 style="margin:0 0 8px;font-size:18px;line-height:26px;color:#111827;font-weight:600;">Domain active</h1>
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:#374151;">Hello {{ c.first_name }}, your domain {{ service.domain }} has been registered.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0;border:1px solid #e5e7eb;">
+<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;">Domain</td><td style="padding:8px 12px;font-size:13px;text-align:right;font-weight:600;">{{ service.domain }}</td></tr>
+<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-top:1px solid #f3f4f6;">Period</td><td style="padding:8px 12px;font-size:13px;text-align:right;border-top:1px solid #f3f4f6;">{{ service.period }} year(s)</td></tr>
+{% if order.expires_at %}<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-top:1px solid #f3f4f6;">Expires</td><td style="padding:8px 12px;font-size:13px;text-align:right;border-top:1px solid #f3f4f6;">{{ order.expires_at|format_date }}</td></tr>{% endif %}
+</table>
+<p style="margin:12px 0 0;font-size:12px;line-height:18px;color:#6b7280;">DNS propagation may take up to 48 hours. Manage nameservers and DNS from your client area.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:16px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#111827;border-radius:4px;"><a href="{{ 'order/service/manage'|link }}/{{ order.id }}" style="display:inline-block;padding:11px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">Manage domain</a></td></tr></table>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:14px 24px;border-top:1px solid #f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#9ca3af;">Quizontal Cloud · Service notification</td></tr>
+</table>
+</td></tr>
+</table>
 {% endblock %}

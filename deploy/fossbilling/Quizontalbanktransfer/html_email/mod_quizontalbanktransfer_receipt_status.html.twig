@@ -1,10 +1,21 @@
-{% block subject %}Payment slip could not be approved | Quizontal Cloud{% endblock %}
+{% block subject %}Payment slip not verified - {{ submission.serie_nr }}{% endblock %}
 {% block content %}
-<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b"><div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden"><div style="height:5px;background:#e31c64"></div><div style="padding:30px"><div style="font-size:22px;font-weight:700">Quizontal <span style="color:#e31c64">Cloud</span></div>
-<h1 style="font-size:25px;margin:26px 0 8px">We could not verify this payment</h1>
-<p style="color:#6b7280;line-height:1.65">Hello {{ customer.first_name }}, we reviewed your bank transfer slip for invoice <strong>{{ submission.serie_nr }}</strong> but could not match it to a payment in our bank account. {% if invoice_kind|default('deposit') == 'service' %}Your order is reserved and waiting — upload a valid slip to activate your service.{% else %}Your wallet was not charged or credited.{% endif %}</p>
-<table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px"><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Submission</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">#{{ submission.id }}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Invoice</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ submission.serie_nr }}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Submitted amount</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ submission.amount|money(submission.currency) }}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Reference</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;text-align:right;font-weight:700">{{ submission.reference }}</td></tr><tr><td style="padding:12px;color:#6b7280">Status</td><td style="padding:12px;text-align:right;font-weight:700;color:#e31c64">Rejected</td></tr></table>
-{% if submission.admin_note %}<div style="padding:15px;margin-bottom:22px;background:#fff1f6;border-left:4px solid #e31c64;border-radius:6px"><strong>Note from our team</strong><div style="margin-top:6px">{{ submission.admin_note }}</div></div>{% endif %}
-{% if invoice_kind|default('deposit') == 'service' %}<a href="{{ ('invoice/' ~ submission.invoice_hash)|link }}" style="display:inline-block;padding:12px 20px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Upload a new slip</a>{% else %}<a href="{{ wallet_url }}" style="display:inline-block;padding:12px 20px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Submit a new slip</a>{% endif %}
-<p style="margin:28px 0 0;color:#8a8f98;font-size:13px">This is an automated account notification from Quizontal Cloud. If you already sent the payment, reply to this email or open a support ticket with your bank receipt.</p></div></div></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f8;padding:24px 0;">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;">
+<tr><td style="padding:20px 24px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#111827;">QUIZONTAL CLOUD</td></tr>
+<tr><td style="padding:0 24px 24px 24px;font-family:Arial,Helvetica,sans-serif;">
+<h1 style="margin:0 0 8px;font-size:18px;line-height:26px;color:#111827;font-weight:600;">Payment slip could not be verified</h1>
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:#374151;">Hello {{ customer.first_name }}, we reviewed your slip for invoice {{ submission.serie_nr }} but could not match it to a bank payment.</p>
+<p style="margin:0;font-size:13px;line-height:20px;color:#374151;">Submission #{{ submission.id }} | Invoice {{ submission.serie_nr }} | Amount {{ submission.amount|money(submission.currency) }} | Ref {{ submission.reference }} | Status: Rejected</p>
+{% if submission.admin_note %}<p style="margin:12px 0 0;padding:10px 12px;background:#f9fafb;border-left:3px solid #111827;font-size:13px;line-height:20px;color:#374151;"><strong>Note:</strong><br>{{ submission.admin_note }}</p>{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#111827;border-radius:4px;"><a href="{{ ('invoice/' ~ submission.invoice_hash)|link }}" style="display:inline-block;padding:11px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#ffffff;text-decoration:none;">Upload new slip</a></td></tr></table>
+</td></tr></table>
+<p style="margin:16px 0 0;font-size:12px;line-height:18px;color:#6b7280;">If you already paid, reply to this email with bank receipt or open support ticket.</p>
+</td></tr>
+<tr><td style="padding:14px 24px;border-top:1px solid #f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#9ca3af;">Quizontal Cloud</td></tr>
+</table>
+</td></tr>
+</table>
 {% endblock %}
