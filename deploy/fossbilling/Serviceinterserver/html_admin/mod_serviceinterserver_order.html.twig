@@ -11,19 +11,19 @@
                 <div class="row g-2">
                     <div class="col-12 col-md-4">
                         <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="location" value="1" checked>
+                            <input class="form-check-input" type="radio" name="config[location]" value="1" checked>
                             <span class="form-check-label"><strong>New Jersey</strong><br><small class="text-secondary">United States</small></span>
                         </label>
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="location" value="2">
+                            <input class="form-check-input" type="radio" name="config[location]" value="2">
                             <span class="form-check-label"><strong>Los Angeles</strong><br><small class="text-secondary">United States</small></span>
                         </label>
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="location" value="3">
+                            <input class="form-check-input" type="radio" name="config[location]" value="3">
                             <span class="form-check-label"><strong>Dallas, TX</strong><br><small class="text-secondary">United States</small></span>
                         </label>
                     </div>
@@ -32,7 +32,7 @@
 
             <div class="col-md-6">
                 <label class="form-label fw-bold" for="qc-admin-os-distro">OS Distro</label>
-                <select class="form-select" id="qc-admin-os-distro" name="osDistro" required>
+                <select class="form-select" id="qc-admin-os-distro" name="config[osDistro]" required>
                     <option value="ubuntu" data-versions="ubuntu24:Ubuntu 24.04 LTS,ubuntu-22.04:Ubuntu 22.04 LTS,ubuntu-20.04:Ubuntu 20.04">ubuntu</option>
                     <option value="debian" data-versions="debian12:Debian 12,debian13:Debian 13,debian-11:Debian 11">debian</option>
                     <option value="almalinux" data-versions="almalinux9:AlmaLinux 9,alma10:AlmaLinux 10,almalinux-8.3:AlmaLinux 8.3">almalinux</option>
@@ -43,7 +43,7 @@
 
             <div class="col-md-6">
                 <label class="form-label fw-bold" for="qc-admin-os-version">OS Version</label>
-                <select class="form-select" id="qc-admin-os-version" name="osVersion" required>
+                <select class="form-select" id="qc-admin-os-version" name="config[osVersion]" required>
                     <option value="ubuntu24">Ubuntu 24.04 LTS</option>
                     <option value="ubuntu-22.04">Ubuntu 22.04 LTS</option>
                     <option value="debian12">Debian 12</option>
@@ -52,13 +52,13 @@
 
             <div class="col-12">
                 <label class="form-label fw-bold" for="qc-admin-hostname">Server hostname</label>
-                <input class="form-control" id="qc-admin-hostname" type="text" name="hostname" required pattern="(?=.{4,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}" placeholder="server1.yourdomain.com">
+                <input class="form-control" id="qc-admin-hostname" type="text" name="config[hostname]" required pattern="(?=.{4,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}" placeholder="server1.yourdomain.com">
                 <div class="form-hint">Use a fully qualified hostname like <code>server1.example.com</code>. Each server needs a unique hostname - if it already exists in your InterServer account, use Reconcile afterwards.</div>
             </div>
 
             <div class="col-12">
                 <label class="form-label fw-bold" for="qc-admin-coupon">Promo / Coupon code (optional)</label>
-                <input class="form-control" id="qc-admin-coupon" type="text" name="coupon" maxlength="32" placeholder="e.g. SAVE10" pattern="[a-zA-Z0-9_-]{0,32}">
+                <input class="form-control" id="qc-admin-coupon" type="text" name="config[coupon]" maxlength="32" placeholder="e.g. SAVE10" pattern="[a-zA-Z0-9_-]{0,32}">
                 <div class="form-hint">If you have an InterServer coupon, enter it here. Leave blank for no coupon. This is the InterServer provider coupon, not the FOSSBilling promo code (promo codes are entered at checkout).</div>
             </div>
         </div>
