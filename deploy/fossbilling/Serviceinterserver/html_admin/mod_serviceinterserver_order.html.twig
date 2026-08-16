@@ -2,74 +2,94 @@
     <div class="card-body">
         <div class="d-flex flex-column gap-1 mb-3">
             <h5 class="card-title mb-0">Cloud server configuration</h5>
-            <p class="text-secondary mb-0">Enter hostname, location and operating system. These fields are required for InterServer orders. Hostname must be unique across your InterServer account.</p>
+            <p class="text-secondary mb-0 small">Enter hostname, location and operating system. Hostname must be unique across your InterServer account. You can use FQDN like <code>server1.example.com</code> or single label like <code>vps3559895</code> for manual assignment.</p>
         </div>
 
         <div class="row g-3">
+            <!-- Location -->
             <div class="col-12">
-                <label class="form-label fw-bold">Server location</label>
+                <label class="form-label fw-semibold">Server location <span class="text-danger">*</span></label>
                 <div class="row g-2">
                     <div class="col-12 col-md-4">
-                        <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="config[location]" value="1" checked>
-                            <span class="form-check-label"><strong>New Jersey</strong><br><small class="text-secondary">United States</small></span>
+                        <label class="d-flex align-items-center gap-2 border rounded p-3 h-100 cursor-pointer" style="cursor:pointer;min-width:0;">
+                            <input class="form-check-input flex-shrink-0" type="radio" name="config[location]" value="1" checked>
+                            <span class="d-flex flex-column overflow-hidden" style="min-width:0;">
+                                <strong class="text-truncate">New Jersey</strong>
+                                <small class="text-secondary text-truncate">United States - East</small>
+                            </span>
                         </label>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="config[location]" value="2">
-                            <span class="form-check-label"><strong>Los Angeles</strong><br><small class="text-secondary">United States</small></span>
+                        <label class="d-flex align-items-center gap-2 border rounded p-3 h-100 cursor-pointer" style="cursor:pointer;min-width:0;">
+                            <input class="form-check-input flex-shrink-0" type="radio" name="config[location]" value="2">
+                            <span class="d-flex flex-column overflow-hidden" style="min-width:0;">
+                                <strong class="text-truncate">Los Angeles</strong>
+                                <small class="text-secondary text-truncate">United States - West</small>
+                            </span>
                         </label>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-check card p-2">
-                            <input class="form-check-input" type="radio" name="config[location]" value="3">
-                            <span class="form-check-label"><strong>Dallas, TX</strong><br><small class="text-secondary">United States</small></span>
+                        <label class="d-flex align-items-center gap-2 border rounded p-3 h-100 cursor-pointer" style="cursor:pointer;min-width:0;">
+                            <input class="form-check-input flex-shrink-0" type="radio" name="config[location]" value="3">
+                            <span class="d-flex flex-column overflow-hidden" style="min-width:0;">
+                                <strong class="text-truncate">Dallas, TX</strong>
+                                <small class="text-secondary text-truncate">United States - Central</small>
+                            </span>
                         </label>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-bold" for="qc-admin-os-distro">OS Distro</label>
+            <!-- OS Distro -->
+            <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold" for="qc-admin-os-distro">OS Distro <span class="text-danger">*</span></label>
                 <select class="form-select" id="qc-admin-os-distro" name="config[osDistro]" required>
-                    <option value="ubuntu" data-versions="ubuntu24:Ubuntu 24.04 LTS,ubuntu-22.04:Ubuntu 22.04 LTS,ubuntu-20.04:Ubuntu 20.04">ubuntu</option>
-                    <option value="debian" data-versions="debian12:Debian 12,debian13:Debian 13,debian-11:Debian 11">debian</option>
-                    <option value="almalinux" data-versions="almalinux9:AlmaLinux 9,alma10:AlmaLinux 10,almalinux-8.3:AlmaLinux 8.3">almalinux</option>
-                    <option value="windows" data-versions="Windows2022:Windows Server 2022,Windows2019Standard:Windows Server 2019,Windows2025Standard:Windows Server 2025">windows (Hyper-V only)</option>
+                    <option value="ubuntu" data-versions="ubuntu24:Ubuntu 24.04 LTS,ubuntu-22.04:Ubuntu 22.04 LTS,ubuntu-20.04:Ubuntu 20.04 LTS" selected>Ubuntu</option>
+                    <option value="debian" data-versions="debian12:Debian 12,debian13:Debian 13,debian-11:Debian 11">Debian</option>
+                    <option value="almalinux" data-versions="almalinux9:AlmaLinux 9,alma10:AlmaLinux 10,almalinux-8.3:AlmaLinux 8.3">AlmaLinux</option>
+                    <option value="windows" data-versions="Windows2022:Windows Server 2022,Windows2019Standard:Windows Server 2019,Windows2025Standard:Windows Server 2025">Windows (Hyper-V only)</option>
                 </select>
-                <div class="form-hint">For Windows, the product must be Hyper-V platform.</div>
+                <div class="form-hint small text-secondary mt-1">For Windows, product must be Hyper-V platform.</div>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-bold" for="qc-admin-os-version">OS Version</label>
+            <!-- OS Version -->
+            <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold" for="qc-admin-os-version">OS Version <span class="text-danger">*</span></label>
                 <select class="form-select" id="qc-admin-os-version" name="config[osVersion]" required>
                     <option value="ubuntu24">Ubuntu 24.04 LTS</option>
-                    <option value="ubuntu-22.04">Ubuntu 22.04 LTS</option>
-                    <option value="debian12">Debian 12</option>
                 </select>
             </div>
 
+            <!-- Hostname -->
             <div class="col-12">
-                <label class="form-label fw-bold" for="qc-admin-hostname">Server hostname</label>
-                <input class="form-control" id="qc-admin-hostname" type="text" name="config[hostname]" required pattern="(?=.{4,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}" placeholder="server1.yourdomain.com">
-                <div class="form-hint">Use a fully qualified hostname like <code>server1.example.com</code>. Each server needs a unique hostname - if it already exists in your InterServer account, use Reconcile afterwards.</div>
+                <label class="form-label fw-semibold" for="qc-admin-hostname">Server hostname <span class="text-danger">*</span></label>
+                <input class="form-control" id="qc-admin-hostname" type="text" name="config[hostname]" required maxlength="253" placeholder="server1.example.com or vps3559895" style="word-break:break-all;">
+                <div class="form-hint small text-secondary mt-1">Use FQDN like <code class="text-break">server1.example.com</code> for new servers. For manual assignment of existing InterServer VPS, you can use single label like <code>vps3559895</code> to match provider hostname.</div>
             </div>
 
+            <!-- Coupon -->
             <div class="col-12">
-                <label class="form-label fw-bold" for="qc-admin-coupon">Promo / Coupon code (optional)</label>
-                <input class="form-control" id="qc-admin-coupon" type="text" name="config[coupon]" maxlength="32" placeholder="e.g. SAVE10" pattern="[a-zA-Z0-9_-]{0,32}">
-                <div class="form-hint">If you have an InterServer coupon, enter it here. Leave blank for no coupon. This is the InterServer provider coupon, not the FOSSBilling promo code (promo codes are entered at checkout).</div>
+                <label class="form-label fw-semibold" for="qc-admin-coupon">Promo / Coupon code (optional)</label>
+                <input class="form-control" id="qc-admin-coupon" type="text" name="config[coupon]" maxlength="32" placeholder="e.g. SAVE10" pattern="[a-zA-Z0-9_-]{0,32}" style="word-break:break-all;">
+                <div class="form-hint small text-secondary mt-1">InterServer provider coupon. Leave empty for none. This is different from FOSSBilling promo codes (those are entered at checkout).</div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Fix overflow issues in admin */
+#qc-admin-hostname, #qc-admin-coupon { max-width:100%; }
+.form-check-input { flex-shrink:0; }
+label.border { word-break:break-word; overflow-wrap:anywhere; }
+</style>
 
 <script>
 (function(){
     var distroEl = document.getElementById('qc-admin-os-distro');
     var versionEl = document.getElementById('qc-admin-os-version');
     function fillVersions(){
+        if(!distroEl || !versionEl) return;
         var opt = distroEl.options[distroEl.selectedIndex];
         var raw = opt ? opt.getAttribute('data-versions') : '';
         if(!raw) return;
@@ -86,7 +106,6 @@
             o.textContent = label;
             versionEl.appendChild(o);
         });
-        // try to keep previous selection if still valid
         for(var i=0;i<versionEl.options.length;i++){
             if(versionEl.options[i].value===current){ versionEl.selectedIndex=i; break; }
         }

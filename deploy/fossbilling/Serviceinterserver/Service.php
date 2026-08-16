@@ -41,6 +41,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             `os_distro` VARCHAR(100) NOT NULL,
             `os_version` VARCHAR(191) NOT NULL,
             `hostname` VARCHAR(255) NOT NULL,
+            `coupon` VARCHAR(64) NULL,
             `control_panel` VARCHAR(32) NOT NULL DEFAULT 'none',
             `provider_cost_usd` DECIMAL(12,2) NULL,
             `expected_cost_usd` DECIMAL(12,2) NULL,
@@ -68,6 +69,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $this->ensureColumn('password_viewed_at', 'DATETIME NULL');
         $this->ensureColumn('provider_response', 'MEDIUMTEXT NULL');
         $this->ensureColumn('ready_at', 'DATETIME NULL');
+        $this->ensureColumn('coupon', 'VARCHAR(64) NULL');
         return true;
     }
 
@@ -100,8 +102,32 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $data['location'] = (int) $data['location'];
         if (!in_array($data['location'], [1, 2, 3], true)) throw new InformationException('Invalid VPS location.');
         if (!$this->isAllowedOs($data['platform'], (string) $data['osDistro'], (string) $data['osVersion'])) throw new InformationException('The selected operating system is not valid for this plan.');
+
+        // Hostname: allow FQDN (server1.example.com) OR single label (vps3559895) for manual assign
         $data['hostname'] = strtolower(trim((string) $data['hostname']));
-        if (!filter_var($data['hostname'], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($data['hostname'], '.')) throw new InformationException('Enter a valid fully-qualified hostname.');
+        if ($data['hostname'] === '') throw new InformationException('Enter a valid hostname.');
+        $isFqdn = str_contains($data['hostname'], '.');
+        if ($isFqdn) {
+            if (!filter_var($data['hostname'], FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                throw new InformationException('Enter a valid fully-qualified hostname like server1.example.com.');
+            }
+            // extra safety: must have at least one dot and TLD >=2 chars
+            if (!preg_match('/^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/', $data['hostname'])) {
+                throw new InformationException('Enter a valid fully-qualified hostname like server1.example.com.');
+            }
+        } else {
+            // single label - allow InterServer auto-generated like vps3559895
+            if (!preg_match('/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/', $data['hostname'])) {
+                throw new InformationException('Enter a valid hostname. Use FQDN like server1.example.com or single label like vps3559895 (3-63 chars).');
+            }
+        }
+
+        // Coupon - optional, for InterServer promo codes
+        $data['coupon'] = strtolower(trim((string) ($data['coupon'] ?? '')));
+        if ($data['coupon'] !== '' && !preg_match('/^[a-z0-9_-]{2,32}$/', $data['coupon'])) {
+            throw new InformationException('Invalid coupon format. Use letters, numbers, dash or underscore, 2-32 chars.');
+        }
+
         // A duplicate hostname must fail before any order, invoice, or wallet charge exists.
         // The activation path calls this with $verifyAvailability=false because it performs
         // its own provider-aware reconciliation instead (safe against retry races).
@@ -190,6 +216,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $model->os_distro = $config['osDistro'];
         $model->os_version = $config['osVersion'];
         $model->hostname = $config['hostname'];
+        $model->coupon = $config['coupon'] ?? null;
         $model->control_panel = 'none';
         $model->expected_cost_usd = (float) $config['expected_cost_usd'];
         $model->status = 'pending_validation';
@@ -218,7 +245,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'location' => (int) $model->location,
             'osVersion' => $model->os_version,
             'hostname' => $model->hostname,
-            'coupon' => '',
+            'coupon' => trim((string) ($model->coupon ?? '')),
             'rootpass' => $rootPassword,
         ];
 
@@ -238,8 +265,19 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             throw new InformationException('Cloud configuration validation failed: '.$model->last_error);
         }
 
+        // Allow cheaper when coupon is used - only fail if provider MORE expensive than expected + tolerance
         $tolerance = max(0, (float) ($this->getConfig()['cost_tolerance_usd'] ?? 0.01));
-        if ($model->provider_cost_usd === null || abs((float) $model->provider_cost_usd - (float) $model->expected_cost_usd) > $tolerance) {
+        $expected = (float) $model->expected_cost_usd;
+        $provider = $model->provider_cost_usd;
+        $hasCoupon = trim((string) ($model->coupon ?? '')) !== '';
+        if ($provider === null) {
+            $model->status = 'price_review';
+            $model->last_error = 'Provider did not return a price.';
+            $this->di['db']->store($model);
+            throw new InformationException($model->last_error);
+        }
+        // If coupon present, cheaper is OK. If no coupon, allow small overage tolerance, but cheaper is also OK (price drop)
+        if ($provider - $expected > $tolerance) {
             $model->status = 'price_review';
             $model->last_error = 'Provider price differs from the imported expected price.';
             $this->di['db']->store($model);
@@ -417,6 +455,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'os_distro' => (string) $model->os_distro,
             'os_version' => (string) $model->os_version,
             'hostname' => (string) $model->hostname,
+            'coupon' => $model->coupon ?? null,
             'status' => (string) $model->status,
             // Customer-facing lifecycle derived from real infrastructure signals:
             // a server is only "active" once the provider has assigned its IP.
@@ -521,12 +560,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     /**
      * Validates the hostname sent with an add-to-cart request: format first, then
      * uniqueness against the rest of the cart, existing orders, and the provider.
+     * Allows both FQDN and single label like vps3559895 for manual assignments.
      */
     public function assertCartHostnameUsable(string $rawHostname, int $cartId = 0): void
     {
         $hostname = strtolower(trim($rawHostname));
-        if (!filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || !str_contains($hostname, '.')) {
-            throw new InformationException('Enter a valid fully-qualified hostname.');
+        if ($hostname === '') throw new InformationException('Enter a valid fully-qualified hostname.');
+        // allow FQDN or single label
+        $isValid = filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || preg_match('/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/', $hostname);
+        if (!$isValid) {
+            throw new InformationException('Enter a valid hostname like server1.example.com or vps3559895.');
         }
         if ($cartId > 0 && $this->hostnameInCart($cartId, $hostname)) {
             throw new InformationException('Another server in your cart already uses this hostname. Please enter a different hostname.');
@@ -669,7 +712,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'order' => ['id' => (int) $order->id, 'status' => $order->status, 'service_type' => $order->service_type, 'service_id' => $order->service_id, 'product_id' => $order->product_id, 'unpaid_invoice_id' => $order->unpaid_invoice_id],
             'product' => $product ? ['type' => $product->type, 'setup' => $product->setup, 'status' => $product->status, 'slug' => $product->slug] : null,
             'invoices' => $invoices,
-            'service' => $service ? ['status' => $service->status, 'cloud_service_id' => $service->provider_vps_id, 'hostname' => $service->hostname, 'last_error' => $service->last_error] : null,
+            'service' => $service ? ['status' => $service->status, 'cloud_service_id' => $service->provider_vps_id, 'hostname' => $service->hostname, 'coupon' => $service->coupon ?? null, 'last_error' => $service->last_error] : null,
             'provisioning' => ['mode' => $config['mode'] ?? 'test', 'live_confirmed' => ($config['live_confirmation'] ?? '') === 'ENABLE LIVE VPS ORDERS'],
             'registered_hooks' => (int) $hookStatement->fetchColumn(),
         ];
