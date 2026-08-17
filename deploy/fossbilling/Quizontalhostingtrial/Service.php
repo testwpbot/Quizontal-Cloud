@@ -28,8 +28,17 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             suspended_at DATETIME NULL, continued_at DATETIME NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL,
             UNIQUE KEY quizontal_hosting_trial_order (order_id), KEY quizontal_hosting_trial_due (status, ends_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        $this->di['db']->exec("CREATE TABLE IF NOT EXISTS quizontal_hosting_trial_email_code (client_id BIGINT UNSIGNED NOT NULL PRIMARY KEY, code_hash VARCHAR(255) NOT NULL, expires_at DATETIME NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, sent_at DATETIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         return true;
     }
+    public function sendEmailCode(\Model_Client $client): int
+    {
+        $code=$this->newEmailCode(); $hash=password_hash($code,PASSWORD_DEFAULT); $stmt=$this->di['pdo']->prepare('INSERT INTO quizontal_hosting_trial_email_code (client_id,code_hash,expires_at,attempts,sent_at) VALUES (?,?,DATE_ADD(NOW(),INTERVAL 10 MINUTE),0,NOW()) ON DUPLICATE KEY UPDATE code_hash=VALUES(code_hash),expires_at=VALUES(expires_at),attempts=0,sent_at=NOW()'); $stmt->execute([$client->id,$hash]);
+        $this->di['mod_service']('email')->sendTemplate(['to_client'=>(int)$client->id,'code'=>'mod_quizontalhostingtrial_email_code','verification_code'=>$code,'send_now'=>true]); return 60;
+    }
+    public function verifyEmailCode(int $clientId,string $code): bool
+    { $q=$this->di['pdo']->prepare('SELECT * FROM quizontal_hosting_trial_email_code WHERE client_id=?');$q->execute([$clientId]);$row=$q->fetch(\PDO::FETCH_ASSOC); if(!$row||strtotime($row['expires_at'])<time()||(int)$row['attempts']>=5||!password_verify(trim($code),$row['code_hash'])){if($row)$this->di['pdo']->prepare('UPDATE quizontal_hosting_trial_email_code SET attempts=attempts+1 WHERE client_id=?')->execute([$clientId]);throw new InformationException('Invalid or expired verification code.');}$this->di['pdo']->prepare('DELETE FROM quizontal_hosting_trial_email_code WHERE client_id=?')->execute([$clientId]);$this->di['pdo']->prepare('UPDATE client SET email_approved=1 WHERE id=?')->execute([$clientId]);return true; }
+    private function newEmailCode(): string { $sets=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghjkmnpqrstuvwxyz','23456789'];$out='';foreach($sets as $set)$out.=$set[random_int(0,strlen($set)-1)];$all=implode('',$sets);while(strlen($out)<8)$out.=$all[random_int(0,strlen($all)-1)];return str_shuffle($out); }
     public function uninstall(): bool { return true; } // retain operational records
     public function getConfig(): array { return array_merge(['trial_days' => 7, 'retention_days' => 14, 'starter_product_id' => 98], (array) $this->di['mod_config']('quizontalhostingtrial')); }
 
