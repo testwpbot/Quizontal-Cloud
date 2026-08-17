@@ -87,7 +87,7 @@
         ${plan.feats.map(f => `<li><span class="check">✓</span>${QC.escape(f)}</li>`).join('')}
         ${(plan.no || []).map(f => `<li class="no"><span class="check">✗</span>${QC.escape(f)}</li>`).join('')}
       </ul>
-      ${starterTrial ? `<a class="button button-primary" href="${QC.escape(starterTrial)}">Start 7-day free trial <span>→</span></a><a class="button button-ghost" style="margin-top:10px" href="${QC.escape(cta)}">Order Starter Hosting <span>→</span></a>` : `<a class="button ${featured ? 'button-primary' : 'button-ghost'}" href="${QC.escape(cta)}">${ctaLabel} <span>→</span></a>`}
+      ${starterTrial ? `<a class="button button-primary" href="${QC.escape(starterTrial)}">Start 7-day free trial <span>→</span></a>` : `<a class="button ${featured ? 'button-primary' : 'button-ghost'}" href="${QC.escape(cta)}">${ctaLabel} <span>→</span></a>`}
     </article>`;
   }
 

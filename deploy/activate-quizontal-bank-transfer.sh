@@ -49,8 +49,9 @@ api_post 'extension/activate' '{"id":"quizontalbanktransfer","type":"mod"}'
 api_post_soft 'extension/activate' '{"id":"quizontaldomains","type":"mod"}'
 # Client profile picture upload (replaces the Gravatar flow).
 api_post_soft 'extension/activate' '{"id":"quizontalavatar","type":"mod"}'
-api_post_soft 'extension/activate' '{"id":"quizontalhostingtrial","type":"mod"}'
-api_post_soft 'extension/activate' '{"id":"quizontalverification","type":"mod"}'
+# These are required: a silent failed activation leaves /hosting-trial/start/98 as a 404.
+api_post 'extension/activate' '{"id":"quizontalhostingtrial","type":"mod"}'
+api_post 'extension/activate' '{"id":"quizontalverification","type":"mod"}'
 # Email confirmation stays required for a free trial, but must not lock every
 # existing customer into their Profile page. The Quizontal modules send and
 # verify emails themselves, then gate only the trial-start route.
