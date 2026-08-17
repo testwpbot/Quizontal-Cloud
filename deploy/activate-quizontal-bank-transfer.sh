@@ -51,6 +51,12 @@ api_post_soft 'extension/activate' '{"id":"quizontaldomains","type":"mod"}'
 api_post_soft 'extension/activate' '{"id":"quizontalavatar","type":"mod"}'
 api_post_soft 'extension/activate' '{"id":"quizontalhostingtrial","type":"mod"}'
 api_post_soft 'extension/activate' '{"id":"quizontalverification","type":"mod"}'
+# Email confirmation stays required for a free trial, but must not lock every
+# existing customer into their Profile page. The Quizontal modules send and
+# verify emails themselves, then gate only the trial-start route.
+CLIENT_CONFIG=$(api_post 'extension/config_get' '{"ext":"mod_client"}')
+CLIENT_CONFIG_PAYLOAD=$(jq -c '(.result // {}) + {ext:"mod_client", require_email_confirmation:false}' <<<"$CLIENT_CONFIG")
+api_post 'extension/config_save' "$CLIENT_CONFIG_PAYLOAD"
 # Reconnect every active module so core Invoice, Support, Order, and Client
 # lifecycle emails fire as well as the custom receipt notification.
 api_post 'hook/batch_connect' '{}'
