@@ -74,7 +74,7 @@
     // Product #98 is Starter Hosting. The protected trial route performs all
     // eligibility checks; repeat customers receive the ordinary paid path.
     const starterTrial = Number(plan.id) === 98 && plan.orderUrl
-      ? `${String(plan.orderUrl).split('/order')[0]}/hosting-trial/start/98`
+      ? `${String(plan.orderUrl).split('/order')[0]}/quizontalhostingtrial/start/98`
       : '';
     return `<article class="h-card reveal ${featured ? 'featured' : ''}" data-reveal-delay="${index * 90}">
       ${featured ? '<div class="h-badge">Most popular</div>' : ''}

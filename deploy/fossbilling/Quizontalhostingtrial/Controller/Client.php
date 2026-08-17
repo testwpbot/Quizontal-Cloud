@@ -14,10 +14,10 @@ class Client implements \FOSSBilling\InjectionAwareInterface
 
     public function register(\Box_App &$app): void
     {
-        $app->get('/hosting-trial/start/:product', 'get_start', ['product' => '[0-9]+'], static::class);
-        $app->post('/hosting-trial/start/:product', 'post_start', ['product' => '[0-9]+'], static::class);
+        $app->get('/quizontalhostingtrial/start/:product', 'get_start', ['product' => '[0-9]+'], static::class);
+        $app->post('/quizontalhostingtrial/start/:product', 'post_start', ['product' => '[0-9]+'], static::class);
         // Kept for backwards-compatible bookmarks; it never appears in navigation.
-        $app->post('/hosting-trial/whatsapp', 'post_whatsapp', [], static::class);
+        $app->post('/quizontalhostingtrial/whatsapp', 'post_whatsapp', [], static::class);
     }
 
     public function get_start(\Box_App $app, $product): string
@@ -48,7 +48,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
             $service->saveWhatsapp((int) $client->id, (string) $this->di['request']->request->get('whatsapp', ''));
             $service->assertClientCanStartTrial((int) $client->id);
         } catch (InformationException $e) {
-            return $app->redirect('hosting-trial/start/'.$product->id.'?error='.rawurlencode($e->getMessage()));
+            return $app->redirect('quizontalhostingtrial/start/'.$product->id.'?error='.rawurlencode($e->getMessage()));
         }
         // The billing product remains the source of truth for plan/domain configuration.
         return $app->redirect('order?product='.(int) $product->id.'&trial=1');
