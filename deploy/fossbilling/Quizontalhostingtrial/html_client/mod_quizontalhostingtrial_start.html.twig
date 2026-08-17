@@ -1,0 +1,13 @@
+{% extends request.ajax ? 'layout_blank.html.twig' : 'layout_default.html.twig' %}
+{% block meta_title %}Start your free hosting trial{% endblock %}
+{% block content %}
+<style>
+.qct{max-width:720px;margin:4vh auto}.qct-card{background:var(--iq-surface,#0b0b0e);border:1px solid var(--iq-line,rgba(255,255,255,.08));border-radius:22px;padding:clamp(22px,5vw,42px);box-shadow:0 22px 60px rgba(0,0,0,.25)}.qct-kicker{color:#f06b9d;text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:.74rem}.qct-steps{display:flex;gap:8px;margin:26px 0}.qct-steps i{display:block;height:4px;flex:1;border-radius:10px;background:#e31c64}.qct-steps i:last-child{background:rgba(255,255,255,.13)}.qct-gate{padding:20px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}.qct-gate h4{margin:0 0 6px}.qct-gate p{color:#aab1c0;margin:0 0 16px}@media(max-width:500px){.qct{margin:12px}.qct-card{padding:22px}.qct-gate{padding:16px}}
+</style>
+<section class="qct"><div class="qct-card"><span class="qct-kicker">7-day free trial</span><h1 class="mt-2">Try {{ product.title }} free</h1><p class="text-muted">No credit or debit card is required. Your package runs for seven days; we ask before it ends whether you want to continue.</p><div class="qct-steps"><i></i><i></i><i></i></div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+{% if trial_used %}<div class="qct-gate"><h4>Your free trial has already been used</h4><p>You can still order this package normally and start hosting right away.</p><a class="premium-btn" href="{{ ('order?product=' ~ product.id)|link }}">Choose paid hosting</a></div>
+{% elseif not email_verified %}<div class="qct-gate"><h4>Verify your email to start</h4><p>We sent a verification link to your account email. Verify it first, then return to this page to start your free trial.</p><a class="premium-btn" href="{{ 'client/profile'|link }}">Verify my email</a></div>
+{% else %}<form method="post" action="{{ ('hosting-trial/start/' ~ product.id)|link }}"><input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"><div class="qct-gate"><h4>Where can we reach you?</h4><p>Enter a WhatsApp number with country code. We only use it for trial setup and important service notices.</p><label class="form-label" for="whatsapp">WhatsApp number</label><input class="form-control mb-3" id="whatsapp" name="whatsapp" required type="tel" autocomplete="tel" placeholder="+94771234567" value="{{ whatsapp }}"><button class="premium-btn" type="submit">Continue to free trial setup</button></div></form>{% endif %}
+</div></section>
+{% endblock %}

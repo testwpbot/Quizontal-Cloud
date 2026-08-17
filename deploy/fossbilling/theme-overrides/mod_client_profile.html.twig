@@ -51,7 +51,7 @@
         }
     </style>
 
-    {% if (guest.client_is_email_validation_required) and (not profile.email_approved) %}
+    {% if not profile.email_approved %}
         <style>.qc-verify-card{display:flex;align-items:center;gap:18px;padding:22px;position:relative;overflow:hidden;border:1px solid rgba(240,107,157,.35);border-radius:18px;background:var(--iq-surface, #0b0b0e);margin-bottom:24px}.qc-verify-mark{flex:0 0 48px;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#e31c64;color:#fff;font-size:23px;font-weight:800}.qc-verify-copy{flex:1;min-width:0}.qc-verify-copy strong{display:block;color:#fff;margin-bottom:4px}.qc-verify-copy span{color:#c8cfdb;font-size:.9rem}.qc-verify-action{flex:none}.qc-verify-action button{min-width:176px}.qc-verify-loading{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:qcspin .7s linear infinite}@keyframes qcspin{to{transform:rotate(360deg)}}@media(max-width:575px){.qc-verify-card{align-items:flex-start;flex-wrap:wrap}.qc-verify-action{width:100%}.qc-verify-action button{width:100%}}</style>
         <div class="qc-verify-card" id="qcVerifyCard">
             <div class="qc-verify-mark">✉</div><div class="qc-verify-copy"><strong>Verify your email address</strong><span>Open the verification link we sent to {{ profile.email }} before ordering a free hosting trial.</span></div>
