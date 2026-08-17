@@ -1,0 +1,4 @@
+{% block subject %}Your Quizontal Cloud hosting trial ends tomorrow{% endblock %}
+{% block content %}
+<p>Hello,</p><p>Your free hosting trial ends on <strong>{{ trial.ends_at }}</strong>.</p><p>Would you like to keep your website online? Pay your hosting invoice before the trial ends and your service will continue without interruption.</p><p><a href="{{ ('invoice/' ~ invoice.hash)|link }}">Pay and continue hosting</a></p><p>If payment is not received, the hosting account is suspended at the end of the trial. Your website becomes unavailable, but we retain its data temporarily so it can be restored after payment.</p>
+{% endblock %}

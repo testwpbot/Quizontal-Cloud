@@ -29,7 +29,7 @@
     <span class="chip-stat"><i>₨</i>From <b>Rs. 499</b>/mo</span>
     <span class="chip-stat"><i>⚡</i>LiteSpeed + NVMe</span>
     <span class="chip-stat"><i>✓</i>Free SSL included</span>
-    <span class="chip-stat"><i>◈</i>Instant activation</span>
+    <span class="chip-stat"><i>◈</i>7-day free trial available</span>
   </div>
 </section>
 
@@ -38,7 +38,7 @@
   <div class="hosting-grid" id="hostingPlans" aria-live="polite">
     <div class="h-skel"></div><div class="h-skel"></div><div class="h-skel"></div>
   </div>
-  <p class="hosting-note reveal">Prices in Sri Lankan Rupees, billed monthly to your wallet. Upgrades between plans are one support ticket away.</p>
+  <p class="hosting-note reveal">Prices in Sri Lankan Rupees. Eligible packages can start with a 7-day free trial without a card: verify your email and add a WhatsApp number first. We send a payment reminder one day before the trial ends; unpaid trial hosting is suspended at the end of day 7, while website data is retained temporarily for reactivation.</p>
 </section>
 
 <section class="section section-surface" id="compare"><div class="container">

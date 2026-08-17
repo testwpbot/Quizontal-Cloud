@@ -43,6 +43,14 @@
                 </a>
             </li>
         {% endif %}
+        {% if guest.extension_is_on({"mod":"quizontalhostingtrial"}) %}
+            <li>
+                <a href="{{ '/hosting-trial'|link }}" class="nav-link">
+                    <span class="icon-box"><svg fill="currentColor"><use href="#i-activity"/></svg></span>
+                    <span class="nav-link-text">{{ 'Hosting Trial'|trans }}</span>
+                </a>
+            </li>
+        {% endif %}
         {% if settings.side_menu_invoices or settings.side_menu_payments %}
             <li class="menu-group-title">{{ 'Billing'|trans }}</li>
             <li>

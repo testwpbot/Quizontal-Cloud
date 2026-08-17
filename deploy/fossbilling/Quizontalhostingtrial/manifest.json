@@ -1,0 +1,10 @@
+{
+  "id": "quizontalhostingtrial",
+  "type": "mod",
+  "name": "Quizontal Hosting Trial",
+  "description": "Verified seven-day web-hosting trials, WhatsApp contact collection, continuation reminders and automatic DirectAdmin suspension.",
+  "icon_url": "icon.svg",
+  "author": "Quizontal Cloud",
+  "license": "Proprietary",
+  "version": "1.0.0"
+}

@@ -1,0 +1,27 @@
+{% set active = trial.trials|first %}
+<div class="card">
+  <div class="card-header"><h4 class="card-title mb-0">Hosting trial</h4></div>
+  <div class="card-body">
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if app.request.get('contact_saved') %}<div class="alert alert-success">Your WhatsApp number was saved.</div>{% endif %}
+    <div class="alert {{ trial.email_verified ? 'alert-success' : 'alert-warning' }}">
+      <strong>Email verification:</strong>
+      {% if trial.email_verified %}Verified — you can start a free hosting trial.{% else %}Required. Please open the verification link sent to your email address before ordering a trial.{% endif %}
+    </div>
+    <h5 class="mb-2">WhatsApp number</h5>
+    <p class="text-muted">Required for free-trial setup and important service reminders. Include your country code.</p>
+    <form method="post" action="{{ 'hosting-trial/whatsapp'|link }}" class="row g-2 align-items-end">
+      <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}" />
+      <div class="col-md-7"><label class="form-label" for="whatsapp">WhatsApp number</label><input class="form-control" id="whatsapp" name="whatsapp" type="tel" required value="{{ trial.whatsapp }}" placeholder="+94771234567" autocomplete="tel" /></div>
+      <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Save number</button></div>
+    </form>
+    <hr class="my-4" />
+    <h5>Your trial status</h5>
+    {% if active %}
+      <dl class="row mb-0"><dt class="col-sm-4">Status</dt><dd class="col-sm-8 text-capitalize">{{ active.status }}</dd><dt class="col-sm-4">Trial ends</dt><dd class="col-sm-8">{{ active.ends_at }}</dd></dl>
+      {% if active.status == 'active' %}<p class="mt-3 mb-0">We will email you one day before this time with a payment link. If payment is not received when the trial ends, your DirectAdmin hosting account is suspended and your website becomes unavailable. Your files and database are retained temporarily.</p>{% elseif active.status == 'suspended' %}<div class="alert alert-warning mt-3 mb-0">Your trial ended and this hosting account is suspended. Pay the continuation invoice to restore the website.</div>{% elseif active.status == 'continued' %}<div class="alert alert-success mt-3 mb-0">Payment received — your hosting continues normally.</div>{% endif %}
+    {% else %}
+      <p class="mb-0">No hosting trial has started yet. Verify your email, save your WhatsApp number, then select a package marked <strong>7-day free trial</strong>.</p>
+    {% endif %}
+  </div>
+</div>

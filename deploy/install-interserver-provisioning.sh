@@ -46,6 +46,16 @@ if [[ -d "$AVATAR_SOURCE" ]]; then
   find "$AVATAR_TARGET" -type d -exec chmod 0755 {} +
   find "$AVATAR_TARGET" -type f -exec chmod 0644 {} +
 fi
+# Verified seven-day web-hosting trial lifecycle (DirectAdmin hosting only).
+TRIAL_SOURCE="$SCRIPT_DIR/fossbilling/Quizontalhostingtrial"
+if [[ -d "$TRIAL_SOURCE" ]]; then
+  TRIAL_TARGET="$MODULES_DIR/Quizontalhostingtrial"
+  install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$TRIAL_TARGET"
+  cp -a "$TRIAL_SOURCE"/. "$TRIAL_TARGET"/
+  chown -R "$WEB_USER:$WEB_GROUP" "$TRIAL_TARGET"
+  find "$TRIAL_TARGET" -type d -exec chmod 0755 {} +
+  find "$TRIAL_TARGET" -type f -exec chmod 0644 {} +
+fi
 APP_ROOT=$(dirname "$MODULES_DIR")
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 # Storefront URL that the order page domain search card bounces to (/domains?q=…).
