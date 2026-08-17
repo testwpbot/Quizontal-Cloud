@@ -17,6 +17,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             client_id BIGINT UNSIGNED NOT NULL PRIMARY KEY, whatsapp VARCHAR(32) NOT NULL,
             verified_at DATETIME NULL, updated_at DATETIME NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        $this->di['db']->exec("CREATE TABLE IF NOT EXISTS quizontal_hosting_trial_intent (
+            cart_id BIGINT UNSIGNED NOT NULL PRIMARY KEY, client_id BIGINT UNSIGNED NOT NULL, product_id BIGINT UNSIGNED NOT NULL, created_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         $this->di['db']->exec("CREATE TABLE IF NOT EXISTS quizontal_hosting_trial (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, client_id BIGINT UNSIGNED NOT NULL,
             order_id BIGINT UNSIGNED NOT NULL, starts_at DATETIME NOT NULL, ends_at DATETIME NOT NULL,
@@ -28,21 +31,20 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return true;
     }
     public function uninstall(): bool { return true; } // retain operational records
-    public function getConfig(): array { return array_merge(['trial_days' => 7, 'retention_days' => 14], (array) $this->di['mod_config']('quizontalhostingtrial')); }
+    public function getConfig(): array { return array_merge(['trial_days' => 7, 'retention_days' => 14, 'starter_product_id' => 98], (array) $this->di['mod_config']('quizontalhostingtrial')); }
 
-    /** A trial hosting product is explicitly opted in with JSON product config: {"trial_enabled":true,"trial_continuation_price":1500}. */
+    /** Product 98 is the only trial-eligible product: Starter Hosting on DirectAdmin. */
     public function isTrialProduct($product): bool
     {
-        if (!$product || (string) ($product->type ?? '') !== 'hosting') return false;
-        $config = json_decode((string) ($product->config ?? ''), true);
-        return is_array($config) && !empty($config['trial_enabled']);
+        return $product && (string) ($product->type ?? '') === 'hosting' && (int) ($product->id ?? 0) === (int) $this->getConfig()['starter_product_id'];
     }
     private function continuationPrice($product): float
     {
-        $config = json_decode((string) ($product->config ?? ''), true) ?: [];
-        $price = (float) ($config['trial_continuation_price'] ?? 0);
-        if ($price <= 0) throw new InformationException('This free-trial hosting package is not configured with a continuation price yet. Please contact support.');
-        return $price;
+        // Keep the real product price as the renewal price. The private promo below
+        // discounts only the first invoice, never future renewals.
+        $pricing = $this->di['mod_service']('Product')->getProductPricingArray($product);
+        foreach ((array) ($pricing['recurrent'] ?? []) as $row) if (!empty($row['enabled']) && (float) ($row['price'] ?? 0) > 0) return (float) $row['price'];
+        throw new InformationException('Starter Hosting needs an enabled recurring monthly price before its free trial can be used.');
     }
     public function assertClientCanStartTrial(int $clientId): void
     {
@@ -75,18 +77,38 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $di = $event->getDi(); $params = $event->getParameters(); $cartId = (int) ($params['cart_id'] ?? 0);
         if (!$cartId) return;
         $service = $di['mod_service']('quizontalhostingtrial');
+        $intent=$di['db']->findOne('quizontal_hosting_trial_intent','cart_id=? AND client_id=?',[$cartId,(int)$params['client_id']]);
+        $cart=$di['db']->load('Cart',$cartId);
+        if ($cart && !empty($cart->promo_id) && !$intent) { try { $promo=$di['mod_service']('Product')->findPromoById((int)$cart->promo_id); if ((string)$promo->getCode()==='QC_INTERNAL_STARTER_7D') throw new InformationException('This promotion is available only through the verified Starter Hosting trial flow.'); } catch (InformationException $e) { throw $e; } catch (\Throwable) {} }
         foreach ($di['db']->find('CartProduct', 'cart_id=?', [$cartId]) as $item) {
             $product = $di['db']->load('Product', (int) $item->product_id);
-            if ($service->isTrialProduct($product)) { $service->continuationPrice($product); $service->assertClientCanStartTrial((int) $params['client_id']); }
+            if (!$service->isTrialProduct($product)) continue;
+            if (!$intent) continue; // standard paid Starter Hosting order
+            $service->continuationPrice($product); $service->assertClientCanStartTrial((int)$params['client_id']);
+            $cart=$di['db']->load('Cart',$cartId); if (!$cart) throw new InformationException('Shopping cart not found.');
+            if (!empty($cart->promo_id)) throw new InformationException('The free hosting trial cannot be combined with another promotion.');
+            $di['mod_service']('Cart')->applyPromo($cart,$service->internalTrialPromo());
         }
+    }
+    /** Marks a cart as an intentional trial checkout only when it came from our protected trial route. */
+    public static function onAfterProductAddedToCart(\Box_Event $event): void
+    {
+        $di=$event->getDi(); $p=$event->getParameters();
+        if ((int)($p['product_id']??0)!==98 || (string)$di['request']->query->get('trial','') !== '1') return;
+        try { $client=$di['loggedin_client']; $di['mod_service']('quizontalhostingtrial')->assertClientCanStartTrial((int)$client->id); $s=$di['pdo']->prepare('INSERT INTO quizontal_hosting_trial_intent (cart_id,client_id,product_id,created_at) VALUES (?,?,98,NOW()) ON DUPLICATE KEY UPDATE client_id=VALUES(client_id),created_at=NOW()'); $s->execute([(int)$p['cart_id'],(int)$client->id]); } catch (\Throwable $e) { throw new InformationException('Your free-trial session could not be verified. Please start again from the Starter Hosting trial button.'); }
     }
     public static function onAfterAdminOrderActivate(\Box_Event $event): void
     {
         $di = $event->getDi(); $order = $di['db']->load('ClientOrder', (int) ($event->getParameters()['id'] ?? 0));
         if (!$order instanceof \Model_ClientOrder || (string) $order->service_type !== 'hosting') return;
         $service = $di['mod_service']('quizontalhostingtrial'); $product = $di['db']->load('Product', (int) $order->product_id);
-        if (!$service->isTrialProduct($product)) return;
+        if (!$service->isTrialProduct($product) || !$service->isTrialOrder($order)) return;
         $service->startTrial($order);
+    }
+    private function isTrialOrder(\Model_ClientOrder $order): bool
+    {
+        if (empty($order->promo_id)) return false;
+        try { return (string)$this->di['mod_service']('Product')->findPromoById((int)$order->promo_id)->getCode() === 'QC_INTERNAL_STARTER_7D'; } catch (\Throwable) { return false; }
     }
     public function startTrial(\Model_ClientOrder $order): void
     {
@@ -159,6 +181,15 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     private function invoicePaid(int $id): bool { $invoice = $this->di['db']->load('Invoice', $id); return $invoice instanceof \Model_Invoice && $invoice->status === \Model_Invoice::STATUS_PAID; }
     private function sendStatusEmail($trial, string $code): void { try { $this->di['mod_service']('email')->sendTemplate(['to_client'=>(int)$trial->client_id,'code'=>$code,'trial'=>$this->toArray($trial)]); } catch (\Throwable) {} }
     private function toArray($trial): array { return ['order_id'=>(int)$trial->order_id,'starts_at'=>(string)$trial->starts_at,'ends_at'=>(string)$trial->ends_at,'status'=>(string)$trial->status,'continuation_invoice_id'=>(int)($trial->continuation_invoice_id ?? 0)]; }
+    /** Non-public promo: it is accepted only for a recorded trial intent above. */
+    public function internalTrialPromo()
+    {
+        $products=$this->di['mod_service']('Product'); $code='QC_INTERNAL_STARTER_7D';
+        $promo=$products->findActivePromoByCode($code);
+        if ($promo) return $promo;
+        $id=$products->createPromo($code,'percentage',100,[(int)$this->getConfig()['starter_product_id']],[],[],['code'=>$code,'active'=>true,'once_per_client'=>false,'recurring'=>false,'description'=>'Internal Quizontal Starter trial']);
+        return $products->findPromoById($id);
+    }
     public function clientStatus(int $clientId): array
     {
         $profile = $this->profile($clientId); $client = $this->di['db']->load('Client', $clientId);

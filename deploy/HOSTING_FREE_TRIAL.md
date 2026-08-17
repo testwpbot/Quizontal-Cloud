@@ -38,20 +38,9 @@ FOSSBilling's cron must run at least every five minutes. The end time is exact, 
 
 ### 3. Mark only selected web-hosting products as trials
 
-Create a **separate** web-hosting product for each package you allow as a trial. It must be a normal FOSSBilling product of type `hosting`, attached to your DirectAdmin server/hosting plan, with a zero first checkout price.
+The only eligible product is the existing **Starter Hosting** product with ID **98**. Keep its normal recurring price and DirectAdmin configuration exactly as they are. Do not create a Rs. 0 product and do not publish a public coupon.
 
-Add the following product JSON configuration:
-
-```json
-{
-  "trial_enabled": true,
-  "trial_continuation_price": 499
-}
-```
-
-`trial_continuation_price` is the normal monthly amount in the configured FOSSBilling currency (for example LKR). It must be greater than zero. The module changes the trial order to this price on day six before it creates the continuation invoice. This prevents a free trial from accidentally renewing at Rs. 0.
-
-Use separate trial products rather than adding this flag to every paid hosting product. Give them clear names such as `Starter Hosting — 7-Day Trial`.
+The trial-start route creates a short-lived verified intent and applies the private `QC_INTERNAL_STARTER_7D` 100% first-invoice promotion only at checkout. That promotion is limited to Product 98, does not recur on renewals, and is rejected if someone tries to enter it outside the verified trial flow. Business, Premium, domains, and VPS products remain paid-only.
 
 ### 4. Payment method
 

@@ -71,6 +71,11 @@
     const featured = index === featuredIndex;
     const cta = plan.orderUrl || (QC.config && QC.config.clientAreaUrl) || '/client-area';
     const ctaLabel = plan.orderUrl ? 'Get started' : 'Order in client area';
+    // Product #98 is Starter Hosting. The protected trial route performs all
+    // eligibility checks; repeat customers receive the ordinary paid path.
+    const starterTrial = Number(plan.id) === 98 && plan.orderUrl
+      ? `${String(plan.orderUrl).split('/order')[0]}/hosting-trial/start/98`
+      : '';
     return `<article class="h-card reveal ${featured ? 'featured' : ''}" data-reveal-delay="${index * 90}">
       ${featured ? '<div class="h-badge">Most popular</div>' : ''}
       <div class="h-icon">${plan.icon}</div>
@@ -82,7 +87,7 @@
         ${plan.feats.map(f => `<li><span class="check">✓</span>${QC.escape(f)}</li>`).join('')}
         ${(plan.no || []).map(f => `<li class="no"><span class="check">✗</span>${QC.escape(f)}</li>`).join('')}
       </ul>
-      <a class="button ${featured ? 'button-primary' : 'button-ghost'}" href="${QC.escape(cta)}">${ctaLabel} <span>→</span></a>
+      ${starterTrial ? `<a class="button button-primary" href="${QC.escape(starterTrial)}">Start 7-day free trial <span>→</span></a><a class="button button-ghost" style="margin-top:10px" href="${QC.escape(cta)}">Order Starter Hosting <span>→</span></a>` : `<a class="button ${featured ? 'button-primary' : 'button-ghost'}" href="${QC.escape(cta)}">${ctaLabel} <span>→</span></a>`}
     </article>`;
   }
 

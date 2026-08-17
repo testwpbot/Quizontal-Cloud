@@ -45,8 +45,8 @@ class Client implements \FOSSBilling\InjectionAwareInterface
         $client = $this->di['loggedin_client'];
         $service = $this->di['mod_service']('quizontalhostingtrial');
         try {
-            $service->assertClientCanStartTrial((int) $client->id);
             $service->saveWhatsapp((int) $client->id, (string) $this->di['request']->request->get('whatsapp', ''));
+            $service->assertClientCanStartTrial((int) $client->id);
         } catch (InformationException $e) {
             return $app->redirect('hosting-trial/start/'.$product->id.'?error='.rawurlencode($e->getMessage()));
         }
