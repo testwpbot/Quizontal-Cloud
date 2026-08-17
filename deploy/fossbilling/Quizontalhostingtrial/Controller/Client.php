@@ -32,7 +32,7 @@ class Client implements \FOSSBilling\InjectionAwareInterface
         } catch (InformationException $e) {
             return $app->redirect('hosting-trial?error='.rawurlencode($e->getMessage()));
         }
-        return $app->redirect('hosting-trial?contact_saved=1');
+        return $app->redirect('client/profile?whatsapp_saved=1');
     }
     private function csrf(): void
     {

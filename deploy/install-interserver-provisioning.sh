@@ -56,6 +56,14 @@ if [[ -d "$TRIAL_SOURCE" ]]; then
   find "$TRIAL_TARGET" -type d -exec chmod 0755 {} +
   find "$TRIAL_TARGET" -type f -exec chmod 0644 {} +
 fi
+# Branded token-verification page and resend rate limiter.
+VERIFY_SOURCE="$SCRIPT_DIR/fossbilling/Quizontalverification"
+if [[ -d "$VERIFY_SOURCE" ]]; then
+  VERIFY_TARGET="$MODULES_DIR/Quizontalverification"; install -d -m 0755 -o "$WEB_USER" -g "$WEB_GROUP" "$VERIFY_TARGET"; cp -a "$VERIFY_SOURCE"/. "$VERIFY_TARGET"/; chown -R "$WEB_USER:$WEB_GROUP" "$VERIFY_TARGET"
+fi
+# The confirmation email points to the branded token page instead of the core immediate redirect.
+EMAIL_OVERRIDE="$SCRIPT_DIR/fossbilling/email-template-overrides/Client/mod_client_confirm.html.twig"
+if [[ -f "$EMAIL_OVERRIDE" && -d "$MODULES_DIR/Client/templates/email" ]]; then install -m 0644 -o "$WEB_USER" -g "$WEB_GROUP" "$EMAIL_OVERRIDE" "$MODULES_DIR/Client/templates/email/mod_client_confirm.html.twig"; fi
 APP_ROOT=$(dirname "$MODULES_DIR")
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 # Storefront URL that the order page domain search card bounces to (/domains?q=…).

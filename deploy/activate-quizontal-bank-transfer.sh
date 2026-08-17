@@ -50,6 +50,7 @@ api_post_soft 'extension/activate' '{"id":"quizontaldomains","type":"mod"}'
 # Client profile picture upload (replaces the Gravatar flow).
 api_post_soft 'extension/activate' '{"id":"quizontalavatar","type":"mod"}'
 api_post_soft 'extension/activate' '{"id":"quizontalhostingtrial","type":"mod"}'
+api_post_soft 'extension/activate' '{"id":"quizontalverification","type":"mod"}'
 # Reconnect every active module so core Invoice, Support, Order, and Client
 # lifecycle emails fire as well as the custom receipt notification.
 api_post 'hook/batch_connect' '{}'
@@ -57,6 +58,7 @@ api_post 'email/batch_template_generate' '{}'
 api_post 'email/batch_template_enable' '{}'
 api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_submitted"}'
 api_post 'email/template_reset' '{"code":"mod_quizontalbanktransfer_receipt_status"}'
+api_post_soft 'email/template_reset' '{"code":"mod_client_confirm"}'
 for template_code in mod_quizontalhostingtrial_reminder mod_quizontalhostingtrial_suspended mod_quizontalhostingtrial_continued; do
     api_post_soft 'email/template_reset' "{\"code\":\"$template_code\"}"
 done
