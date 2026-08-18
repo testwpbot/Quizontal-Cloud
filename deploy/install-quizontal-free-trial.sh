@@ -61,4 +61,28 @@ if [[ -d "$APP_ROOT/data/cache" ]]; then
 fi
 
 echo "Quizontal Cloud Free Trial module files installed in $TARGET_DIR (owner $WEB_USER:$WEB_GROUP)."
+
+# A machine can carry more than one FOSSBilling tree (an old /var/www copy plus
+# a live XAMPP one, say). Installing into the wrong one succeeds quietly here
+# and only fails later with "manifest file is missing" from the activation API,
+# so name the other candidates now while the context is still on screen.
+OTHER_INSTALLS=()
+for other in /var/www/fossbilling /var/www/billing /opt/lampp/htdocs /var/www/html; do
+  [[ "$other" == "$FOSSBILLING_DIR" ]] && continue
+  for sub in '' /src /htdocs; do
+    if [[ -f "$other$sub/modules/Invoice/manifest.json" ]]; then
+      OTHER_INSTALLS+=("$other")
+      break
+    fi
+  done
+done
+if [[ ${#OTHER_INSTALLS[@]} -gt 0 ]]; then
+  echo
+  echo "NOTE: another FOSSBilling installation exists at: ${OTHER_INSTALLS[*]}"
+  echo "      Files were installed into $FOSSBILLING_DIR. This must be the same"
+  echo '      installation that FOSSBILLING_URL in Laravel .env serves, otherwise'
+  echo '      activation reports "Module quizontalfreetrial manifest file is missing".'
+fi
+
+echo
 echo 'Next: run deploy/activate-quizontal-free-trial.sh from the Quizontal Cloud repository.'

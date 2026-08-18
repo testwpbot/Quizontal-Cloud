@@ -9,10 +9,19 @@ for the full reference. This page is the operator summary.
 ## Deploy
 
 ```bash
-export FOSSBILLING_DIR=/var/www/fossbilling
-sudo -E bash deploy/install-quizontal-free-trial.sh
+# Point this at the installation that FOSSBILLING_URL serves.
+# Nginx/Apache guide layout: /var/www/fossbilling
+# XAMPP for Linux:           /opt/lampp/htdocs
+sudo -E env FOSSBILLING_DIR=/var/www/fossbilling \
+  bash deploy/install-quizontal-free-trial.sh
+
 bash deploy/activate-quizontal-free-trial.sh
 ```
+
+If a machine carries more than one FOSSBilling tree, installing into the wrong
+one succeeds quietly and activation then fails with
+`Module quizontalfreetrial manifest file is missing`. Both scripts now name the
+other candidates they can see, so the mismatch is obvious.
 
 Optional Laravel `.env` values read by the activation helper:
 

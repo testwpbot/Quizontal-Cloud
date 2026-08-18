@@ -32,6 +32,23 @@ api_post() {
     response=$(curl -sS -u "admin:$API_KEY" -H 'Content-Type: application/json' -X POST "$BILLING_URL/api/admin/$endpoint" -d "$data")
     if [[ $(jq -r '.error // empty' <<<"$response") != "" ]]; then
         jq -r '"FOSSBilling API error: " + (.error.message // "Unknown error")' <<<"$response" >&2
+        # By far the most common cause: the module files were installed into a
+        # different FOSSBilling tree than the one FOSSBILLING_URL serves.
+        if jq -e '.error.message // "" | test("manifest file is missing")' <<<"$response" >/dev/null 2>&1; then
+            echo >&2
+            echo "The billing application at $BILLING_URL cannot see the module files." >&2
+            echo 'Re-run the installer against the installation that URL actually serves, for example:' >&2
+            echo >&2
+            echo '  sudo -E env FOSSBILLING_DIR=/opt/lampp/htdocs \' >&2
+            echo '    bash deploy/install-quizontal-free-trial.sh' >&2
+            echo >&2
+            echo 'Installations that currently contain the module:' >&2
+            for candidate in /var/www/fossbilling /var/www/billing /opt/lampp/htdocs /var/www/html; do
+                for sub in '' /src /htdocs; do
+                    [[ -d "$candidate$sub/modules/Quizontalfreetrial" ]] && echo "  - $candidate$sub" >&2
+                done
+            done
+        fi
         exit 1
     fi
     jq . <<<"$response"

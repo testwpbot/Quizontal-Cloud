@@ -77,10 +77,19 @@ databases and mailboxes intact.
 From the Quizontal Cloud repository:
 
 ```bash
-export FOSSBILLING_DIR=/var/www/fossbilling
-sudo -E bash deploy/install-quizontal-free-trial.sh
+# Point this at the installation that FOSSBILLING_URL serves.
+# Nginx/Apache guide layout: /var/www/fossbilling
+# XAMPP for Linux:           /opt/lampp/htdocs
+sudo -E env FOSSBILLING_DIR=/var/www/fossbilling \
+  bash deploy/install-quizontal-free-trial.sh
+
 bash deploy/activate-quizontal-free-trial.sh
 ```
+
+If a machine carries more than one FOSSBilling tree, installing into the wrong
+one succeeds quietly and activation then fails with
+`Module quizontalfreetrial manifest file is missing`. Both scripts now name the
+other candidates they can see, so the mismatch is obvious.
 
 The activation helper reads `FOSSBILLING_URL` and `FOSSBILLING_ADMIN_API_KEY`
 from Laravel's `.env` without printing secrets. It activates the module,
