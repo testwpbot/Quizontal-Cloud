@@ -20,10 +20,13 @@ class Admin implements \FOSSBilling\InjectionAwareInterface
 
     public function fetchNavigation(): array
     {
+        // The Orders group registers itself under the location key 'order'
+        // (singular) — 'orders' is only its CSS class. A subpage pointing at a
+        // location that does not exist is dropped without a visible error.
         return ['subpages' => [[
-            'location' => 'orders',
+            'location' => 'order',
             'label' => 'Free Trials',
-            'index' => 860,
+            'index' => 300,
             'uri' => $this->di['url']->adminLink('quizontalfreetrial'),
             'class' => '',
         ]]];
