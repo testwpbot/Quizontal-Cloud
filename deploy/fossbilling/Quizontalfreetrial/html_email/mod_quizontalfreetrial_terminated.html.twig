@@ -1,26 +1,29 @@
 {% block subject %}Your trial hosting account for {{ trial.domain }} has been removed{% endblock %}
 {% block content %}
-<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b">
-  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden">
-    <div style="height:5px;background:#6b7280"></div>
-    <div style="padding:28px">
-      <div style="font-size:22px;font-weight:700;margin-bottom:8px">Quizontal Cloud</div>
-      <h1 style="font-size:24px;margin:24px 0 8px">Your trial account has been closed</h1>
-      <p style="color:#6b7280;line-height:1.6;margin-top:0">
-        Hello {{ c.first_name }}, the grace period after your free trial for <strong>{{ trial.domain }}</strong> has passed,
-        so the hosting account and its data have now been removed from our servers.
-      </p>
+<div style="margin:0;padding:40px 24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1f26;-webkit-font-smoothing:antialiased">
+  <div style="max-width:520px;margin:0 auto">
 
-      <p style="color:#6b7280;line-height:1.6">
-        Your Quizontal Cloud customer account is still open — you can order a paid plan at any time and set the domain up again in a couple of minutes.
-      </p>
+    <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;color:#1c1f26">Quizontal&nbsp;Cloud</div>
 
-      <a href="{{ upgrade_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Browse hosting plans</a>
+    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 14px">Your trial account has been closed</div>
 
-      <p style="margin:26px 0 0;color:#8a8f98;font-size:13px;line-height:1.5">
-        Thank you for trying Quizontal Cloud. If something did not work the way you expected, reply to this email and tell us — we read every message.
-      </p>
+    <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0 0 22px">
+      Hello {{ c.first_name }}, the grace period after your free trial for {{ trial.domain }} has passed,
+      so the hosting account and its data have now been removed from our servers.
     </div>
+
+    <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0 0 30px">
+      Your Quizontal Cloud customer account is still open. You can order a paid plan at any time and set the domain up again in a couple of minutes.
+    </div>
+
+    <a href="{{ upgrade_url }}" style="display:inline-block;padding:13px 26px;background:#1c1f26;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14.5px;font-weight:600">Browse hosting plans</a>
+
+    <div style="height:1px;background:#e9eaee;margin:34px 0 22px"></div>
+
+    <div style="font-size:12.5px;line-height:1.7;color:#9aa0ab">
+      Thank you for trying Quizontal Cloud. If something did not work the way you expected, reply to this email and tell us — we read every message.
+    </div>
+
   </div>
 </div>
 {% endblock %}

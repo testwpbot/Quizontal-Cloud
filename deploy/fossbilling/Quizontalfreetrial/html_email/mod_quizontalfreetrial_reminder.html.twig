@@ -1,31 +1,43 @@
-{% block subject %}Your free trial for {{ trial.domain }} ends soon{% endblock %}
+{% block subject %}Your free trial for {{ trial.domain }} ends on {{ trial.expires_at|date('j M') }}{% endblock %}
 {% block content %}
-<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b">
-  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden">
-    <div style="height:5px;background:#ffbc35"></div>
-    <div style="padding:28px">
-      <div style="font-size:22px;font-weight:700;margin-bottom:8px">Quizontal Cloud</div>
-      <h1 style="font-size:24px;margin:24px 0 8px">Your trial ends on {{ trial.expires_at|date('j M Y') }}</h1>
-      <p style="color:#6b7280;line-height:1.6;margin-top:0">
-        Hello {{ c.first_name }}, your free hosting trial for <strong>{{ trial.domain }}</strong> finishes in
-        {{ trial.days_left > 1 ? trial.days_left ~ ' days' : 'less than a day' }}.
-        Upgrade before then and your site keeps running without a single second of downtime.
-      </p>
+<div style="margin:0;padding:40px 24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1f26;-webkit-font-smoothing:antialiased">
+  <div style="max-width:520px;margin:0 auto">
 
-      <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px">
-        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Domain</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.domain }}</td></tr>
-        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Trial ends</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.expires_at|date('j M Y') }}</td></tr>
-        <tr><td style="padding:12px;color:#6b7280">If you do nothing</td><td style="padding:12px;font-weight:700;color:#ffbc35">Account is suspended</td></tr>
-      </table>
+    <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;color:#1c1f26">Quizontal&nbsp;Cloud</div>
 
-      <a href="{{ upgrade_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Upgrade to a paid plan</a>
-      <a href="{{ service_url }}" style="display:inline-block;padding:12px 18px;margin-left:8px;color:#e31c64;text-decoration:none;border-radius:8px;font-weight:700;border:1px solid #f6c6d9">View my service</a>
+    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 14px">Your trial ends on {{ trial.expires_at|date('j M Y') }}</div>
 
-      <p style="margin:26px 0 0;color:#8a8f98;font-size:13px;line-height:1.5">
-        Your files and databases stay in place for {{ grace_days|default(7) }} days after the trial ends, so you have time to decide.
-        After that the account is removed permanently.
-      </p>
+    <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0 0 30px">
+      Hello {{ c.first_name }}, your free hosting trial for {{ trial.domain }} finishes in
+      {{ trial.days_left > 1 ? trial.days_left ~ ' days' : 'less than a day' }}.
+      Upgrade before then and your site keeps running without a second of downtime.
     </div>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14.5px;margin:0 0 30px">
+      <tr>
+        <td style="padding:9px 0;color:#8a909c;width:150px">Domain</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">{{ trial.domain }}</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 0;color:#8a909c">Trial ends</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">{{ trial.expires_at|date('j M Y') }}</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 0;color:#8a909c">If you do nothing</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">The account is suspended</td>
+      </tr>
+    </table>
+
+    <a href="{{ upgrade_url }}" style="display:inline-block;padding:13px 26px;background:#1c1f26;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14.5px;font-weight:600">Upgrade to a paid plan</a>
+    <a href="{{ service_url }}" style="display:inline-block;padding:13px 20px;color:#5b6270;text-decoration:none;font-size:14.5px;font-weight:600">View my service</a>
+
+    <div style="height:1px;background:#e9eaee;margin:34px 0 22px"></div>
+
+    <div style="font-size:12.5px;line-height:1.7;color:#9aa0ab">
+      Your files and databases stay in place for {{ grace_days|default(7) }} days after the trial ends, so you have time to decide.
+      After that the account is removed permanently.
+    </div>
+
   </div>
 </div>
 {% endblock %}

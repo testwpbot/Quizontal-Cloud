@@ -1273,8 +1273,37 @@ class Service implements \FOSSBilling\InjectionAwareInterface
      * Email
      * ===================================================================== */
 
+    /**
+     * FOSSBilling creates the email_template row the first time a template is
+     * needed, and falls back to a generated subject ("Mod Quizontalfreetrial
+     * Code") whenever it cannot read the module file — which happens if the
+     * row was generated before the module files were in place. That row then
+     * persists forever and silently drops the code from the subject line.
+     *
+     * Rebuild it from the shipped file whenever the placeholder is missing.
+     */
+    private function ensureCodeTemplateIsCurrent(): void
+    {
+        $this->safely(function (): void {
+            $template = $this->di['db']->findOne('EmailTemplate', 'action_code = ?', ['mod_quizontalfreetrial_code']);
+            if (!$template instanceof \Model_EmailTemplate) {
+                return;
+            }
+
+            $needsReset = !str_contains((string) $template->subject, 'verification_code')
+                || !str_contains((string) $template->content, 'verification_code');
+
+            if ($needsReset) {
+                $this->di['mod_service']('email')->resetTemplateByCode('mod_quizontalfreetrial_code');
+                $this->di['logger']->info('Rebuilt the free trial verification email template from its shipped file');
+            }
+        });
+    }
+
     private function sendCodeEmail(string $email, string $code, int $ttlMinutes): void
     {
+        $this->ensureCodeTemplateIsCurrent();
+
         $sent = $this->di['mod_service']('email')->sendTemplate([
             'to' => $email,
             'to_name' => 'Quizontal Cloud customer',

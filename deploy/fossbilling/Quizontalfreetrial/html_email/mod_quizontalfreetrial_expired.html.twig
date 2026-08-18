@@ -1,29 +1,41 @@
 {% block subject %}Your free trial has ended — {{ trial.domain }} is suspended{% endblock %}
 {% block content %}
-<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b">
-  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden">
-    <div style="height:5px;background:#f4113c"></div>
-    <div style="padding:28px">
-      <div style="font-size:22px;font-weight:700;margin-bottom:8px">Quizontal Cloud</div>
-      <h1 style="font-size:24px;margin:24px 0 8px">Your trial has finished</h1>
-      <p style="color:#6b7280;line-height:1.6;margin-top:0">
-        Hello {{ c.first_name }}, the free trial for <strong>{{ trial.domain }}</strong> has ended and the hosting account is now suspended.
-        Your website is temporarily offline, but nothing has been deleted.
-      </p>
+<div style="margin:0;padding:40px 24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1f26;-webkit-font-smoothing:antialiased">
+  <div style="max-width:520px;margin:0 auto">
 
-      <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px">
-        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Domain</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.domain }}</td></tr>
-        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Status</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700;color:#f4113c">Suspended</td></tr>
-        <tr><td style="padding:12px;color:#6b7280">Data kept until</td><td style="padding:12px;font-weight:700">{{ trial.suspended_at|date_modify('+' ~ grace_days|default(7) ~ ' days')|date('j M Y') }}</td></tr>
-      </table>
+    <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;color:#1c1f26">Quizontal&nbsp;Cloud</div>
 
-      <a href="{{ upgrade_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Upgrade and restore my site</a>
+    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 14px">Your trial has finished</div>
 
-      <p style="margin:26px 0 0;color:#8a8f98;font-size:13px;line-height:1.5">
-        Choose any paid plan and we bring the same account straight back online — your files, databases and email stay exactly as you left them.
-        After {{ grace_days|default(7) }} days the account and its data are permanently removed.
-      </p>
+    <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0 0 30px">
+      Hello {{ c.first_name }}, the free trial for {{ trial.domain }} has ended and the hosting account is now suspended.
+      Your website is temporarily offline, but nothing has been deleted.
     </div>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14.5px;margin:0 0 30px">
+      <tr>
+        <td style="padding:9px 0;color:#8a909c;width:150px">Domain</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">{{ trial.domain }}</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 0;color:#8a909c">Status</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">Suspended</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 0;color:#8a909c">Data kept until</td>
+        <td style="padding:9px 0;color:#1c1f26;font-weight:600">{{ trial.suspended_at|date_modify('+' ~ grace_days|default(7) ~ ' days')|date('j M Y') }}</td>
+      </tr>
+    </table>
+
+    <a href="{{ upgrade_url }}" style="display:inline-block;padding:13px 26px;background:#1c1f26;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14.5px;font-weight:600">Upgrade and restore my site</a>
+
+    <div style="height:1px;background:#e9eaee;margin:34px 0 22px"></div>
+
+    <div style="font-size:12.5px;line-height:1.7;color:#9aa0ab">
+      Choose any paid plan and the same account comes straight back online — files, databases and email exactly as you left them.
+      After {{ grace_days|default(7) }} days the account and its data are permanently removed.
+    </div>
+
   </div>
 </div>
 {% endblock %}
