@@ -36,9 +36,19 @@ class Client implements \FOSSBilling\InjectionAwareInterface
     public function get_index(\Box_App $app): string
     {
         $service = $this->di['mod_service']('quizontalfreetrial');
+        $state = $service->state();
+
+        // FOSSBilling's login and signup screens send the customer to whatever
+        // 'redirect_uri' holds. Core only sets it when a page demands a login,
+        // and this page does not, so set it here: a visitor who steps out to
+        // sign in or register lands back on the wizard instead of the
+        // dashboard, with their answers still in the session.
+        if (empty($state['logged_in'])) {
+            $this->di['session']->set('redirect_uri', 'quizontalfreetrial');
+        }
 
         return $app->render('mod_quizontalfreetrial_index', [
-            'trial' => $service->state(),
+            'trial' => $state,
         ]);
     }
 }

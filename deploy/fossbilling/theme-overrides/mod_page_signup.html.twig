@@ -18,8 +18,13 @@
         <h1>{{ 'Create a new account'|trans }}</h1>
         <p class="qc-auth-sub">{{ 'Join Quizontal Cloud to manage domains, hosting and servers.'|trans }}</p>
 
-        <form class="api-form auth" action="{{ 'api/guest/client/create'|link }}" method="post" data-api-redirect="{{ '/'|link }}">
+        {# Honour redirect_uri like the login screen does, and sign the customer
+           in on success, so someone who registered part-way through a flow
+           (the free trial wizard, a checkout) returns to it authenticated
+           instead of being dropped on the dashboard. #}
+        <form class="api-form auth" action="{{ 'api/guest/client/create'|link }}" method="post" data-api-redirect="{{ redirect_uri|default('/')|link }}">
             <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}"/>
+            <input type="hidden" name="auto_login" value="1"/>
             {% set r = guest.client_required %}
 
             <div class="row g-3">

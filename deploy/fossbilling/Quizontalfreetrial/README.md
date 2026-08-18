@@ -167,11 +167,18 @@ a database leak never exposes a live verification code.
 
 Three places, each with a different job:
 
-| Location | Role |
+Verification is **never** read from the session. `emailIsVerified()` queries the
+database on every call, and every gate in the wizard goes through it:
+
+| Source | Meaning |
 |---|---|
-| Session `qc_free_trial_wizard.email_verified` | The working gate every wizard step checks. Not persisted beyond the session, so closing the browser means verifying again. |
-| `quizontal_free_trial_code.verified_at` | The durable record. Cleared whenever a new code is issued, and cross-checked at provisioning so a corrupted session alone cannot reach DirectAdmin. |
-| `client.email_approved = 1` | Set on the account the wizard creates. Typing back a one-time code is stronger proof than clicking a confirmation link, so an installation with *require email confirmation* enabled must not ask for the same address twice. |
+| `client.email_approved = 1` | A signed-in customer's address is proven. Set by core's confirmation link, and by this module when a code is verified or an account is created through the wizard. |
+| `quizontal_free_trial_code.verified_at IS NOT NULL` | A guest — or a signed-in customer whose account is not yet approved — has typed back a valid code. Cleared whenever a new code is issued, so a stale row never counts. |
+
+The session only remembers *which* address is being signed up (`email`,
+`pending_email`); whether it is verified is always a database read. A signed-in
+customer with `email_approved = 0` therefore goes through the code step exactly
+like a guest, and passing it sets the column so they are never asked again.
 
 ## Emails
 

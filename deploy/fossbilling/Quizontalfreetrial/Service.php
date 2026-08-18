@@ -168,22 +168,25 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $client = $this->loggedInClient();
 
         if ($client instanceof \Model_Client) {
-            // A signed-in customer has already proven their address to us.
             $state['email'] = (string) $client->email;
-            $state['email_verified'] = true;
             $state['first_name'] = (string) $client->first_name;
             $state['last_name'] = (string) $client->last_name;
             $state['needs_account'] = false;
         }
 
+        // Verification is never taken from the session. It is read from the
+        // database every time: client.email_approved for a signed-in customer,
+        // otherwise a verified code row for the address being signed up.
+        $emailVerified = $this->emailIsVerified($client, (string) ($state['email'] ?? ''));
+
         $step = 'email';
-        if (!empty($state['email_verified'])) {
+        if ($emailVerified) {
             $step = 'whatsapp';
         }
-        if (!empty($state['whatsapp'])) {
+        if ($emailVerified && !empty($state['whatsapp'])) {
             $step = 'domain';
         }
-        if (!empty($state['domain'])) {
+        if ($emailVerified && !empty($state['domain'])) {
             $step = empty($state['needs_account']) || !empty($state['first_name']) ? 'review' : 'account';
         }
         if (!empty($state['completed_order_id'])) {
@@ -207,7 +210,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             'blocked_reason' => $blockedReason,
             'logged_in' => $client instanceof \Model_Client,
             'email' => $state['email'] ?? '',
-            'email_verified' => (bool) ($state['email_verified'] ?? false),
+            'email_verified' => $emailVerified,
             'whatsapp' => $state['whatsapp'] ?? '',
             'domain' => $state['domain'] ?? '',
             'first_name' => $state['first_name'] ?? '',
@@ -254,18 +257,29 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function requestCode(string $email): array
     {
         $this->assertEnabled();
+        $client = $this->loggedInClient();
 
-        if ($this->loggedInClient() instanceof \Model_Client) {
-            // Signed-in visitors skip verification entirely.
-            return $this->state();
+        if ($client instanceof \Model_Client) {
+            if ($this->emailIsVerified($client)) {
+                // Already proven in the database — nothing to send.
+                return $this->state();
+            }
+            // A signed-in customer verifies their own account address; the one
+            // typed in the form is ignored so it cannot be used to claim
+            // somebody else's mailbox.
+            $email = (string) $client->email;
         }
 
         $email = $this->sanitizeEmail($email);
         $key = $this->emailKey($email);
 
         // Refuse before mailing anything: an address that already owns a trial,
-        // or already has a Quizontal Cloud account, must not receive a code.
-        $this->assertEmailEligible($email, $key);
+        // or (for guests) already has an account, must not receive a code.
+        if ($client instanceof \Model_Client) {
+            $this->assertClientEligible($client);
+        } else {
+            $this->assertEmailEligible($email, $key);
+        }
         $this->assertIpBudget();
 
         $config = $this->getConfig();
@@ -307,11 +321,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $this->sendCodeEmail($email, $code, $config['code_ttl_minutes']);
 
         // Remember the pending address so the browser cannot verify a code that
-        // was issued to a different mailbox in another tab.
+        // was issued to a different mailbox in another tab. Verification itself
+        // is not tracked here — it lives in the database.
         $this->patchState([
             'pending_email' => $email,
             'email' => $email,
-            'email_verified' => false,
         ]);
 
         return array_merge($this->state(), ['resend_after' => $config['code_resend_seconds']]);
@@ -320,16 +334,20 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     public function verifyCode(string $email, string $code): array
     {
         $this->assertEnabled();
+        $client = $this->loggedInClient();
 
-        if ($this->loggedInClient() instanceof \Model_Client) {
-            return $this->state();
+        if ($client instanceof \Model_Client) {
+            if ($this->emailIsVerified($client)) {
+                return $this->state();
+            }
+            $email = (string) $client->email;
         }
 
         $email = $this->sanitizeEmail($email);
         $key = $this->emailKey($email);
         $state = $this->readState();
 
-        if (($state['pending_email'] ?? null) !== $email) {
+        if (!$client instanceof \Model_Client && ($state['pending_email'] ?? null) !== $email) {
             throw new InformationException('Please request a verification code for this email address first.');
         }
 
@@ -362,15 +380,25 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
         // Re-run eligibility: someone else may have claimed the address while
         // this code was in flight.
-        $this->assertEmailEligible($email, $key);
+        if ($client instanceof \Model_Client) {
+            $this->assertClientEligible($client);
+        } else {
+            $this->assertEmailEligible($email, $key);
+        }
 
         $row->verified_at = date('Y-m-d H:i:s');
         $this->di['db']->store($row);
 
+        // Promote the proof onto the account itself when there is one, so the
+        // customer is never asked for the same address again.
+        if ($client instanceof \Model_Client) {
+            $client->email_approved = 1;
+            $this->di['db']->store($client);
+        }
+
         $this->patchState([
             'email' => $email,
-            'email_verified' => true,
-            'needs_account' => true,
+            'needs_account' => !$client instanceof \Model_Client,
         ]);
 
         return $this->state();
@@ -900,30 +928,42 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     private function assertEmailStep(): void
     {
-        if ($this->loggedInClient() instanceof \Model_Client) {
-            return;
-        }
-        if (empty($this->readState()['email_verified'])) {
+        if (!$this->emailIsVerified($this->loggedInClient(), (string) ($this->readState()['email'] ?? ''))) {
             throw new InformationException('Please verify your email address first.');
         }
     }
 
     /**
-     * Confirms the persisted record of a successful code entry for this exact
-     * address. `verified_at` is cleared whenever a new code is issued, so a
-     * stale row cannot satisfy this.
+     * The single source of truth for "is this address verified", read from the
+     * database on every call — never from the wizard session.
+     *
+     * A signed-in customer counts as verified when `client.email_approved` is
+     * set. If it is not (an account imported or created before this module, or
+     * an installation that never required confirmation), they still have to
+     * pass the code step, exactly like a guest.
      */
-    private function assertCodeWasVerified(string $email): void
+    private function emailIsVerified(?\Model_Client $client, string $email = ''): bool
     {
+        if ($client instanceof \Model_Client) {
+            if ((int) $client->email_approved === 1) {
+                return true;
+            }
+            $email = (string) $client->email;
+        }
+
+        if ($email === '') {
+            return false;
+        }
+
+        // `verified_at` is cleared whenever a new code is issued, so a stale
+        // row can never satisfy this.
         $row = $this->di['db']->findOne(
             'quizontal_free_trial_code',
             'email_key = ? AND verified_at IS NOT NULL',
             [$this->emailKey($email)]
         );
 
-        if ($row === null) {
-            throw new InformationException('Please verify your email address first.');
-        }
+        return $row !== null;
     }
 
     private function assertReadyToProvision(): array
@@ -932,14 +972,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $client = $this->loggedInClient();
 
         if (!$client instanceof \Model_Client) {
-            if (empty($state['email']) || empty($state['email_verified'])) {
+            if (empty($state['email'])) {
                 throw new InformationException('Please verify your email address first.');
             }
-            // Cross-check the session flag against the code row. The session is
-            // the working gate, but this makes the database the record of
-            // truth, so a corrupted or injected session state alone is not
-            // enough to reach provisioning without a real verification.
-            $this->assertCodeWasVerified((string) $state['email']);
             if (empty($state['first_name']) || empty($state['password'])) {
                 throw new InformationException('Please complete your account details first.');
             }
@@ -949,6 +984,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             $state['last_name'] = (string) $client->last_name;
         }
 
+        // Verification is proven against the database for guests and signed-in
+        // customers alike; nothing here trusts the session for that fact.
+        if (!$this->emailIsVerified($client, (string) ($state['email'] ?? ''))) {
+            throw new InformationException('Please verify your email address first.');
+        }
         if (empty($state['whatsapp'])) {
             throw new InformationException('Please confirm your WhatsApp number first.');
         }

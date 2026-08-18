@@ -15,6 +15,24 @@ class Client extends \Api_Abstract
         return $this->getService()->state();
     }
 
+    /**
+     * Signed-in customers whose account is not yet marked email-approved still
+     * have to pass the code step, so these two mirror the guest endpoints. The
+     * service ignores any address in the payload and uses the account's own.
+     */
+    public function request_code($data = []): array
+    {
+        return $this->getService()->requestCode((string) ($data['email'] ?? ''));
+    }
+
+    public function verify_code($data = []): array
+    {
+        return $this->getService()->verifyCode(
+            (string) ($data['email'] ?? ''),
+            (string) ($data['code'] ?? '')
+        );
+    }
+
     public function set_whatsapp($data = []): array
     {
         return $this->getService()->setWhatsapp((string) ($data['whatsapp'] ?? ''));

@@ -1,8 +1,25 @@
 {% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
 {% set active_menu = 'order' %}
 {% block meta_title %}{{ '7-day free hosting trial'|trans }}{% endblock %}
-{% block body_class %}qc-free-trial{% endblock %}
+{% block body_class %}qc-free-trial qc-has-banner{% endblock %}
 {% block breadcrumbs %}{% endblock %}
+
+{% block banner %}
+    <div class="iq-banner">
+        <div class="iq-banner-art" aria-hidden="true"></div>
+        <div class="container-fluid iq-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <h1>{{ 'Free Trial'|trans }}</h1>
+                    <p>{{ 'Set up your starter hosting account in a few minutes — no payment details.'|trans }}</p>
+                </div>
+                <div>
+                    <a href="{{ '/order'|link }}" class="premium-btn">{{ 'See paid plans'|trans }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
 
 {% block content %}
 <div class="qcft" id="qcft-root"
@@ -120,6 +137,24 @@
 .qcft-trust div{display:flex;align-items:center;gap:10px;padding:13px 15px;border-radius:13px;background:rgba(255,255,255,.025);border:1px solid var(--ft-line);font-size:.83rem;color:#c3c9d6;font-weight:550}
 .qcft-trust svg{width:17px;height:17px;flex-shrink:0;color:var(--ft-success)}
 
+/* ---------- boot skeleton (before the first state answer) ---------- */
+.qcft-boot{position:absolute;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;padding:26px;
+  background:linear-gradient(180deg,var(--ft-card-2),var(--ft-card));border-radius:20px;transition:opacity .28s ease,visibility .28s ease}
+.qcft.ready .qcft-boot{opacity:0;visibility:hidden;pointer-events:none}
+.qcft:not(.ready) .qcft-panel{visibility:hidden}
+.qcft:not(.ready) .qcft-steps{opacity:.35}
+.qcft-boot-inner{width:min(340px,100%);display:flex;flex-direction:column;gap:13px;align-items:center}
+.qcft-boot-spinner{width:44px;height:44px;border-radius:50%;position:relative;margin-bottom:6px}
+.qcft-boot-spinner::before{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.10);
+  border-top-color:var(--ft-primary);border-right-color:var(--ft-primary-2);animation:qcft-rot .85s linear infinite}
+.qcft-boot-line{display:block;width:100%;height:12px;border-radius:999px;
+  background:linear-gradient(90deg,rgba(255,255,255,.06) 20%,rgba(255,255,255,.16) 48%,rgba(255,255,255,.06) 76%);
+  background-size:400% 100%;animation:qcft-shimmer 1.15s ease-in-out infinite}
+.qcft-boot-line:nth-child(3){animation-delay:.12s}
+.qcft-boot-line:nth-child(4){animation-delay:.24s}
+@keyframes qcft-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+@media(prefers-reduced-motion:reduce){.qcft-boot-line,.qcft-boot-spinner::before{animation:none}}
+
 /* ---------- provisioning loader ---------- */
 .qcft-loader{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(7,7,12,.94);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
 .qcft-loader.show{display:flex}
@@ -148,11 +183,15 @@
 
 <div class="qcft-wrap">
 
+  {# Signed-in customers already get the standard dashboard banner card above,
+     so the marketing hero is only shown to guests. #}
+  {% if not client %}
   <div class="qcft-hero">
     <span class="qcft-pill"><i></i>{{ trial.trial_days }} {{ 'days free'|trans }} · {{ 'no card required'|trans }}</span>
     <h1>{{ 'Try'|trans }} <span>{{ trial.product.title|default('Starter Hosting') }}</span> {{ 'free for'|trans }} {{ trial.trial_days }} {{ 'days'|trans }}</h1>
     <p>{{ 'Verify your email, confirm your WhatsApp number and point your existing domain at us. Your hosting account is created automatically — usually in under a minute.'|trans }}</p>
   </div>
+  {% endif %}
 
   {% if not trial.enabled or not trial.product.available %}
     <div class="qcft-card"><div class="qcft-card-body">
@@ -173,6 +212,16 @@
   </div>
 
   <div class="qcft-card">
+    {# Held until the server reports which step this visitor is really on, so
+       the card never flashes the wrong panel for a few frames. #}
+    <div class="qcft-boot" id="qcft-boot" role="status" aria-label="{{ 'Loading'|trans }}">
+      <div class="qcft-boot-inner">
+        <div class="qcft-boot-spinner"><i></i></div>
+        <span class="qcft-boot-line" style="width:58%"></span>
+        <span class="qcft-boot-line" style="width:88%"></span>
+        <span class="qcft-boot-line" style="width:42%"></span>
+      </div>
+    </div>
     <div class="qcft-card-head">
       <h2 id="qcft-title">{{ 'Start with your email'|trans }}</h2>
       <p id="qcft-sub">{{ 'We send a six-digit code to make sure the address is really yours.'|trans }}</p>
@@ -416,7 +465,9 @@
     button.disabled = on;
   }
 
-  function render(step) {
+  var isDesktop = function () { return window.matchMedia('(min-width: 992px)').matches; };
+
+  function render(step, isInitial) {
     state.step = step;
     document.querySelectorAll('.qcft-panel').forEach(function (panel) {
       panel.classList.toggle('show', panel.dataset.panel === step);
@@ -433,32 +484,55 @@
       els.title.textContent = COPY[step][0];
       els.sub.textContent = COPY[step][1];
     }
+
+    if (isInitial) {
+      // Always open at the top of the page: the banner and hero are part of
+      // the pitch, and autofocus would scroll straight past them.
+      window.scrollTo(0, 0);
+      return;
+    }
+
     var first = document.querySelector('.qcft-panel.show .qcft-input, .qcft-panel.show .qcft-code input');
-    if (first && window.innerWidth > 720) { first.focus(); }
+    if (!first) { return; }
+    if (isDesktop()) {
+      // On a wide screen the whole card is visible, so keep the page at the
+      // top rather than letting focus yank it down the document.
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      first.focus({ preventScroll: true });
+    } else {
+      first.focus();
+    }
   }
 
   /* Signed-in customers never see the two email steps. */
-  function applyState(next) {
+  function applyState(next, isInitial) {
     if (!next) { return; }
     state = Object.assign(state, next);
+
+    // A signed-in customer whose address is not yet approved in the database
+    // still has to pass the code step, so keep the email panels available.
+    if (next.logged_in && next.email) {
+      var emailField = document.getElementById('qcft-email');
+      if (emailField) { emailField.value = next.email; emailField.readOnly = true; }
+    }
 
     if (next.blocked_reason) {
       document.getElementById('qcft-blocked-reason').textContent = next.blocked_reason;
       document.getElementById('qcft-steps').style.display = 'none';
       els.title.textContent = COPY.blocked[0];
       els.sub.textContent = COPY.blocked[1];
-      render('blocked');
+      render('blocked', isInitial);
       return;
     }
 
     if (next.completed_order_id) {
       var link = document.getElementById('qcft-goto-service');
       link.href = root.dataset.serviceUrl + '/' + next.completed_order_id;
-      render('done');
+      render('done', isInitial);
       return;
     }
-    if (next.step === 'review') { loadReview(); return; }
-    render(next.step);
+    if (next.step === 'review') { loadReview(isInitial); return; }
+    render(next.step, isInitial);
   }
 
   /* ---------------- step 1 & 2: email code ---------------- */
@@ -553,8 +627,8 @@
       '</dd></div>';
   }
 
-  function loadReview() {
-    render('review');
+  function loadReview(isInitial) {
+    render('review', isInitial);
     var container = document.getElementById('qcft-review');
     container.innerHTML = '<div class="qcft-review-row"><dt>{{ 'Loading your summary…'|trans|e('js') }}</dt><dd></dd></div>';
     call('review', {}).then(function (r) {
@@ -694,10 +768,41 @@
     if (button && !button.disabled) { event.preventDefault(); button.click(); }
   });
 
-  // Paint the server's opening step immediately so there is no blank card,
-  // then reconcile with a fresh authoritative state.
-  render(state.step && COPY[state.step] ? state.step : 'email');
-  call('state', {}).then(applyState).catch(function () { render(state.step || 'email'); });
+  /* ---------------- boot ---------------- */
+
+  var booted = false;
+  function finishBoot() {
+    if (booted) { return; }
+    booted = true;
+    root.classList.add('ready');
+    // Release the dashboard page loader only once the wizard is settled, so
+    // the two never overlap and the customer sees one continuous animation.
+    var pageLoader = document.getElementById('loading');
+    if (pageLoader) { pageLoader.classList.add('hide'); }
+    window.scrollTo(0, 0);
+  }
+
+  // Hold the app-shell loader while the first state request is in flight; the
+  // layout would otherwise hide it 250ms after window load.
+  (function holdPageLoader() {
+    var pageLoader = document.getElementById('loading');
+    if (!pageLoader) { return; }
+    var keep = setInterval(function () {
+      if (booted) { clearInterval(keep); return; }
+      pageLoader.classList.remove('hide');
+    }, 60);
+    setTimeout(function () { clearInterval(keep); }, 8000);
+  })();
+
+  // Never trap anyone behind the skeleton if the request stalls.
+  setTimeout(function () {
+    if (!booted) { render(state.step && COPY[state.step] ? state.step : 'email', true); finishBoot(); }
+  }, 8000);
+
+  call('state', {})
+    .then(function (result) { applyState(result, true); })
+    .catch(function () { render(state.step || 'email', true); })
+    .then(finishBoot, finishBoot);
 })();
 </script>
 </div>
