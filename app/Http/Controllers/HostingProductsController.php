@@ -38,8 +38,19 @@ class HostingProductsController extends Controller
                     throw new \RuntimeException((string) data_get($json, 'error.message', 'Billing catalog error'));
                 }
 
-                return collect(data_get($json, 'result.list', []))
-                    ->filter(fn (array $p): bool => ($p['type'] ?? null) === 'hosting')
+                $hosting = collect(data_get($json, 'result.list', []))
+                    ->filter(fn (array $p): bool => ($p['type'] ?? null) === 'hosting');
+
+                // A trial product ID that matches nothing is silent otherwise:
+                // the card simply keeps its normal button and nobody knows why.
+                if ($trialProductId > 0 && ! $hosting->contains(fn (array $p): bool => (int) ($p['id'] ?? 0) === $trialProductId)) {
+                    Log::warning('Free trial product ID does not match any hosting product, so no trial button will be shown.', [
+                        'free_trial_product_id' => $trialProductId,
+                        'available_hosting_product_ids' => $hosting->map(fn (array $p): int => (int) ($p['id'] ?? 0))->values()->all(),
+                    ]);
+                }
+
+                return $hosting
                     ->map(function (array $p) use ($base, $trialProductId, $trialUrl): array {
                         $monthly = data_get($p, 'pricing.recurrent.1M') ?? [];
                         $id = (int) ($p['id'] ?? 0);
@@ -70,6 +81,9 @@ class HostingProductsController extends Controller
             'products' => $products,
             'source' => 'billing',
             'freeTrialUrl' => $trialUrl,
+            // Echoed so a mismatch between this and the product IDs below is
+            // obvious from the endpoint alone.
+            'freeTrialProductId' => $trialProductId,
         ]);
     }
 
