@@ -1275,7 +1275,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     /** Canonical subjects, used to repair rows FOSSBilling generated blind. */
     private const EMAIL_SUBJECTS = [
-        'mod_quizontalfreetrial_code' => 'Your Quizontal Cloud verification code is {{ verification_code }}',
+        'mod_quizontalfreetrial_code' => 'Your Quizontal Cloud verification code',
         'mod_quizontalfreetrial_ready' => 'Your free trial for {{ trial.domain }} is live',
         'mod_quizontalfreetrial_reminder' => "Your free trial for {{ trial.domain }} ends on {{ trial.expires_at|date('j M') }}",
         'mod_quizontalfreetrial_expired' => 'Your free trial has ended — {{ trial.domain }} is suspended',
@@ -1288,8 +1288,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
      * subject derived from the action code ("Mod Quizontalfreetrial Code").
      * That happens whenever the row is generated before the files are in
      * place, and email_template rows persist forever — so the placeholder
-     * subject survives every later reinstall and the code never reaches the
-     * subject line.
+     * subject survives every later reinstall.
      *
      * Repairing through resetTemplateByCode() depends on that same file
      * discovery, so the subject is written directly instead: deterministic,
@@ -1309,8 +1308,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
             $changed = false;
 
-            // A subject that lost its placeholders is a generated stub.
-            if (!str_contains((string) $template->subject, '{{')) {
+            if ($this->subjectLooksGenerated($code, (string) $template->subject, $subject)) {
                 $template->subject = $subject;
                 $changed = true;
             }
@@ -1341,6 +1339,31 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         return $repaired;
+    }
+
+    /**
+     * True when the stored subject is one FOSSBilling invented rather than one
+     * of ours. It generates `ucwords(str_replace('_', ' ', $code))` when it
+     * cannot read the module file, so that exact string — and an empty one —
+     * are the tells. A subject an administrator has edited is left alone.
+     */
+    private function subjectLooksGenerated(string $code, string $subject, string $canonical): bool
+    {
+        $subject = trim($subject);
+
+        if ($subject === '' || $subject === ucwords(str_replace('_', ' ', $code))) {
+            return true;
+        }
+
+        if (str_contains($canonical, '{{')) {
+            // Subjects that interpolate must still carry their placeholders.
+            return !str_contains($subject, '{{');
+        }
+
+        // The verification subject deliberately has no placeholders any more.
+        // A stored one that still interpolates came from an earlier release
+        // (it used to include the code itself) and has to be migrated.
+        return str_contains($subject, '{{');
     }
 
     /** Reads the {% block content %} body out of a shipped template file. */
