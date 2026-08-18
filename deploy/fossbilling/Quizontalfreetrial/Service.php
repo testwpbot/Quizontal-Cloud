@@ -805,6 +805,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             throw new InformationException('We could not create your account. Please try again.');
         }
 
+        // The wizard only reaches this point after a one-time code was sent to
+        // this address and typed back correctly, which is a stronger proof than
+        // clicking a confirmation link. Record it on the account so an
+        // installation with "require email confirmation" enabled does not ask
+        // the customer to prove the same address a second time.
+        $client->email_approved = 1;
+        $this->di['db']->store($client);
+
         return $client;
     }
 
@@ -900,6 +908,24 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
     }
 
+    /**
+     * Confirms the persisted record of a successful code entry for this exact
+     * address. `verified_at` is cleared whenever a new code is issued, so a
+     * stale row cannot satisfy this.
+     */
+    private function assertCodeWasVerified(string $email): void
+    {
+        $row = $this->di['db']->findOne(
+            'quizontal_free_trial_code',
+            'email_key = ? AND verified_at IS NOT NULL',
+            [$this->emailKey($email)]
+        );
+
+        if ($row === null) {
+            throw new InformationException('Please verify your email address first.');
+        }
+    }
+
     private function assertReadyToProvision(): array
     {
         $state = $this->readState();
@@ -909,6 +935,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             if (empty($state['email']) || empty($state['email_verified'])) {
                 throw new InformationException('Please verify your email address first.');
             }
+            // Cross-check the session flag against the code row. The session is
+            // the working gate, but this makes the database the record of
+            // truth, so a corrupted or injected session state alone is not
+            // enough to reach provisioning without a real verification.
+            $this->assertCodeWasVerified((string) $state['email']);
             if (empty($state['first_name']) || empty($state['password'])) {
                 throw new InformationException('Please complete your account details first.');
             }

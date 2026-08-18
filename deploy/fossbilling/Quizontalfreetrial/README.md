@@ -158,10 +158,20 @@ number and end date, and offers:
 | Table | Purpose |
 |---|---|
 | `quizontal_free_trial` | The permanent trial register and the one-per-customer gate. |
-| `quizontal_free_trial_code` | Email verification codes (hashed), attempt counters and send windows. |
+| `quizontal_free_trial_code` | Email verification codes (hashed), attempt counters, send windows and `verified_at`. |
 
 Codes are stored with the same password hasher FOSSBilling uses for accounts, so
 a database leak never exposes a live verification code.
+
+## Where "email verified" is recorded
+
+Three places, each with a different job:
+
+| Location | Role |
+|---|---|
+| Session `qc_free_trial_wizard.email_verified` | The working gate every wizard step checks. Not persisted beyond the session, so closing the browser means verifying again. |
+| `quizontal_free_trial_code.verified_at` | The durable record. Cleared whenever a new code is issued, and cross-checked at provisioning so a corrupted session alone cannot reach DirectAdmin. |
+| `client.email_approved = 1` | Set on the account the wizard creates. Typing back a one-time code is stronger proof than clicking a confirmation link, so an installation with *require email confirmation* enabled must not ask for the same address twice. |
 
 ## Emails
 
