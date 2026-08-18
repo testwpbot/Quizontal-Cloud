@@ -16,7 +16,14 @@ page, without a payment method and without staff involvement.
 8. **Redirect** — straight to the ordinary service details page,
    `/order/service/manage/<order_id>`. A trial is a normal service, not a special case.
 
-The wizard lives at **`/free-trial`** (also reachable at `/quizontalfreetrial`).
+The wizard lives at **`/quizontalfreetrial`**.
+
+FOSSBilling resolves the owning module from the *first* URL segment and only
+then registers that module's routes, so a module cannot publish a route outside
+its own namespace — a `/free-trial` route declared in the controller is simply
+never reached. The activation helper therefore adds a core **Redirect** module
+entry so `/free-trial` 301s to the canonical path. If the Redirect module is not
+active, only `/quizontalfreetrial` works and the helper says so.
 
 ## What happens on the server
 

@@ -99,9 +99,29 @@ CONFIG_PAYLOAD=$(jq -n \
       default_country_code:"94", storefront_url:$storefront}')
 api_post 'extension/config_save' "$CONFIG_PAYLOAD"
 
+# FOSSBilling resolves a module from the first URL segment, so the wizard's own
+# route can only ever be /quizontalfreetrial. The core Redirect module is loaded
+# on every request, which makes it the supported way to publish the friendlier
+# /free-trial path. Create the entry once, idempotently.
+REDIRECTS=$(curl -sS -u "admin:$API_KEY" -H 'Content-Type: application/json' \
+    -X POST "$BILLING_URL/api/admin/redirect/get_list" -d '{}' || true)
+if jq -e '.result' <<<"$REDIRECTS" >/dev/null 2>&1; then
+    if jq -e '.result[]? | select(.path == "free-trial")' <<<"$REDIRECTS" >/dev/null 2>&1; then
+        echo 'Redirect /free-trial already present.'
+    else
+        REDIRECT_PAYLOAD=$(jq -n --arg target "$BILLING_URL/quizontalfreetrial" \
+            '{path:"free-trial", target:$target}')
+        api_post_soft 'redirect/create' "$REDIRECT_PAYLOAD"
+        echo "Created redirect /free-trial -> $BILLING_URL/quizontalfreetrial"
+    fi
+else
+    echo 'Note: the core Redirect module is not active, so only the canonical' >&2
+    echo "      $BILLING_URL/quizontalfreetrial URL will work." >&2
+    echo '      Activate Extensions -> Redirect and re-run this script to publish /free-trial.' >&2
+fi
+
 echo
-echo 'Checking that the trial product can actually provision…'
-DIAGNOSIS=$(api_post_soft 'quizontalfreetrial/diagnose' '{}')
+echo 'Checking that the trial product can actually provision…'DIAGNOSIS=$(api_post_soft 'quizontalfreetrial/diagnose' '{}')
 if [[ $(jq -r '.result.ready // false' <<<"$DIAGNOSIS" 2>/dev/null) == 'true' ]]; then
     echo "Ready: $(jq -r '.result.product_title' <<<"$DIAGNOSIS") (product #$TRIAL_PRODUCT_ID) on $(jq -r '.result.server_manager' <<<"$DIAGNOSIS")."
 else
@@ -112,7 +132,8 @@ fi
 
 echo
 echo 'Quizontal Cloud Free Trial is active.'
-echo "Customer wizard: $BILLING_URL/free-trial"
+echo "Customer wizard: $BILLING_URL/quizontalfreetrial"
+echo "  also at:       $BILLING_URL/free-trial (via the Redirect module)"
 echo "Admin register:  $BILLING_URL/admin/quizontalfreetrial"
 echo "Settings:        $BILLING_URL/admin/extension/settings/quizontalfreetrial"
 echo

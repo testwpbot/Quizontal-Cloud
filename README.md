@@ -70,7 +70,7 @@ An installable FossBilling module for private receipt uploads and administrator 
 
 ## Seven-day starter hosting trial
 
-`deploy/fossbilling/Quizontalfreetrial` adds a self-service free trial of the starter package at `https://billing.example.com/free-trial`: a secure email-code wizard, WhatsApp validation, an existing-domain step, a final review screen, and automatic DirectAdmin provisioning behind a progress loader. The customer lands on the ordinary service details page, already signed in.
+`deploy/fossbilling/Quizontalfreetrial` adds a self-service free trial of the starter package at `https://billing.example.com/quizontalfreetrial`: a secure email-code wizard, WhatsApp validation, an existing-domain step, a final review screen, and automatic DirectAdmin provisioning behind a progress loader. The customer lands on the ordinary service details page, already signed in.
 
 One trial per customer is enforced on the normalised email, the E.164 WhatsApp number, the domain and the client account, backed by database UNIQUE keys. Reminder, suspension and termination emails run from the standard FossBilling cron. Follow [`deploy/QUIZONTAL_FREE_TRIAL.md`](deploy/QUIZONTAL_FREE_TRIAL.md) to install and configure it.
 

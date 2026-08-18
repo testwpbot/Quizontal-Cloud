@@ -30,8 +30,9 @@ Optional Laravel `.env` values read by the activation helper:
 # DirectAdmin server and hosting plan on its configuration tab.
 FREE_TRIAL_PRODUCT_ID=98
 FREE_TRIAL_DAYS=7
-# Shown as a "Start free trial" button on the storefront hosting page.
-FOSSBILLING_FREE_TRIAL_URL=https://billing.example.com/free-trial
+# Shown as a "Start free trial" button on the trial plan's card on /hosting.
+# Leave blank to derive it from FOSSBILLING_URL + /quizontalfreetrial.
+FOSSBILLING_FREE_TRIAL_URL=
 ```
 
 The activation helper finishes by verifying that the trial product can actually
@@ -39,7 +40,7 @@ provision, and prints exactly what is missing if it cannot.
 
 ## Customer journey
 
-1. `https://billing.example.com/free-trial`
+1. `https://billing.example.com/quizontalfreetrial` (`/free-trial` redirects here)
 2. Email → six-digit code → WhatsApp number → existing domain → name and password
 3. Final review screen, then a provisioning loader
 4. Lands on the normal service details page, `/order/service/manage/<order_id>`,

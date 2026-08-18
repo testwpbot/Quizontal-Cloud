@@ -28,6 +28,6 @@ class StorefrontConfigController extends Controller
 
         $base = rtrim((string) config('services.fossbilling.url'), '/');
 
-        return $base === '' ? null : $base.'/free-trial';
+        return $base === '' ? null : $base.'/quizontalfreetrial';
     }
 }

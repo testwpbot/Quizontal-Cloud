@@ -54,6 +54,7 @@
   }
   function normalize(product, index) {
     if (product.feats) return product; // fallback rows are already normalized
+    // Object.assign below already carries trialUrl through from the API row.
     const parts = bullets(product.description);
     const feats = parts.filter(p => p.bullet).map(p => p.text);
     const note = (parts.find(p => !p.bullet) || {}).text || '';
@@ -71,6 +72,26 @@
     const featured = index === featuredIndex;
     const cta = plan.orderUrl || (QC.config && QC.config.clientAreaUrl) || '/client-area';
     const ctaLabel = plan.orderUrl ? 'Get started' : 'Order in client area';
+
+    // The trial plan leads with the trial: it is the lower-friction action, so
+    // it takes the primary button and paid ordering drops to a quiet link.
+    if (plan.trialUrl) {
+      return `<article class="h-card reveal ${featured ? 'featured' : ''}" data-reveal-delay="${index * 90}">
+      <div class="h-badge h-badge-trial">7 days free</div>
+      <div class="h-icon">${plan.icon}</div>
+      <h3>${QC.escape(plan.title)}</h3>
+      <p class="h-note">${QC.escape(plan.note || '')}</p>
+      <div class="h-price">${QC.money(plan.price)}<small> /month</small></div>
+      ${plan.mini && plan.mini.length ? `<div class="h-mini">${plan.mini.map(m => { const [b, s] = String(m).split('|'); return `<div><b>${QC.escape(b)}</b><span>${QC.escape(s || '')}</span></div>`; }).join('')}</div>` : ''}
+      <ul class="h-feats">
+        ${plan.feats.map(f => `<li><span class="check">✓</span>${QC.escape(f)}</li>`).join('')}
+        ${(plan.no || []).map(f => `<li class="no"><span class="check">✗</span>${QC.escape(f)}</li>`).join('')}
+      </ul>
+      <a class="button button-primary" href="${QC.escape(plan.trialUrl)}">Start free trial <span>→</span></a>
+      <a class="h-secondary-cta" href="${QC.escape(cta)}">or buy it now — no trial</a>
+    </article>`;
+    }
+
     return `<article class="h-card reveal ${featured ? 'featured' : ''}" data-reveal-delay="${index * 90}">
       ${featured ? '<div class="h-badge">Most popular</div>' : ''}
       <div class="h-icon">${plan.icon}</div>

@@ -54,6 +54,9 @@ return [
         // Seven-day starter trial wizard served by the Quizontalfreetrial
         // FOSSBilling module. Blank hides the storefront call to action.
         'free_trial_url' => env('FOSSBILLING_FREE_TRIAL_URL'),
+        // Catalog product the trial provisions, so the storefront can put the
+        // trial button on that exact plan card. Must match the module setting.
+        'free_trial_product_id' => (int) env('FREE_TRIAL_PRODUCT_ID', 98),
     ],
 
     'porkbun' => [

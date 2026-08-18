@@ -24,9 +24,12 @@ class Client implements \FOSSBilling\InjectionAwareInterface
 
     public function register(\Box_App &$app): void
     {
-        // Marketing-friendly URL plus the module-namespaced one, so links in
-        // emails and on the storefront never break if one of them is changed.
-        $app->get('/free-trial', 'get_index', [], static::class);
+        // FOSSBilling resolves the module from the FIRST URL segment and only
+        // then registers that module's routes (Box_AppClient::init), so a route
+        // like '/free-trial' declared here is never reachable — nothing loads
+        // this controller for a URL that does not start with the module name.
+        // The pretty '/free-trial' path is provided by a core Redirect module
+        // entry instead, which the activation helper creates.
         $app->get('/quizontalfreetrial', 'get_index', [], static::class);
     }
 

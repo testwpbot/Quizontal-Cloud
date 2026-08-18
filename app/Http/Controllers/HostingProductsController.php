@@ -21,8 +21,14 @@ class HostingProductsController extends Controller
             return response()->json(['products' => [], 'source' => 'unconfigured']);
         }
 
+        $trialProductId = (int) config('services.fossbilling.free_trial_product_id');
+        $trialUrl = $this->freeTrialUrl($base);
+
         try {
-            $products = Cache::remember('storefront.hosting-products', 300, function () use ($base): array {
+            // The trial URL/product are part of the payload, so the cache key
+            // must change with them or a config edit would not take effect.
+            $cacheKey = 'storefront.hosting-products.'.md5((string) $trialUrl.'|'.$trialProductId);
+            $products = Cache::remember($cacheKey, 300, function () use ($base, $trialProductId, $trialUrl): array {
                 $json = Http::acceptJson()->asJson()->timeout(15)
                     ->post($base.'/api/guest/product/get_list', ['per_page' => 100])
                     ->throw()
@@ -34,15 +40,19 @@ class HostingProductsController extends Controller
 
                 return collect(data_get($json, 'result.list', []))
                     ->filter(fn (array $p): bool => ($p['type'] ?? null) === 'hosting')
-                    ->map(function (array $p) use ($base): array {
+                    ->map(function (array $p) use ($base, $trialProductId, $trialUrl): array {
                         $monthly = data_get($p, 'pricing.recurrent.1M') ?? [];
+                        $id = (int) ($p['id'] ?? 0);
 
                         return [
-                            'id' => (int) ($p['id'] ?? 0),
+                            'id' => $id,
                             'title' => (string) ($p['title'] ?? 'Hosting plan'),
                             'description' => (string) ($p['description'] ?? ''),
                             'price' => (float) ($monthly['price'] ?? 0),
-                            'orderUrl' => $base.'/order?product='.(int) ($p['id'] ?? 0),
+                            'orderUrl' => $base.'/order?product='.$id,
+                            // Only the trial plan gets the trial button, so the
+                            // card CTA never promises a trial we cannot deliver.
+                            'trialUrl' => ($trialUrl !== null && $id === $trialProductId) ? $trialUrl : null,
                         ];
                     })
                     ->filter(fn (array $p): bool => $p['id'] > 0)
@@ -56,6 +66,25 @@ class HostingProductsController extends Controller
             return response()->json(['products' => [], 'source' => 'error']);
         }
 
-        return response()->json(['products' => $products, 'source' => 'billing']);
+        return response()->json([
+            'products' => $products,
+            'source' => 'billing',
+            'freeTrialUrl' => $trialUrl,
+        ]);
+    }
+
+    /**
+     * Canonical wizard URL. FOSSBilling routes by the first path segment, so
+     * the module's own page is /quizontalfreetrial; /free-trial only exists as
+     * a Redirect module entry and is not safe to rely on here.
+     */
+    private function freeTrialUrl(string $base): ?string
+    {
+        $explicit = trim((string) config('services.fossbilling.free_trial_url'));
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        return $base === '' ? null : $base.'/quizontalfreetrial';
     }
 }

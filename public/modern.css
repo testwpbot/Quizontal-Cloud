@@ -167,8 +167,19 @@ body::before {
   padding: 6px 14px; border-radius: 999px;
   box-shadow: 0 8px 20px rgba(227, 28, 100, .35);
 }
-.h-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; color: var(--pink); background: var(--grad-soft); border: 1px solid rgba(227, 28, 100, .18); margin-bottom: 16px; }
-.h-card h3 { font: 600 21px var(--display); margin: 0 0 4px; }
+/* Free-trial plan card: green badge and a quiet paid-order link under the
+   primary "Start free trial" button. */
+.h-badge-trial {
+  background: linear-gradient(120deg, #12a877, #20c997);
+  box-shadow: 0 8px 20px rgba(32, 201, 151, .35);
+}
+.h-secondary-cta {
+  display: block; text-align: center; margin-top: 10px;
+  font-size: 12.5px; color: var(--muted); text-decoration: none;
+}
+.h-secondary-cta:hover { color: var(--pink); text-decoration: underline; }
+
+.h-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; color: var(--pink); background: var(--grad-soft); border: 1px solid rgba(227, 28, 100, .18); margin-bottom: 16px; }.h-card h3 { font: 600 21px var(--display); margin: 0 0 4px; }
 .h-note { color: var(--muted); font-size: 13px; margin: 0 0 16px; min-height: 20px; }
 .h-price { font: 700 38px var(--display); letter-spacing: -.03em; margin-bottom: 18px; }
 .h-price small { font: 400 14px var(--body); color: var(--muted); letter-spacing: 0; }
