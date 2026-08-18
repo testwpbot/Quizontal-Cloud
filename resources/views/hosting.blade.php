@@ -33,6 +33,38 @@
   </div>
 </section>
 
+@if (!empty($freeTrialUrl))
+<section class="container reveal" data-reveal-delay="80" style="margin-top:8px">
+  <div class="trial-banner">
+    <div class="trial-banner-copy">
+      <span class="trial-banner-badge">7 days free</span>
+      <h2>Try Starter hosting free for 7 days</h2>
+      <p>No card, no invoice. Verify your email, tell us your WhatsApp number and your domain, and your hosting account is built automatically in about a minute.</p>
+    </div>
+    <div class="trial-banner-action">
+      <a href="{{ $freeTrialUrl }}" class="button button-primary button-large">Start my free trial</a>
+      <small>One trial per customer</small>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Trial banner — self-contained so it does not depend on plan-grid styles. */
+  .trial-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;
+    padding:clamp(20px,3.4vw,34px);border-radius:20px;
+    background:linear-gradient(120deg,rgba(227,28,100,.16),rgba(34,211,238,.10));
+    border:1px solid rgba(227,28,100,.30)}
+  .trial-banner-copy{flex:1 1 380px}
+  .trial-banner-badge{display:inline-block;padding:5px 13px;border-radius:999px;background:rgba(227,28,100,.22);
+    border:1px solid rgba(227,28,100,.45);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .trial-banner h2{margin:14px 0 8px;font-size:clamp(1.3rem,3vw,1.85rem);line-height:1.2}
+  .trial-banner p{margin:0;max-width:56ch;opacity:.82;line-height:1.65}
+  .trial-banner-action{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+  .trial-banner-action small{opacity:.62;font-size:.78rem}
+  @media(max-width:640px){.trial-banner-action{width:100%}.trial-banner-action .button{width:100%;text-align:center}}
+</style>
+@endif
+
 <section class="section container" id="plans" style="padding-top:54px">
   <div class="section-intro reveal"><div><span class="section-kicker">Hosting plans</span><h2>Pick your size</h2></div><p>Live prices from our billing system. Every plan activates automatically the moment your invoice is paid.</p></div>
   <div class="hosting-grid" id="hostingPlans" aria-live="polite">
@@ -82,7 +114,7 @@
   <details class="reveal" data-reveal-delay="320"><summary>How is this different from a VPS?<span>+</span></summary><p>Hosting is fully managed — we run the server and you just upload your site. A <a href="{{ route('vps') }}">Cloud VPS</a> gives you an entire virtual server with root access to configure yourself.</p></details>
 </div></div></div></section>
 
-<section class="container reveal"><div class="final-cta band-dark"><div><span class="section-kicker">Ready when you are</span><h2>Put your website on fast hosting today.</h2><p>From Rs. 499/month, SSL and backups included, live in minutes.</p></div><div><a href="#plans" class="button button-primary button-large">Choose a hosting plan</a><a href="{{ route('pricing') }}" class="button button-ghost button-large">See all pricing</a></div></div></section>
+<section class="container reveal"><div class="final-cta band-dark"><div><span class="section-kicker">Ready when you are</span><h2>Put your website on fast hosting today.</h2><p>From Rs. 499/month, SSL and backups included, live in minutes.</p></div><div>@if (!empty($freeTrialUrl))<a href="{{ $freeTrialUrl }}" class="button button-primary button-large">Start 7-day free trial</a><a href="#plans" class="button button-ghost button-large">Choose a plan</a>@else<a href="#plans" class="button button-primary button-large">Choose a hosting plan</a><a href="{{ route('pricing') }}" class="button button-ghost button-large">See all pricing</a>@endif</div></div></section>
 @endsection
 
 @push('page-scripts')

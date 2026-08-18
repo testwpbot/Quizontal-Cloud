@@ -1,0 +1,704 @@
+{% extends request.ajax ? "layout_blank.html.twig" : "layout_default.html.twig" %}
+{% set active_menu = 'order' %}
+{% block meta_title %}{{ '7-day free hosting trial'|trans }}{% endblock %}
+{% block body_class %}qc-free-trial{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="qcft" id="qcft-root"
+     data-api-base="{{ 'api'|link }}"
+     data-role="{{ trial.logged_in ? 'client' : 'guest' }}"
+     data-csrf="{{ CSRFToken }}"
+     data-step="{{ trial.step }}"
+     data-login-url="{{ 'login'|link }}"
+     data-order-url="{{ 'order'|link }}"
+     data-service-url="{{ 'order/service/manage'|link }}">
+
+<style>
+/* =======================================================================
+   Quizontal Cloud — free trial wizard.
+   Fully self-contained: the page is served to signed-out visitors on the
+   stock light theme and to signed-in customers inside the dark app shell,
+   so it cannot rely on either one's variables.
+   ======================================================================= */
+.qcft{--ft-bg:#0b0b12;--ft-card:#13131c;--ft-card-2:#171722;--ft-line:rgba(255,255,255,.08);--ft-text:#f2f3f7;--ft-muted:#9aa1b2;--ft-primary:#e31c64;--ft-primary-2:#ff4d8d;--ft-success:#20c997;--ft-warn:#ffbc35;--ft-danger:#f4113c;
+  position:relative;margin:-1rem -0.75rem;padding:clamp(18px,4vw,44px) clamp(14px,4vw,32px) 64px;background:radial-gradient(1200px 520px at 12% -8%,rgba(227,28,100,.22),transparent 60%),radial-gradient(900px 460px at 92% 4%,rgba(34,211,238,.14),transparent 58%),var(--ft-bg);
+  color:var(--ft-text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;overflow:hidden}
+.qcft *,.qcft *::before,.qcft *::after{box-sizing:border-box}
+.qcft-wrap{max-width:1080px;margin:0 auto;position:relative;z-index:2}
+
+/* ---------- hero ---------- */
+.qcft-hero{text-align:center;margin-bottom:clamp(22px,4vw,38px)}
+.qcft-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;background:rgba(227,28,100,.14);border:1px solid rgba(227,28,100,.34);color:#ff9ec1;font-size:.76rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.qcft-pill i{width:7px;height:7px;border-radius:50%;background:var(--ft-primary);box-shadow:0 0 0 0 rgba(227,28,100,.7);animation:qcft-pulse 2s infinite}
+@keyframes qcft-pulse{70%{box-shadow:0 0 0 9px rgba(227,28,100,0)}100%{box-shadow:0 0 0 0 rgba(227,28,100,0)}}
+.qcft-hero h1{margin:16px 0 10px;font-size:clamp(1.75rem,4.6vw,2.9rem);font-weight:800;line-height:1.12;letter-spacing:-.02em}
+.qcft-hero h1 span{background:linear-gradient(96deg,var(--ft-primary) 8%,var(--ft-primary-2) 52%,#22d3ee 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.qcft-hero p{margin:0 auto;max-width:620px;color:var(--ft-muted);font-size:clamp(.92rem,2.1vw,1.03rem);line-height:1.65}
+
+/* ---------- stepper ---------- */
+.qcft-steps{display:flex;align-items:flex-start;justify-content:center;gap:0;margin:clamp(24px,4vw,36px) auto clamp(18px,3vw,28px);max-width:760px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.qcft-steps::-webkit-scrollbar{display:none}
+.qcft-step{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;flex:1 1 0;position:relative}
+.qcft-step::after{content:"";position:absolute;top:17px;left:calc(50% + 20px);right:calc(-50% + 20px);height:2px;background:var(--ft-line);border-radius:2px}
+.qcft-step:last-child::after{display:none}
+.qcft-step.done::after{background:linear-gradient(90deg,var(--ft-primary),var(--ft-primary-2))}
+.qcft-dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ft-card-2);border:1.5px solid var(--ft-line);color:var(--ft-muted);font-size:.82rem;font-weight:700;transition:all .28s ease;position:relative;z-index:1}
+.qcft-step.active .qcft-dot{background:linear-gradient(135deg,var(--ft-primary),var(--ft-primary-2));border-color:transparent;color:#fff;box-shadow:0 0 0 5px rgba(227,28,100,.16)}
+.qcft-step.done .qcft-dot{background:rgba(32,201,151,.16);border-color:rgba(32,201,151,.5);color:var(--ft-success)}
+.qcft-step small{font-size:.68rem;color:var(--ft-muted);text-align:center;white-space:nowrap;font-weight:600;letter-spacing:.02em}
+.qcft-step.active small{color:var(--ft-text)}
+
+/* ---------- card ---------- */
+.qcft-card{background:linear-gradient(180deg,var(--ft-card-2),var(--ft-card));border:1px solid var(--ft-line);border-radius:20px;box-shadow:0 28px 70px -30px rgba(0,0,0,.85);overflow:hidden;position:relative}
+.qcft-card-head{padding:clamp(20px,3.4vw,28px) clamp(18px,3.4vw,32px) 0}
+.qcft-card-head h2{margin:0 0 7px;font-size:clamp(1.15rem,2.7vw,1.42rem);font-weight:750;letter-spacing:-.01em}
+.qcft-card-head p{margin:0;color:var(--ft-muted);font-size:.9rem;line-height:1.6}
+.qcft-card-body{padding:clamp(18px,3.4vw,28px) clamp(18px,3.4vw,32px) clamp(22px,3.4vw,30px)}
+.qcft-panel{display:none;animation:qcft-in .32s cubic-bezier(.2,.7,.3,1)}
+.qcft-panel.show{display:block}
+@keyframes qcft-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- form controls ---------- */
+.qcft-field{margin-bottom:16px}
+.qcft-field label{display:block;margin-bottom:7px;font-size:.82rem;font-weight:650;color:#cdd3e0}
+.qcft-input{width:100%;padding:13px 15px;border-radius:12px;border:1.5px solid var(--ft-line);background:rgba(255,255,255,.03);color:var(--ft-text);font-size:.95rem;font-family:inherit;transition:border-color .2s,box-shadow .2s,background .2s;-webkit-appearance:none}
+.qcft-input::placeholder{color:#666e80}
+.qcft-input:focus{outline:none;border-color:var(--ft-primary);background:rgba(255,255,255,.05);box-shadow:0 0 0 4px rgba(227,28,100,.14)}
+.qcft-input:disabled{opacity:.6;cursor:not-allowed}
+.qcft-hint{margin:7px 0 0;font-size:.78rem;color:var(--ft-muted);line-height:1.55}
+.qcft-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.qcft-row{grid-template-columns:1fr}}
+.qcft-prefix{display:flex;align-items:stretch;border-radius:12px;border:1.5px solid var(--ft-line);background:rgba(255,255,255,.03);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.qcft-prefix:focus-within{border-color:var(--ft-primary);box-shadow:0 0 0 4px rgba(227,28,100,.14)}
+.qcft-prefix span{display:grid;place-items:center;padding:0 13px;background:rgba(255,255,255,.05);color:#c8cedb;font-size:.9rem;font-weight:650;border-right:1px solid var(--ft-line);white-space:nowrap}
+.qcft-prefix .qcft-input{border:0;background:transparent;border-radius:0}
+.qcft-prefix .qcft-input:focus{box-shadow:none;background:transparent}
+
+/* ---------- verification code boxes ---------- */
+.qcft-code{display:flex;gap:clamp(6px,2vw,11px);justify-content:center;margin:6px 0 4px}
+.qcft-code input{width:clamp(40px,12vw,54px);height:clamp(50px,14vw,62px);text-align:center;font-size:clamp(1.15rem,4vw,1.5rem);font-weight:750;border-radius:13px;border:1.5px solid var(--ft-line);background:rgba(255,255,255,.03);color:var(--ft-text);transition:all .18s;-webkit-appearance:none}
+.qcft-code input:focus{outline:none;border-color:var(--ft-primary);box-shadow:0 0 0 4px rgba(227,28,100,.16);transform:translateY(-2px)}
+.qcft-code input.filled{border-color:rgba(227,28,100,.5);background:rgba(227,28,100,.08)}
+
+/* ---------- buttons ---------- */
+.qcft-actions{display:flex;gap:11px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.qcft-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 26px;border-radius:12px;border:0;font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .16s,box-shadow .2s,opacity .2s;text-decoration:none;line-height:1.2}
+.qcft-btn-primary{background:linear-gradient(135deg,var(--ft-primary),var(--ft-primary-2));color:#fff;box-shadow:0 10px 26px -10px rgba(227,28,100,.85)}
+.qcft-btn-primary:hover:not(:disabled){transform:translateY(-2px);color:#fff}
+.qcft-btn-ghost{background:transparent;border:1.5px solid var(--ft-line);color:#c8cedb}
+.qcft-btn-ghost:hover:not(:disabled){border-color:rgba(255,255,255,.24);color:#fff}
+.qcft-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.qcft-btn .qcft-spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:qcft-rot .7s linear infinite;display:none}
+.qcft-btn.busy .qcft-spin{display:block}
+@keyframes qcft-rot{to{transform:rotate(360deg)}}
+.qcft-link{background:none;border:0;padding:0;color:var(--ft-primary-2);font-size:.84rem;font-weight:650;cursor:pointer;font-family:inherit;text-decoration:none}
+.qcft-link:hover{text-decoration:underline}
+.qcft-link:disabled{opacity:.5;cursor:not-allowed;text-decoration:none}
+
+/* ---------- alerts ---------- */
+.qcft-alert{display:none;align-items:flex-start;gap:10px;padding:12px 15px;border-radius:12px;font-size:.86rem;line-height:1.55;margin-bottom:16px}
+.qcft-alert.show{display:flex}
+.qcft-alert-error{background:rgba(244,17,60,.11);border:1px solid rgba(244,17,60,.32);color:#ff9db0}
+.qcft-alert-ok{background:rgba(32,201,151,.11);border:1px solid rgba(32,201,151,.32);color:#7ee2c3}
+.qcft-alert-info{background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.26);color:#9fe6f4}
+.qcft-alert a{color:inherit;text-decoration:underline;font-weight:700}
+
+/* ---------- review ---------- */
+.qcft-review{border:1px solid var(--ft-line);border-radius:15px;overflow:hidden;background:rgba(255,255,255,.02)}
+.qcft-review-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 17px;border-bottom:1px solid var(--ft-line);font-size:.89rem}
+.qcft-review-row:last-child{border-bottom:0}
+.qcft-review-row dt{color:var(--ft-muted);margin:0;font-weight:500;flex-shrink:0}
+.qcft-review-row dd{margin:0;font-weight:650;text-align:right;word-break:break-word}
+.qcft-badge-free{display:inline-block;padding:3px 11px;border-radius:999px;background:rgba(32,201,151,.16);border:1px solid rgba(32,201,151,.4);color:var(--ft-success);font-size:.76rem;font-weight:750;letter-spacing:.03em}
+.qcft-terms{display:flex;gap:11px;align-items:flex-start;margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(255,188,53,.07);border:1px solid rgba(255,188,53,.22)}
+.qcft-terms input{margin-top:2px;width:17px;height:17px;accent-color:var(--ft-primary);flex-shrink:0;cursor:pointer}
+.qcft-terms label{font-size:.83rem;color:#e0d3b6;line-height:1.6;cursor:pointer;margin:0}
+
+/* ---------- trust strip ---------- */
+.qcft-trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:22px}
+.qcft-trust div{display:flex;align-items:center;gap:10px;padding:13px 15px;border-radius:13px;background:rgba(255,255,255,.025);border:1px solid var(--ft-line);font-size:.83rem;color:#c3c9d6;font-weight:550}
+.qcft-trust svg{width:17px;height:17px;flex-shrink:0;color:var(--ft-success)}
+
+/* ---------- provisioning loader ---------- */
+.qcft-loader{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(7,7,12,.94);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.qcft-loader.show{display:flex}
+.qcft-loader-box{width:min(460px,100%);text-align:center}
+.qcft-orb{width:88px;height:88px;margin:0 auto 24px;position:relative}
+.qcft-orb::before,.qcft-orb::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid transparent}
+.qcft-orb::before{border-top-color:var(--ft-primary);border-right-color:var(--ft-primary-2);animation:qcft-rot 1.1s linear infinite}
+.qcft-orb::after{inset:13px;border-bottom-color:#22d3ee;animation:qcft-rot 1.7s linear infinite reverse}
+.qcft-orb i{position:absolute;inset:29px;border-radius:50%;background:linear-gradient(135deg,var(--ft-primary),var(--ft-primary-2));animation:qcft-breathe 1.6s ease-in-out infinite}
+@keyframes qcft-breathe{50%{transform:scale(.72);opacity:.65}}
+.qcft-loader h3{font-size:1.24rem;font-weight:750;color:#fff;margin:0 0 9px}
+.qcft-loader p{color:var(--ft-muted);font-size:.9rem;margin:0 0 22px;line-height:1.6;min-height:2.9em}
+.qcft-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:20px}
+.qcft-bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--ft-primary),var(--ft-primary-2),#22d3ee);transition:width .9s cubic-bezier(.4,0,.2,1)}
+.qcft-tasks{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:9px}
+.qcft-tasks li{display:flex;align-items:center;gap:11px;font-size:.85rem;color:#6f7789;transition:color .3s}
+.qcft-tasks li b{width:19px;height:19px;border-radius:50%;border:1.6px solid currentColor;display:grid;place-items:center;font-size:.62rem;flex-shrink:0}
+.qcft-tasks li.active{color:#fff}
+.qcft-tasks li.done{color:var(--ft-success)}
+.qcft-tasks li.done b{background:rgba(32,201,151,.18);border-color:var(--ft-success)}
+
+.qcft-foot{text-align:center;margin-top:26px;font-size:.8rem;color:#6b7284;line-height:1.7}
+.qcft-foot a{color:#9aa1b2;text-decoration:underline}
+@media(max-width:600px){.qcft-step small{display:none}.qcft-step{min-width:44px}}
+</style>
+
+<div class="qcft-wrap">
+
+  <div class="qcft-hero">
+    <span class="qcft-pill"><i></i>{{ trial.trial_days }} {{ 'days free'|trans }} · {{ 'no card required'|trans }}</span>
+    <h1>{{ 'Try'|trans }} <span>{{ trial.product.title|default('Starter Hosting') }}</span> {{ 'free for'|trans }} {{ trial.trial_days }} {{ 'days'|trans }}</h1>
+    <p>{{ 'Verify your email, confirm your WhatsApp number and point your existing domain at us. Your hosting account is created automatically — usually in under a minute.'|trans }}</p>
+  </div>
+
+  {% if not trial.enabled or not trial.product.available %}
+    <div class="qcft-card"><div class="qcft-card-body">
+      <div class="qcft-alert qcft-alert-info show">
+        <span>{{ 'The free trial is not accepting new signups right now. Please check back soon or browse our paid plans.'|trans }}
+        <a href="{{ 'order'|link }}">{{ 'View plans'|trans }}</a></span>
+      </div>
+    </div></div>
+  {% else %}
+
+  <div class="qcft-steps" id="qcft-steps">
+    <div class="qcft-step" data-for="email"><span class="qcft-dot">1</span><small>{{ 'Email'|trans }}</small></div>
+    <div class="qcft-step" data-for="code"><span class="qcft-dot">2</span><small>{{ 'Verify'|trans }}</small></div>
+    <div class="qcft-step" data-for="whatsapp"><span class="qcft-dot">3</span><small>{{ 'WhatsApp'|trans }}</small></div>
+    <div class="qcft-step" data-for="domain"><span class="qcft-dot">4</span><small>{{ 'Domain'|trans }}</small></div>
+    <div class="qcft-step" data-for="account"><span class="qcft-dot">5</span><small>{{ 'Account'|trans }}</small></div>
+    <div class="qcft-step" data-for="review"><span class="qcft-dot">6</span><small>{{ 'Review'|trans }}</small></div>
+  </div>
+
+  <div class="qcft-card">
+    <div class="qcft-card-head">
+      <h2 id="qcft-title">{{ 'Start with your email'|trans }}</h2>
+      <p id="qcft-sub">{{ 'We send a six-digit code to make sure the address is really yours.'|trans }}</p>
+    </div>
+    <div class="qcft-card-body">
+      <div class="qcft-alert qcft-alert-error" id="qcft-error"><span></span></div>
+      <div class="qcft-alert qcft-alert-ok" id="qcft-ok"><span></span></div>
+
+      {# ---------- 1. email ---------- #}
+      <div class="qcft-panel" data-panel="email">
+        <div class="qcft-field">
+          <label for="qcft-email">{{ 'Email address'|trans }}</label>
+          <input class="qcft-input" type="email" id="qcft-email" autocomplete="email" inputmode="email"
+                 placeholder="you@example.com" value="{{ trial.email }}">
+          <p class="qcft-hint">{{ 'Use an address you can open right now — the code expires quickly.'|trans }}</p>
+        </div>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-send-code"><span class="qcft-spin"></span>{{ 'Send my code'|trans }}</button>
+          <a class="qcft-link" href="{{ 'login'|link }}">{{ 'Already have an account? Sign in'|trans }}</a>
+        </div>
+      </div>
+
+      {# ---------- 2. code ---------- #}
+      <div class="qcft-panel" data-panel="code">
+        <div class="qcft-field">
+          <label>{{ 'Enter the 6-digit code'|trans }}</label>
+          <div class="qcft-code" id="qcft-code">
+            <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5">
+            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6">
+          </div>
+          <p class="qcft-hint" style="text-align:center">{{ 'Sent to'|trans }} <strong id="qcft-code-email"></strong> · <button class="qcft-link" type="button" id="qcft-change-email">{{ 'change'|trans }}</button></p>
+        </div>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-verify-code"><span class="qcft-spin"></span>{{ 'Verify and continue'|trans }}</button>
+          <button class="qcft-link" type="button" id="qcft-resend">{{ 'Resend code'|trans }}</button>
+        </div>
+      </div>
+
+      {# ---------- 3. whatsapp ---------- #}
+      <div class="qcft-panel" data-panel="whatsapp">
+        <div class="qcft-field">
+          <label for="qcft-whatsapp">{{ 'WhatsApp number'|trans }}</label>
+          <div class="qcft-prefix">
+            <span>+94</span>
+            <input class="qcft-input" type="tel" id="qcft-whatsapp" inputmode="tel" autocomplete="tel"
+                   placeholder="77 123 4567" value="{{ trial.whatsapp }}">
+          </div>
+          <p class="qcft-hint">{{ 'We use WhatsApp for setup help and trial reminders. Outside Sri Lanka? Type the full number starting with +.'|trans }}</p>
+        </div>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-save-whatsapp"><span class="qcft-spin"></span>{{ 'Continue'|trans }}</button>
+        </div>
+      </div>
+
+      {# ---------- 4. domain ---------- #}
+      <div class="qcft-panel" data-panel="domain">
+        <div class="qcft-field">
+          <label for="qcft-domain">{{ 'Your existing domain'|trans }}</label>
+          <input class="qcft-input" type="text" id="qcft-domain" autocapitalize="none" autocorrect="off" spellcheck="false"
+                 placeholder="yoursite.lk" value="{{ trial.domain }}">
+          <p class="qcft-hint">{{ 'The trial runs on a domain you already own. You can point its nameservers at us after the account is created — we send the details by email.'|trans }}</p>
+        </div>
+        <div class="qcft-alert qcft-alert-info show">
+          <span>{{ 'No domain yet? Your trial still works — you can register one from your dashboard at any time.'|trans }}</span>
+        </div>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-save-domain"><span class="qcft-spin"></span>{{ 'Continue'|trans }}</button>
+        </div>
+      </div>
+
+      {# ---------- 5. account ---------- #}
+      <div class="qcft-panel" data-panel="account">
+        <div class="qcft-row">
+          <div class="qcft-field">
+            <label for="qcft-first">{{ 'First name'|trans }}</label>
+            <input class="qcft-input" type="text" id="qcft-first" autocomplete="given-name" value="{{ trial.first_name }}">
+          </div>
+          <div class="qcft-field">
+            <label for="qcft-last">{{ 'Last name'|trans }}</label>
+            <input class="qcft-input" type="text" id="qcft-last" autocomplete="family-name" value="{{ trial.last_name }}">
+          </div>
+        </div>
+        <div class="qcft-row">
+          <div class="qcft-field">
+            <label for="qcft-pass">{{ 'Password'|trans }}</label>
+            <input class="qcft-input" type="password" id="qcft-pass" autocomplete="new-password">
+          </div>
+          <div class="qcft-field">
+            <label for="qcft-pass2">{{ 'Confirm password'|trans }}</label>
+            <input class="qcft-input" type="password" id="qcft-pass2" autocomplete="new-password">
+          </div>
+        </div>
+        <p class="qcft-hint">{{ 'This is the password for your Quizontal Cloud client area.'|trans }}</p>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-save-account"><span class="qcft-spin"></span>{{ 'Continue'|trans }}</button>
+        </div>
+      </div>
+
+      {# ---------- 6. review ---------- #}
+      <div class="qcft-panel" data-panel="review">
+        <dl class="qcft-review" id="qcft-review"></dl>
+        <div class="qcft-terms">
+          <input type="checkbox" id="qcft-agree">
+          <label for="qcft-agree">{{ trial.terms_note }}</label>
+        </div>
+        <div class="qcft-actions">
+          <button class="qcft-btn qcft-btn-primary" id="qcft-provision" disabled><span class="qcft-spin"></span>{{ 'Start my free trial'|trans }}</button>
+          <button class="qcft-link" type="button" id="qcft-restart">{{ 'Start over'|trans }}</button>
+        </div>
+      </div>
+
+      {# ---------- blocked ---------- #}
+      <div class="qcft-panel" data-panel="blocked">
+        <div class="qcft-alert qcft-alert-info show"><span id="qcft-blocked-reason"></span></div>
+        <div class="qcft-actions">
+          <a class="qcft-btn qcft-btn-primary" href="{{ 'order'|link }}">{{ 'Browse hosting plans'|trans }}</a>
+          <a class="qcft-link" href="{{ 'order/service'|link }}">{{ 'View my services'|trans }}</a>
+        </div>
+      </div>
+
+      {# ---------- done ---------- #}
+      <div class="qcft-panel" data-panel="done">
+        <div class="qcft-alert qcft-alert-ok show"><span>{{ 'Your free trial is already active.'|trans }}</span></div>
+        <div class="qcft-actions">
+          <a class="qcft-btn qcft-btn-primary" id="qcft-goto-service" href="{{ 'order/service'|link }}">{{ 'Open my hosting account'|trans }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcft-trust">
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>{{ 'No payment details'|trans }}</div>
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>{{ 'Free SSL included'|trans }}</div>
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>{{ 'Instant DirectAdmin access'|trans }}</div>
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>{{ 'Cancel any time'|trans }}</div>
+  </div>
+
+  <p class="qcft-foot">{{ 'One free trial per customer.'|trans }} {{ 'Need help?'|trans }} <a href="{{ 'support'|link }}">{{ 'Contact support'|trans }}</a></p>
+  {% endif %}
+</div>
+
+{# ---------- provisioning loader ---------- #}
+<div class="qcft-loader" id="qcft-loader">
+  <div class="qcft-loader-box">
+    <div class="qcft-orb"><i></i></div>
+    <h3 id="qcft-loader-title">{{ 'Building your hosting account'|trans }}</h3>
+    <p id="qcft-loader-text">{{ 'Please keep this page open — this usually takes less than a minute.'|trans }}</p>
+    <div class="qcft-bar"><i id="qcft-bar"></i></div>
+    <ul class="qcft-tasks" id="qcft-tasks">
+      <li data-task="0"><b>1</b>{{ 'Creating your Quizontal Cloud account'|trans }}</li>
+      <li data-task="1"><b>2</b>{{ 'Reserving your starter plan'|trans }}</li>
+      <li data-task="2"><b>3</b>{{ 'Provisioning hosting on DirectAdmin'|trans }}</li>
+      <li data-task="3"><b>4</b>{{ 'Issuing SSL and mailboxes'|trans }}</li>
+      <li data-task="4"><b>5</b>{{ 'Opening your service dashboard'|trans }}</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.getElementById('qcft-root');
+  if (!root) { return; }
+
+  var API   = root.dataset.apiBase.replace(/\/+$/, '');
+  var ROLE  = root.dataset.role;            // 'guest' or 'client'
+  var CSRF  = root.dataset.csrf;
+  var state = { step: root.dataset.step };
+
+  var els = {
+    error: document.getElementById('qcft-error'),
+    ok: document.getElementById('qcft-ok'),
+    title: document.getElementById('qcft-title'),
+    sub: document.getElementById('qcft-sub'),
+    loader: document.getElementById('qcft-loader'),
+    bar: document.getElementById('qcft-bar')
+  };
+
+  var COPY = {
+    email:    ['{{ 'Start with your email'|trans|e('js') }}', '{{ 'We send a six-digit code to make sure the address is really yours.'|trans|e('js') }}'],
+    code:     ['{{ 'Check your inbox'|trans|e('js') }}', '{{ 'Enter the six-digit code we just emailed you. It expires shortly.'|trans|e('js') }}'],
+    whatsapp: ['{{ 'How can we reach you?'|trans|e('js') }}', '{{ 'We confirm your WhatsApp number so we can help you get set up.'|trans|e('js') }}'],
+    domain:   ['{{ 'Which domain will you use?'|trans|e('js') }}', '{{ 'Enter a domain you already own — we configure hosting for it right away.'|trans|e('js') }}'],
+    account:  ['{{ 'Create your account'|trans|e('js') }}', '{{ 'Just a name and a password — no billing details.'|trans|e('js') }}'],
+    review:   ['{{ 'Review and confirm'|trans|e('js') }}', '{{ 'One last look before we build your hosting account.'|trans|e('js') }}'],
+    done:     ['{{ 'You are all set'|trans|e('js') }}', '{{ 'Your free trial has already been activated.'|trans|e('js') }}'],
+    blocked:  ['{{ 'This account already had its free trial'|trans|e('js') }}', '{{ 'Every customer gets one free trial. Any paid plan starts instantly.'|trans|e('js') }}']
+  };
+  var ORDER = ['email', 'code', 'whatsapp', 'domain', 'account', 'review'];
+
+  /* ---------------- transport ---------------- */
+
+  function call(method, payload) {
+    // Signed-in customers hit the client API (their session proves the email);
+    // visitors use the guest API, which additionally runs the code checks.
+    var body = Object.assign({ CSRFToken: CSRF }, payload || {});
+    return fetch(API + '/' + ROLE + '/quizontalfreetrial/' + method, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.json().catch(function () {
+        throw new Error('{{ 'We could not reach the server. Please try again.'|trans|e('js') }}');
+      });
+    }).then(function (json) {
+      if (json && json.error) { throw new Error(json.error.message || '{{ 'Something went wrong.'|trans|e('js') }}'); }
+      return json ? json.result : null;
+    });
+  }
+
+  /* ---------------- ui helpers ---------------- */
+
+  function showError(message) {
+    els.ok.classList.remove('show');
+    els.error.querySelector('span').innerHTML = escapeHtml(message);
+    els.error.classList.add('show');
+    els.error.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function showOk(message) {
+    els.error.classList.remove('show');
+    els.ok.querySelector('span').textContent = message;
+    els.ok.classList.add('show');
+  }
+  function clearAlerts() { els.error.classList.remove('show'); els.ok.classList.remove('show'); }
+
+  function escapeHtml(value) {
+    var div = document.createElement('div');
+    div.textContent = String(value);
+    // Keep the one link we ever emit from the server side clickable.
+    return div.innerHTML;
+  }
+
+  function busy(button, on) {
+    if (!button) { return; }
+    button.classList.toggle('busy', on);
+    button.disabled = on;
+  }
+
+  function render(step) {
+    state.step = step;
+    document.querySelectorAll('.qcft-panel').forEach(function (panel) {
+      panel.classList.toggle('show', panel.dataset.panel === step);
+    });
+
+    var index = ORDER.indexOf(step);
+    document.querySelectorAll('.qcft-step').forEach(function (node) {
+      var position = ORDER.indexOf(node.dataset.for);
+      node.classList.toggle('active', node.dataset.for === step);
+      node.classList.toggle('done', index > -1 && position > -1 && position < index);
+    });
+
+    if (COPY[step]) {
+      els.title.textContent = COPY[step][0];
+      els.sub.textContent = COPY[step][1];
+    }
+    var first = document.querySelector('.qcft-panel.show .qcft-input, .qcft-panel.show .qcft-code input');
+    if (first && window.innerWidth > 720) { first.focus(); }
+  }
+
+  /* Signed-in customers never see the two email steps. */
+  function applyState(next) {
+    if (!next) { return; }
+    state = Object.assign(state, next);
+
+    if (next.blocked_reason) {
+      document.getElementById('qcft-blocked-reason').textContent = next.blocked_reason;
+      document.getElementById('qcft-steps').style.display = 'none';
+      els.title.textContent = COPY.blocked[0];
+      els.sub.textContent = COPY.blocked[1];
+      render('blocked');
+      return;
+    }
+
+    if (next.completed_order_id) {
+      var link = document.getElementById('qcft-goto-service');
+      link.href = root.dataset.serviceUrl + '/' + next.completed_order_id;
+      render('done');
+      return;
+    }
+    if (next.step === 'review') { loadReview(); return; }
+    render(next.step);
+  }
+
+  /* ---------------- step 1 & 2: email code ---------------- */
+
+  var codeInputs = Array.prototype.slice.call(document.querySelectorAll('#qcft-code input'));
+
+  function readCode() { return codeInputs.map(function (i) { return i.value; }).join(''); }
+  function clearCode() {
+    codeInputs.forEach(function (i) { i.value = ''; i.classList.remove('filled'); });
+    if (codeInputs[0]) { codeInputs[0].focus(); }
+  }
+
+  codeInputs.forEach(function (input, index) {
+    input.addEventListener('input', function () {
+      input.value = input.value.replace(/\D/g, '').slice(0, 1);
+      input.classList.toggle('filled', input.value !== '');
+      if (input.value && index < codeInputs.length - 1) { codeInputs[index + 1].focus(); }
+      if (readCode().length === 6) { verifyCode(); }
+    });
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Backspace' && !input.value && index > 0) { codeInputs[index - 1].focus(); }
+    });
+    input.addEventListener('paste', function (event) {
+      event.preventDefault();
+      var digits = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      digits.split('').forEach(function (digit, position) {
+        if (codeInputs[position]) { codeInputs[position].value = digit; codeInputs[position].classList.add('filled'); }
+      });
+      if (digits.length === 6) { verifyCode(); }
+    });
+  });
+
+  var resendTimer = null;
+  function startResendCountdown(seconds) {
+    var button = document.getElementById('qcft-resend');
+    var left = seconds || 60;
+    clearInterval(resendTimer);
+    button.disabled = true;
+    function tick() {
+      button.textContent = left > 0
+        ? '{{ 'Resend in'|trans|e('js') }} ' + left + 's'
+        : '{{ 'Resend code'|trans|e('js') }}';
+      if (left <= 0) { button.disabled = false; clearInterval(resendTimer); }
+      left -= 1;
+    }
+    tick();
+    resendTimer = setInterval(tick, 1000);
+  }
+
+  function sendCode(button) {
+    var email = document.getElementById('qcft-email').value.trim();
+    if (!email) { showError('{{ 'Please enter your email address.'|trans|e('js') }}'); return; }
+    clearAlerts();
+    busy(button, true);
+    call('request_code', { email: email }).then(function (result) {
+      busy(button, false);
+      document.getElementById('qcft-code-email').textContent = email;
+      clearCode();
+      render('code');
+      showOk('{{ 'Code sent. Check your inbox — and your spam folder just in case.'|trans|e('js') }}');
+      startResendCountdown(result && result.resend_after ? result.resend_after : 60);
+    }).catch(function (error) { busy(button, false); showError(error.message); });
+  }
+
+  function verifyCode() {
+    var button = document.getElementById('qcft-verify-code');
+    var code = readCode();
+    if (code.length !== 6) { showError('{{ 'Please enter all six digits.'|trans|e('js') }}'); return; }
+    clearAlerts();
+    busy(button, true);
+    call('verify_code', { email: document.getElementById('qcft-email').value.trim(), code: code })
+      .then(function (result) { busy(button, false); applyState(result); })
+      .catch(function (error) { busy(button, false); clearCode(); showError(error.message); });
+  }
+
+  /* ---------------- steps 3-5 ---------------- */
+
+  function submitStep(button, method, payload, onDone) {
+    clearAlerts();
+    busy(button, true);
+    call(method, payload).then(function (result) {
+      busy(button, false);
+      if (onDone) { onDone(result); } else { applyState(result); }
+    }).catch(function (error) { busy(button, false); showError(error.message); });
+  }
+
+  /* ---------------- step 6: review ---------------- */
+
+  function reviewRow(label, value, isBadge) {
+    return '<div class="qcft-review-row"><dt>' + escapeHtml(label) + '</dt><dd>' +
+      (isBadge ? '<span class="qcft-badge-free">' + escapeHtml(value) + '</span>' : escapeHtml(value)) +
+      '</dd></div>';
+  }
+
+  function loadReview() {
+    render('review');
+    var container = document.getElementById('qcft-review');
+    container.innerHTML = '<div class="qcft-review-row"><dt>{{ 'Loading your summary…'|trans|e('js') }}</dt><dd></dd></div>';
+    call('review', {}).then(function (r) {
+      container.innerHTML =
+        reviewRow('{{ 'Plan'|trans|e('js') }}', r.plan) +
+        reviewRow('{{ 'Price'|trans|e('js') }}', r.price, true) +
+        reviewRow('{{ 'Trial length'|trans|e('js') }}', r.trial_days + ' {{ 'days'|trans|e('js') }}') +
+        reviewRow('{{ 'Domain'|trans|e('js') }}', r.domain) +
+        reviewRow('{{ 'Email'|trans|e('js') }}', r.email) +
+        reviewRow('{{ 'WhatsApp'|trans|e('js') }}', r.whatsapp) +
+        (r.name ? reviewRow('{{ 'Account name'|trans|e('js') }}', r.name) : '') +
+        reviewRow('{{ 'Starts'|trans|e('js') }}', r.starts_on) +
+        reviewRow('{{ 'Ends'|trans|e('js') }}', r.ends_on);
+    }).catch(function (error) {
+      container.innerHTML = '';
+      showError(error.message);
+    });
+  }
+
+  document.getElementById('qcft-agree').addEventListener('change', function () {
+    document.getElementById('qcft-provision').disabled = !this.checked;
+  });
+
+  /* ---------------- step 7: provisioning ---------------- */
+
+  var TASK_COPY = [
+    '{{ 'Setting up your customer account…'|trans|e('js') }}',
+    '{{ 'Reserving your starter hosting plan…'|trans|e('js') }}',
+    '{{ 'Creating the account on our DirectAdmin server…'|trans|e('js') }}',
+    '{{ 'Issuing SSL and preparing your mailboxes…'|trans|e('js') }}',
+    '{{ 'Almost there — opening your service dashboard…'|trans|e('js') }}'
+  ];
+
+  function runLoader() {
+    var tasks = Array.prototype.slice.call(document.querySelectorAll('#qcft-tasks li'));
+    var text = document.getElementById('qcft-loader-text');
+    var index = 0;
+    els.loader.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    function advance() {
+      if (index > 0) { tasks[index - 1].classList.remove('active'); tasks[index - 1].classList.add('done'); }
+      if (index >= tasks.length) { return; }
+      tasks[index].classList.add('active');
+      text.textContent = TASK_COPY[index];
+      // Stop short of 100% — the real completion fills the bar.
+      els.bar.style.width = Math.min(92, (index + 1) * 19) + '%';
+      index += 1;
+    }
+
+    advance();
+    var timer = setInterval(function () {
+      if (index >= tasks.length) { clearInterval(timer); return; }
+      advance();
+    }, 4200);
+
+    return {
+      finish: function () {
+        clearInterval(timer);
+        tasks.forEach(function (task) { task.classList.remove('active'); task.classList.add('done'); });
+        els.bar.style.width = '100%';
+        document.getElementById('qcft-loader-title').textContent = '{{ 'Your hosting account is ready'|trans|e('js') }}';
+        text.textContent = '{{ 'Taking you to your service details…'|trans|e('js') }}';
+      },
+      fail: function () {
+        clearInterval(timer);
+        els.loader.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    };
+  }
+
+  document.getElementById('qcft-provision').addEventListener('click', function () {
+    var button = this;
+    clearAlerts();
+    busy(button, true);
+    var loader = runLoader();
+
+    call('provision', {}).then(function (result) {
+      loader.finish();
+      setTimeout(function () {
+        // Trials are ordinary services — land on the normal details page.
+        var target = (result && result.redirect_url) || root.dataset.orderUrl;
+        try { window.top.location.href = target; } catch (e) { window.location.href = target; }
+      }, 1500);
+    }).catch(function (error) {
+      loader.fail();
+      busy(button, false);
+      showError(error.message);
+    });
+  });
+
+  /* ---------------- wiring ---------------- */
+
+  document.getElementById('qcft-send-code').addEventListener('click', function () { sendCode(this); });
+  document.getElementById('qcft-verify-code').addEventListener('click', verifyCode);
+  document.getElementById('qcft-resend').addEventListener('click', function () {
+    sendCode(document.getElementById('qcft-send-code'));
+  });
+  document.getElementById('qcft-change-email').addEventListener('click', function () {
+    clearAlerts(); clearCode(); render('email');
+  });
+
+  document.getElementById('qcft-save-whatsapp').addEventListener('click', function () {
+    submitStep(this, 'set_whatsapp', { whatsapp: document.getElementById('qcft-whatsapp').value.trim() });
+  });
+  // Typing a full international number makes the local +94 prefix misleading.
+  (function () {
+    var input = document.getElementById('qcft-whatsapp');
+    var prefix = input.parentNode.querySelector('span');
+    input.addEventListener('input', function () {
+      prefix.style.display = input.value.trim().charAt(0) === '+' ? 'none' : 'grid';
+    });
+  })();
+  document.getElementById('qcft-save-domain').addEventListener('click', function () {
+    submitStep(this, 'set_domain', { domain: document.getElementById('qcft-domain').value.trim() });
+  });
+  document.getElementById('qcft-save-account').addEventListener('click', function () {
+    submitStep(this, 'set_account', {
+      first_name: document.getElementById('qcft-first').value.trim(),
+      last_name: document.getElementById('qcft-last').value.trim(),
+      password: document.getElementById('qcft-pass').value,
+      password_confirm: document.getElementById('qcft-pass2').value
+    });
+  });
+  document.getElementById('qcft-restart').addEventListener('click', function () {
+    clearAlerts();
+    call('reset', {}).then(applyState).catch(function (error) { showError(error.message); });
+  });
+
+  // Enter advances the visible step.
+  root.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter') { return; }
+    var panel = document.querySelector('.qcft-panel.show');
+    if (!panel || !panel.contains(event.target)) { return; }
+    var button = panel.querySelector('.qcft-btn-primary');
+    if (button && !button.disabled) { event.preventDefault(); button.click(); }
+  });
+
+  // Paint the server's opening step immediately so there is no blank card,
+  // then reconcile with a fresh authoritative state.
+  render(state.step && COPY[state.step] ? state.step : 'email');
+  call('state', {}).then(applyState).catch(function () { render(state.step || 'email'); });
+})();
+</script>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "layout_default.html.twig" %}
+{% set active_menu = 'order' %}
+{% block meta_title %}Free Trials{% endblock %}
+{% block content %}
+{% set stats = admin.quizontalfreetrial_stats %}
+{% set health = admin.quizontalfreetrial_diagnose %}
+
+{% if not health.ready %}
+<div class="alert alert-warning">
+  <h4 class="alert-title">The free trial cannot provision yet</h4>
+  <ul class="mb-0">
+    {% for problem in health.problems %}<li>{{ problem }}</li>{% endfor %}
+  </ul>
+  <div class="mt-2 small">
+    Fix these on <a href="{{ ('product/manage/' ~ health.product_id)|alink }}">the trial product</a>,
+    then reload this page. Trial product ID is set in
+    <a href="{{ 'extension/settings/quizontalfreetrial'|alink }}">the module settings</a>.
+  </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+  Provisioning is ready — <strong>{{ health.product_title }}</strong> (product #{{ health.product_id }})
+  on the <strong>{{ health.server_manager }}</strong> server manager.
+</div>
+{% endif %}
+
+<div class="row row-cards mb-3">
+  <div class="col-6 col-md-3"><div class="card"><div class="card-body text-center"><div class="h1 m-0">{{ stats.active|default(0) }}</div><div class="text-muted">Active trials</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card"><div class="card-body text-center"><div class="h1 m-0">{{ stats.suspended|default(0) }}</div><div class="text-muted">Suspended</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card"><div class="card-body text-center"><div class="h1 m-0">{{ stats.terminated|default(0) }}</div><div class="text-muted">Terminated</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card"><div class="card-body text-center"><div class="h1 m-0">{{ stats.total|default(0) }}</div><div class="text-muted">All time</div></div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">Free trial register</h2>
+      <p class="card-subtitle">Every row permanently blocks a second trial for that email, WhatsApp number and domain.</p>
+    </div>
+    <div class="ms-auto">
+      <a class="btn btn-outline-secondary btn-sm api-link"
+         href="{{ 'api/admin/quizontalfreetrial/run_lifecycle'|link({ 'CSRFToken': CSRFToken }) }}"
+         data-api-confirm="{{ 'Process reminders, suspensions and terminations now?'|trans }}"
+         data-api-reload="1">Run lifecycle now</a>
+    </div>
+  </div>
+
+  <div class="card-body border-bottom py-2">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-auto">
+        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+          <option value="">All statuses</option>
+          {% for value in ['active','suspended','terminated','failed','provisioning'] %}
+            <option value="{{ value }}" {% if request.status == value %}selected{% endif %}>{{ value|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <input class="form-control form-control-sm" type="search" name="search" value="{{ request.search }}" placeholder="Email, domain or number">
+      </div>
+      <div class="col-auto"><button class="btn btn-sm" type="submit">Filter</button></div>
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-vcenter">
+      <thead><tr>
+        <th>ID</th><th>Customer</th><th>Domain</th><th>WhatsApp</th>
+        <th>Status</th><th>Ends</th><th>Order</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% set trials = admin.quizontalfreetrial_get_list({per_page: 100, status: request.status, search: request.search}) %}
+      {% for item in trials.list %}
+        <tr>
+          <td>#{{ item.id }}</td>
+          <td>
+            {% if item.client_id %}<a href="{{ ('client/manage/' ~ item.client_id)|alink }}">{{ item.client_name|trim|default(item.email) }}</a>
+            {% else %}{{ item.first_name }} {{ item.last_name }}{% endif %}
+            <div class="small text-muted">{{ item.email }}</div>
+          </td>
+          <td><code>{{ item.domain }}</code></td>
+          <td>{{ item.whatsapp }}</td>
+          <td>
+            {% if item.status == 'active' %}<span class="badge bg-green-lt">Active</span>
+            {% elseif item.status == 'suspended' %}<span class="badge bg-orange-lt">Suspended</span>
+            {% elseif item.status == 'terminated' %}<span class="badge bg-red-lt">Terminated</span>
+            {% elseif item.status == 'failed' %}<span class="badge bg-red-lt" title="{{ item.last_error }}">Failed</span>
+            {% else %}<span class="badge">{{ item.status }}</span>{% endif %}
+          </td>
+          <td>{% if item.expires_at %}{{ item.expires_at|format_date }}{% else %}—{% endif %}</td>
+          <td>{% if item.order_id %}<a href="{{ ('order/manage/' ~ item.order_id)|alink }}">#{{ item.order_id }}</a>{% else %}—{% endif %}</td>
+          <td class="text-end">
+            {% if item.status in ['active','suspended'] %}
+              <a class="btn btn-sm api-link"
+                 href="{{ 'api/admin/quizontalfreetrial/extend'|link({ 'id': item.id, 'days': 7, 'CSRFToken': CSRFToken }) }}"
+                 data-api-confirm="{{ 'Give this customer 7 more trial days?'|trans }}"
+                 data-api-reload="1">+7 days</a>
+              <a class="btn btn-sm btn-outline-danger api-link"
+                 href="{{ 'api/admin/quizontalfreetrial/terminate'|link({ 'id': item.id, 'CSRFToken': CSRFToken }) }}"
+                 data-api-confirm="{{ 'Cancel this trial and delete the hosting account?'|trans }}"
+                 data-api-confirm-btn="{{ 'Terminate'|trans }}"
+                 data-api-confirm-btn-color="danger"
+                 data-api-reload="1">Terminate</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted">No free trials yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

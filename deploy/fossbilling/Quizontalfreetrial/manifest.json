@@ -1,0 +1,10 @@
+{
+  "id": "quizontalfreetrial",
+  "type": "mod",
+  "name": "Quizontal Cloud Free Trial",
+  "description": "Secure seven-day starter hosting trial: email-code wizard, WhatsApp validation, existing-domain step, one trial per customer, and automatic DirectAdmin provisioning.",
+  "icon_url": "icon.svg",
+  "author": "Quizontal Cloud",
+  "license": "Proprietary",
+  "version": "1.0.0"
+}

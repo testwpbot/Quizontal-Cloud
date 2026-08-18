@@ -1,0 +1,113 @@
+{% extends "layout_default.html.twig" %}
+{% set active_menu = 'system' %}
+{% set params = admin.extension_config_get({ext: 'mod_quizontalfreetrial'}) %}
+{% set health = admin.quizontalfreetrial_diagnose %}
+{% block meta_title %}Quizontal Cloud Free Trial Settings{% endblock %}
+{% block content %}
+
+{% if not health.ready %}
+<div class="alert alert-warning">
+  <h4 class="alert-title">Provisioning is not ready</h4>
+  <ul class="mb-0">{% for problem in health.problems %}<li>{{ problem }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">Quizontal Cloud Free Trial</h2>
+      <p class="card-subtitle">Customer wizard: <code>{{ 'free-trial'|link }}</code></p>
+    </div>
+  </div>
+
+  <form method="post" action="{{ 'api/admin/extension/config_save'|link }}" class="api-form" data-api-msg="{{ 'Configuration updated'|trans }}">
+    <input type="hidden" name="CSRFToken" value="{{ CSRFToken }}">
+    <input type="hidden" name="ext" value="mod_quizontalfreetrial">
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-check form-switch">
+            <input type="hidden" name="enabled" value="0">
+            <input class="form-check-input" type="checkbox" name="enabled" value="1" {% if params.enabled|default(1) %}checked{% endif %}>
+            <span class="form-check-label">Accept new free trial signups</span>
+          </label>
+          <div class="form-hint">Turning this off leaves existing trials running but closes the wizard to new customers.</div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Trial product ID</label>
+          <input class="form-control" type="number" min="1" name="product_id" value="{{ params.product_id|default(98) }}" required>
+          <small class="form-hint">Must be an enabled <strong>hosting</strong> product with a DirectAdmin server and a hosting plan selected on its configuration tab.</small>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Trial length (days)</label>
+          <input class="form-control" type="number" min="1" max="90" name="trial_days" value="{{ params.trial_days|default(7) }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Grace period before deletion (days)</label>
+          <input class="form-control" type="number" min="0" max="90" name="grace_days" value="{{ params.grace_days|default(7) }}" required>
+          <small class="form-hint">Days a suspended trial is kept before the hosting account is deleted. <code>0</code> deletes immediately at expiry.</small>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Reminder sent this many days before the end</label>
+          <input class="form-control" type="number" min="0" max="30" name="reminder_days_before" value="{{ params.reminder_days_before|default(2) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Code validity (minutes)</label>
+          <input class="form-control" type="number" min="2" max="120" name="code_ttl_minutes" value="{{ params.code_ttl_minutes|default(15) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Seconds between resends</label>
+          <input class="form-control" type="number" min="15" max="600" name="code_resend_seconds" value="{{ params.code_resend_seconds|default(60) }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Maximum code attempts</label>
+          <input class="form-control" type="number" min="3" max="20" name="code_max_attempts" value="{{ params.code_max_attempts|default(6) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Maximum codes per email per hour</label>
+          <input class="form-control" type="number" min="1" max="20" name="code_max_sends_per_hour" value="{{ params.code_max_sends_per_hour|default(5) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Maximum trials per IP per day</label>
+          <input class="form-control" type="number" min="0" max="50" name="ip_max_trials_per_day" value="{{ params.ip_max_trials_per_day|default(3) }}">
+          <small class="form-hint"><code>0</code> disables the IP throttle.</small>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Default country code for WhatsApp</label>
+          <input class="form-control" name="default_country_code" value="{{ params.default_country_code|default('94') }}">
+          <small class="form-hint">Applied when a customer types a local number such as <code>0771234567</code>.</small>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Storefront URL</label>
+          <input class="form-control" name="storefront_url" value="{{ params.storefront_url }}" placeholder="https://quizontalcloud.lk">
+          <small class="form-hint">Blocked as a trial domain so nobody can claim one of our own host names.</small>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Terms note shown on the review screen</label>
+          <textarea class="form-control" name="terms_note" rows="2">{{ params.terms_note|default('One free trial per customer. No payment details required. Your account is suspended when the trial ends unless you upgrade.') }}</textarea>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer"><button class="btn btn-primary" type="submit">Save settings</button></div>
+  </form>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header"><h3 class="card-title">Protections in force</h3></div>
+  <div class="card-body">
+    <ul class="mb-0">
+      <li>Email addresses are normalised before the duplicate check, so <code>a.b+trial@gmail.com</code> and <code>ab@gmail.com</code> count as one customer.</li>
+      <li>The WhatsApp number is stored in E.164 form, so formatting cannot be used to claim a second trial.</li>
+      <li>The domain must not already exist as a hosting account, a pending order, or an earlier trial.</li>
+      <li>Database UNIQUE keys on email, WhatsApp and domain are the final gate against concurrent submissions.</li>
+      <li>Trial records are never deleted — a terminated trial still blocks a repeat signup.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% block subject %}Your {{ trial.domain }} free trial is live{% endblock %}
+{% block content %}
+<div style="margin:0;padding:28px;background:#f5f6f8;font-family:Arial,sans-serif;color:#20242b">
+  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden">
+    <div style="height:5px;background:#e31c64"></div>
+    <div style="padding:28px">
+      <div style="font-size:22px;font-weight:700;margin-bottom:8px">Quizontal Cloud</div>
+      <h1 style="font-size:24px;margin:24px 0 8px">Your free trial is ready, {{ c.first_name }}</h1>
+      <p style="color:#6b7280;line-height:1.6;margin-top:0">Your starter hosting account has been created and is running right now. Everything below is already active — no payment details were taken.</p>
+
+      <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fafafa;border-radius:10px">
+        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Domain</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.domain }}</td></tr>
+        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Trial started</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.starts_at|date('j M Y') }}</td></tr>
+        <tr><td style="padding:12px;border-bottom:1px solid #e7e8eb;color:#6b7280">Trial ends</td><td style="padding:12px;border-bottom:1px solid #e7e8eb;font-weight:700">{{ trial.expires_at|date('j M Y') }}</td></tr>
+        <tr><td style="padding:12px;color:#6b7280">Cost</td><td style="padding:12px;font-weight:700;color:#20c997">Free</td></tr>
+      </table>
+
+      <a href="{{ service_url }}" style="display:inline-block;padding:12px 18px;background:#e31c64;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Open my hosting account</a>
+
+      <h2 style="font-size:17px;margin:30px 0 8px">Next step: point your domain to us</h2>
+      <p style="color:#6b7280;line-height:1.6;margin-top:0">
+        Open your service page above to find your control panel login, nameservers and server IP address.
+        Update the nameservers at your domain registrar and <strong>{{ trial.domain }}</strong> will start serving from Quizontal Cloud, usually within a few hours.
+      </p>
+
+      <p style="margin:26px 0 0;color:#8a8f98;font-size:13px;line-height:1.5">
+        We will remind you before the trial ends. If you decide to keep your site, upgrade from your dashboard and nothing is interrupted.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

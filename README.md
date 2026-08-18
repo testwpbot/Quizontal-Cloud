@@ -68,6 +68,12 @@ Create a separate MySQL database/user first, complete FossBilling's web installe
 
 An installable FossBilling module for private receipt uploads and administrator approval is included in `deploy/fossbilling/Quizontalbanktransfer`. Customers pay the exact order invoice by bank transfer and the service activates on approval; standalone wallet top-ups remain supported. Follow [`deploy/QUIZONTAL_BANK_TRANSFER.md`](deploy/QUIZONTAL_BANK_TRANSFER.md) to install and configure it.
 
+## Seven-day starter hosting trial
+
+`deploy/fossbilling/Quizontalfreetrial` adds a self-service free trial of the starter package at `https://billing.example.com/free-trial`: a secure email-code wizard, WhatsApp validation, an existing-domain step, a final review screen, and automatic DirectAdmin provisioning behind a progress loader. The customer lands on the ordinary service details page, already signed in.
+
+One trial per customer is enforced on the normalised email, the E.164 WhatsApp number, the domain and the client account, backed by database UNIQUE keys. Reminder, suspension and termination emails run from the standard FossBilling cron. Follow [`deploy/QUIZONTAL_FREE_TRIAL.md`](deploy/QUIZONTAL_FREE_TRIAL.md) to install and configure it.
+
 ## Scheduled updates
 
 Run this daily as the web-server user after Laravel is installed:

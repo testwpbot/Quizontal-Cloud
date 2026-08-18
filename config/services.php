@@ -51,6 +51,9 @@ return [
         'order_url' => env('FOSSBILLING_ORDER_URL'),
         'domain_order_url' => env('FOSSBILLING_DOMAIN_ORDER_URL'),
         'admin_api_key' => env('FOSSBILLING_ADMIN_API_KEY'),
+        // Seven-day starter trial wizard served by the Quizontalfreetrial
+        // FOSSBilling module. Blank hides the storefront call to action.
+        'free_trial_url' => env('FOSSBILLING_FREE_TRIAL_URL'),
     ],
 
     'porkbun' => [
