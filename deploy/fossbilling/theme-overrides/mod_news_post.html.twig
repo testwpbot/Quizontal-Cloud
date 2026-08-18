@@ -53,7 +53,11 @@
 
     <div class="qc-news-article">
         {% if post.image %}<img src="{{ post.image }}" alt="{{ post.title }}">{% endif %}
-        <div class="pt-1">{{ post.content|markdown }}</div>
+        {# The admin editor is CKEditor, so posts are stored as HTML. Core pipes
+           them through |markdown, whose parser is configured with
+           html_input => 'escape', which renders the tags as visible text.
+           Announcements are written by staff only, so output the HTML. #}
+        <div class="pt-1">{{ post.content|raw }}</div>
         {% if guest.extension_is_on({ "mod": "comment" }) %}{{ include('mod_comment_block.html.twig') }}{% endif %}
     </div>
 {% endblock %}

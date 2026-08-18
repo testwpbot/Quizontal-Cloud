@@ -51,10 +51,12 @@
                         {{ post.updated_at|format_datetime }}
                     </span>
                     <p class="qc-news-excerpt mb-0">
+                        {# Strip tags before truncating: cutting HTML at 200
+                           characters can slice a tag in half and break the page. #}
                         {% if post.excerpt %}
-                            {{ post.excerpt|truncate(200)|markdown }}
+                            <p>{{ post.excerpt|striptags|truncate(200) }}</p>
                         {% else %}
-                            {{ post.content|truncate(200)|markdown }}
+                            <p>{{ post.content|striptags|truncate(200) }}</p>
                         {% endif %}
                     </p>
                     <span class="qc-news-link mt-2">{{ 'Continue reading'|trans }}
