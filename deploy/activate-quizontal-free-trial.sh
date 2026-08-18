@@ -120,6 +120,13 @@ else
     echo '      Activate Extensions -> Redirect and re-run this script to publish /free-trial.' >&2
 fi
 
+# template_reset only helps when FOSSBilling can find the module file. Rows
+# generated while the files were missing keep a subject derived from the action
+# code ("Mod Quizontalfreetrial Code") and drop the verification code from the
+# subject line, so repair them directly as well.
+REPAIRED=$(api_post_soft 'quizontalfreetrial/repair_email_templates' '{}')
+jq -r '.result[]? | "Repaired email template: " + .' <<<"$REPAIRED" 2>/dev/null || true
+
 echo
 echo 'Checking that the trial product can actually provision…'DIAGNOSIS=$(api_post_soft 'quizontalfreetrial/diagnose' '{}')
 if [[ $(jq -r '.result.ready // false' <<<"$DIAGNOSIS" 2>/dev/null) == 'true' ]]; then

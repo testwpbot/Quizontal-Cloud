@@ -5,7 +5,9 @@
 
     <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;color:#1c1f26">Quizontal&nbsp;Cloud</div>
 
-    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 14px">Here is your verification code</div>
+    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 18px">Here is your verification code</div>
+
+    <div style="font-size:15px;line-height:1.7;color:#1c1f26;margin:0 0 16px">{% if first_name %}Hi {{ first_name }},{% else %}Hello there,{% endif %}</div>
 
     <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0">
       Enter this code on the free trial page to confirm your email address and continue setting up your {{ trial_days|default(7) }}-day trial.

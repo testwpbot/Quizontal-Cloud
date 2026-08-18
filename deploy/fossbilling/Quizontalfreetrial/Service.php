@@ -321,7 +321,7 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         $row->updated_at = date('Y-m-d H:i:s', $now);
         $this->di['db']->store($row);
 
-        $this->sendCodeEmail($email, $code, $config['code_ttl_minutes']);
+        $this->sendCodeEmail($email, $code, $config['code_ttl_minutes'], $client);
 
         // Remember the pending address so the browser cannot verify a code that
         // was issued to a different mailbox in another tab. Verification itself
@@ -1273,41 +1273,107 @@ class Service implements \FOSSBilling\InjectionAwareInterface
      * Email
      * ===================================================================== */
 
+    /** Canonical subjects, used to repair rows FOSSBilling generated blind. */
+    private const EMAIL_SUBJECTS = [
+        'mod_quizontalfreetrial_code' => 'Your Quizontal Cloud verification code is {{ verification_code }}',
+        'mod_quizontalfreetrial_ready' => 'Your free trial for {{ trial.domain }} is live',
+        'mod_quizontalfreetrial_reminder' => "Your free trial for {{ trial.domain }} ends on {{ trial.expires_at|date('j M') }}",
+        'mod_quizontalfreetrial_expired' => 'Your free trial has ended — {{ trial.domain }} is suspended',
+        'mod_quizontalfreetrial_terminated' => 'Your trial hosting account for {{ trial.domain }} has been removed',
+    ];
+
     /**
      * FOSSBilling creates the email_template row the first time a template is
-     * needed, and falls back to a generated subject ("Mod Quizontalfreetrial
-     * Code") whenever it cannot read the module file — which happens if the
-     * row was generated before the module files were in place. That row then
-     * persists forever and silently drops the code from the subject line.
+     * needed, and when it cannot read the module file it falls back to a
+     * subject derived from the action code ("Mod Quizontalfreetrial Code").
+     * That happens whenever the row is generated before the files are in
+     * place, and email_template rows persist forever — so the placeholder
+     * subject survives every later reinstall and the code never reaches the
+     * subject line.
      *
-     * Rebuild it from the shipped file whenever the placeholder is missing.
+     * Repairing through resetTemplateByCode() depends on that same file
+     * discovery, so the subject is written directly instead: deterministic,
+     * and independent of where the module happens to be installed.
+     *
+     * Returns the codes that were repaired.
      */
-    private function ensureCodeTemplateIsCurrent(): void
+    public function repairEmailTemplates(): array
     {
-        $this->safely(function (): void {
-            $template = $this->di['db']->findOne('EmailTemplate', 'action_code = ?', ['mod_quizontalfreetrial_code']);
+        $repaired = [];
+
+        foreach (self::EMAIL_SUBJECTS as $code => $subject) {
+            $template = $this->di['db']->findOne('EmailTemplate', 'action_code = ?', [$code]);
             if (!$template instanceof \Model_EmailTemplate) {
-                return;
+                continue;
             }
 
-            $needsReset = !str_contains((string) $template->subject, 'verification_code')
-                || !str_contains((string) $template->content, 'verification_code');
+            $changed = false;
 
-            if ($needsReset) {
-                $this->di['mod_service']('email')->resetTemplateByCode('mod_quizontalfreetrial_code');
-                $this->di['logger']->info('Rebuilt the free trial verification email template from its shipped file');
+            // A subject that lost its placeholders is a generated stub.
+            if (!str_contains((string) $template->subject, '{{')) {
+                $template->subject = $subject;
+                $changed = true;
             }
-        });
+
+            // Pull the body back from the shipped file when it looks generated
+            // (FOSSBilling seeds those with a bare variable listing).
+            if (!str_contains((string) $template->content, '<div')) {
+                $body = $this->emailBodyFromFile($code);
+                if ($body !== null) {
+                    $template->content = $body;
+                    $changed = true;
+                }
+            }
+
+            if (!$template->enabled) {
+                $template->enabled = 1;
+                $changed = true;
+            }
+
+            if ($changed) {
+                $this->di['db']->store($template);
+                $repaired[] = $code;
+            }
+        }
+
+        if ($repaired !== []) {
+            $this->di['logger']->info('Repaired free trial email templates: %s', implode(', ', $repaired));
+        }
+
+        return $repaired;
     }
 
-    private function sendCodeEmail(string $email, string $code, int $ttlMinutes): void
+    /** Reads the {% block content %} body out of a shipped template file. */
+    private function emailBodyFromFile(string $code): ?string
     {
-        $this->ensureCodeTemplateIsCurrent();
+        $path = __DIR__ . '/html_email/' . $code . '.html.twig';
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        $template = (string) file_get_contents($path);
+        if (preg_match('/{%.?block content.?%}((.*?\n)+){%.?endblock.?%}/m', $template, $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1];
+    }
+
+    private function sendCodeEmail(string $email, string $code, int $ttlMinutes, ?\Model_Client $client = null): void
+    {
+        $this->safely(fn () => $this->repairEmailTemplates());
+
+        // A guest has not told us their name yet — it is collected after
+        // verification — so the greeting falls back to a neutral one.
+        $firstName = $client instanceof \Model_Client
+            ? trim((string) $client->first_name)
+            : trim((string) ($this->readState()['first_name'] ?? ''));
 
         $sent = $this->di['mod_service']('email')->sendTemplate([
             'to' => $email,
-            'to_name' => 'Quizontal Cloud customer',
+            'to_name' => $firstName !== '' ? $firstName : 'Quizontal Cloud customer',
             'code' => 'mod_quizontalfreetrial_code',
+            'first_name' => $firstName,
             'verification_code' => $code,
             'expires_minutes' => $ttlMinutes,
             'trial_days' => $this->getConfig()['trial_days'],

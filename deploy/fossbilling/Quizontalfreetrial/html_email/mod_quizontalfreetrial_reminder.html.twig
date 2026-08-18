@@ -5,10 +5,12 @@
 
     <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;color:#1c1f26">Quizontal&nbsp;Cloud</div>
 
-    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 14px">Your trial ends on {{ trial.expires_at|date('j M Y') }}</div>
+    <div style="font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-0.4px;margin:34px 0 18px">Your trial ends on {{ trial.expires_at|date('j M Y') }}</div>
+
+    <div style="font-size:15px;line-height:1.7;color:#1c1f26;margin:0 0 16px">Hi {{ c.first_name }},</div>
 
     <div style="font-size:15px;line-height:1.7;color:#5b6270;margin:0 0 30px">
-      Hello {{ c.first_name }}, your free hosting trial for {{ trial.domain }} finishes in
+      Your free hosting trial for {{ trial.domain }} finishes in
       {{ trial.days_left > 1 ? trial.days_left ~ ' days' : 'less than a day' }}.
       Upgrade before then and your site keeps running without a second of downtime.
     </div>

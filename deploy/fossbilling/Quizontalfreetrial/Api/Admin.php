@@ -65,6 +65,18 @@ class Admin extends \Api_Abstract
     }
 
     /**
+     * Rewrites any email template row FOSSBilling generated blind (a subject
+     * derived from the action code, a placeholder body) from the files shipped
+     * with this module. Returns the codes that were repaired.
+     */
+    public function repair_email_templates($data = []): array
+    {
+        $this->di['mod_service']('Staff')->checkPermissionsAndThrowException('quizontalfreetrial', 'manage');
+
+        return $this->getService()->repairEmailTemplates();
+    }
+
+    /**
      * Runs reminder/suspension/termination immediately instead of waiting for
      * the next cron tick. Safe to call repeatedly — every step is idempotent.
      */
