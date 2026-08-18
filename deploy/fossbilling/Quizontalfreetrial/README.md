@@ -7,7 +7,7 @@ page, without a payment method and without staff involvement.
 ## What the customer sees
 
 1. **Email** — enter an address; a six-digit code is emailed immediately.
-2. **Verify** — the code is typed into six auto-advancing boxes (paste works too).
+2. **Verify** — an 8-character code mixing capitals, small letters, digits and symbols, compared case-sensitively. Pasting submits immediately; typing does not, so a slip never burns an attempt.
 3. **WhatsApp** — number is normalised to E.164 and checked for reuse.
 4. **Domain** — an existing domain the customer already owns.
 5. **Account** — first/last name and a password (skipped for signed-in customers).
@@ -163,6 +163,12 @@ number and end date, and offers:
 Codes are stored with the same password hasher FOSSBilling uses for accounts, so
 a database leak never exposes a live verification code.
 
+Each code is 8 characters with at least one capital, one small letter, one digit
+and one symbol — roughly 65 bits of entropy, against a 6-attempt limit and a
+15-minute expiry. Visually ambiguous characters (`I l O 0 1`) are excluded so a
+code read off a phone is never mistyped, and `< > & " '` are excluded so it
+survives HTML email and JSON untouched.
+
 ## Where "email verified" is recorded
 
 Three places, each with a different job:
@@ -184,7 +190,7 @@ like a guest, and passing it sets the column so they are never asked again.
 
 | Template | Sent |
 |---|---|
-| `mod_quizontalfreetrial_code` | Verification code — sent immediately, never queued. |
+| `mod_quizontalfreetrial_code` | 8-character verification code — sent immediately, never queued. |
 | `mod_quizontalfreetrial_ready` | Trial activated, with next steps for pointing the domain. |
 | `mod_quizontalfreetrial_reminder` | Before the trial ends. |
 | `mod_quizontalfreetrial_expired` | Trial ended, account suspended, data kept. |

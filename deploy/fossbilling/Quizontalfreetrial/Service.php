@@ -24,6 +24,9 @@ class Service implements \FOSSBilling\InjectionAwareInterface
     /** Wizard state lives here for the duration of the visitor's session. */
     private const SESSION_KEY = 'qc_free_trial_wizard';
 
+    /** Verification codes are 8 characters, mixed case, digits and symbols. */
+    private const CODE_LENGTH = 8;
+
     private const STATUS_PENDING = 'pending';
     private const STATUS_PROVISIONING = 'provisioning';
     private const STATUS_ACTIVE = 'active';
@@ -366,12 +369,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             throw new InformationException('This verification code belongs to a different browser session. Please request a new one.');
         }
 
-        $code = preg_replace('/\D/', '', $code) ?? '';
+        // Only surrounding whitespace is forgiven — the comparison is exact and
+        // case sensitive, because case is part of the code's entropy.
+        $code = trim($code);
         $row->attempts = (int) $row->attempts + 1;
         $row->updated_at = date('Y-m-d H:i:s');
         $this->di['db']->store($row);
 
-        if ($code === '' || !$this->di['password']->verify($code, (string) $row->code_hash)) {
+        if (strlen($code) !== self::CODE_LENGTH || !$this->di['password']->verify($code, (string) $row->code_hash)) {
             $left = max(0, $config['code_max_attempts'] - (int) $row->attempts);
             throw new InformationException($left > 0
                 ? sprintf('That code is not correct. %d attempt%s left.', $left, $left === 1 ? '' : 's')
@@ -1533,9 +1538,40 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $local . '@' . $domain;
     }
 
+    /**
+     * Eight characters mixing upper case, lower case, digits and symbols, with
+     * at least one of each class guaranteed.
+     *
+     * Visually ambiguous characters (I/l/1, O/o/0) are left out so nobody
+     * mistypes a code read off a phone screen, and the symbol set deliberately
+     * avoids < > & " ' so the code survives HTML email and JSON untouched.
+     */
     private function generateCode(): string
     {
-        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $classes = [
+            'ABCDEFGHJKLMNPQRSTUVWXYZ',
+            'abcdefghijkmnpqrstuvwxyz',
+            '23456789',
+            '!@#$%*?+=',
+        ];
+
+        $characters = [];
+        foreach ($classes as $class) {
+            $characters[] = $class[random_int(0, strlen($class) - 1)];
+        }
+
+        $pool = implode('', $classes);
+        for ($i = count($characters); $i < self::CODE_LENGTH; ++$i) {
+            $characters[] = $pool[random_int(0, strlen($pool) - 1)];
+        }
+
+        // Fisher-Yates, so the guaranteed characters are not always first.
+        for ($i = count($characters) - 1; $i > 0; --$i) {
+            $j = random_int(0, $i);
+            [$characters[$i], $characters[$j]] = [$characters[$j], $characters[$i]];
+        }
+
+        return implode('', $characters);
     }
 
     private function sessionFingerprint(): string

@@ -38,11 +38,28 @@
    stock light theme and to signed-in customers inside the dark app shell,
    so it cannot rely on either one's variables.
    ======================================================================= */
-.qcft{--ft-bg:#0b0b12;--ft-card:#13131c;--ft-card-2:#171722;--ft-line:rgba(255,255,255,.08);--ft-text:#f2f3f7;--ft-muted:#9aa1b2;--ft-primary:#e31c64;--ft-primary-2:#ff4d8d;--ft-success:#20c997;--ft-warn:#ffbc35;--ft-danger:#f4113c;
-  position:relative;margin:-1rem -0.75rem;padding:clamp(18px,4vw,44px) clamp(14px,4vw,32px) 64px;background:radial-gradient(1200px 520px at 12% -8%,rgba(227,28,100,.22),transparent 60%),radial-gradient(900px 460px at 92% 4%,rgba(34,211,238,.14),transparent 58%),var(--ft-bg);
-  color:var(--ft-text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;overflow:hidden}
+.qcft{--ft-bg:#0b0b12;--ft-card:#0f0f16;--ft-card-2:#14141d;--ft-line:rgba(255,255,255,.08);--ft-text:#f5f6f8;--ft-muted:#9aa3b2;--ft-primary:#e31c64;--ft-primary-hover:#ee3d80;--ft-primary-2:#ff4d8d;--ft-success:#20c997;--ft-warn:#ffbc35;--ft-danger:#f4113c;
+  position:relative;color:var(--ft-text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .qcft *,.qcft *::before,.qcft *::after{box-sizing:border-box}
 .qcft-wrap{max-width:1080px;margin:0 auto;position:relative;z-index:2}
+/* The app shell paints every <a> rose; the wizard's buttons own their colour. */
+.qcft a.qcft-btn-primary,.qcft a.qcft-btn-primary:hover{color:#fff}
+.qcft a.qcft-btn-ghost{color:var(--ft-text)}
+
+/* Inside the client app shell the page already supplies the dark chrome and
+   pulls .content-inner up under the banner, so the wizard must behave like any
+   other card on that grid: no full-bleed background, no negative margins, and
+   no min-height fighting the shell's own spacing. */
+body.qc-app .qcft{background:none;margin:0;padding:0 0 1.5rem;min-height:0;overflow:visible}
+body.qc-app .qcft-wrap{max-width:none}
+body.qc-app .qcft-card{border-radius:.5rem;box-shadow:0 0 .5rem rgba(0,0,0,.55);background:#0b0b0e}
+body.qc-app .qcft-trust{margin-top:1rem}
+body.qc-app .qcft-foot{margin-top:1.25rem}
+
+/* Guests get the stock light theme with no shell, so the wizard paints its own
+   full-bleed dark hero instead. */
+body:not(.qc-app) .qcft{margin:-1rem -.75rem;padding:clamp(18px,4vw,44px) clamp(14px,4vw,32px) 64px;min-height:100vh;overflow:hidden;
+  background:radial-gradient(1200px 520px at 12% -8%,rgba(227,28,100,.22),transparent 60%),radial-gradient(900px 460px at 92% 4%,rgba(34,211,238,.14),transparent 58%),var(--ft-bg)}
 
 /* ---------- hero ---------- */
 .qcft-hero{text-align:center;margin-bottom:clamp(22px,4vw,38px)}
@@ -92,26 +109,43 @@
 .qcft-prefix .qcft-input{border:0;background:transparent;border-radius:0}
 .qcft-prefix .qcft-input:focus{box-shadow:none;background:transparent}
 
-/* ---------- verification code boxes ---------- */
-.qcft-code{display:flex;gap:clamp(6px,2vw,11px);justify-content:center;margin:6px 0 4px}
-.qcft-code input{width:clamp(40px,12vw,54px);height:clamp(50px,14vw,62px);text-align:center;font-size:clamp(1.15rem,4vw,1.5rem);font-weight:750;border-radius:13px;border:1.5px solid var(--ft-line);background:rgba(255,255,255,.03);color:var(--ft-text);transition:all .18s;-webkit-appearance:none}
-.qcft-code input:focus{outline:none;border-color:var(--ft-primary);box-shadow:0 0 0 4px rgba(227,28,100,.16);transform:translateY(-2px)}
-.qcft-code input.filled{border-color:rgba(227,28,100,.5);background:rgba(227,28,100,.08)}
+/* ---------- verification code ---------- */
+/* One field rather than per-character boxes: the code contains symbols and
+   mixed case, which per-character inputs handle badly on mobile keyboards. */
+.qcft-label-center{text-align:center}
+.qcft-code-input{text-align:center;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:clamp(1.3rem,5vw,1.75rem);font-weight:700;letter-spacing:.34em;text-indent:.34em;padding:16px 15px;height:auto}
+.qcft-code-input::placeholder{letter-spacing:.28em;color:#4d5464}
+.qcft-code-input.complete{border-color:rgba(32,201,151,.55);background:rgba(32,201,151,.07)}
+.qcft-code-meter{margin-top:8px;text-align:center;font-size:.74rem;font-weight:600;color:var(--ft-muted);letter-spacing:.08em}
+.qcft-code-meter.complete{color:var(--ft-success)}
 
 /* ---------- buttons ---------- */
-.qcft-actions{display:flex;gap:11px;align-items:center;margin-top:22px;flex-wrap:wrap}
-.qcft-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 26px;border-radius:12px;border:0;font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .16s,box-shadow .2s,opacity .2s;text-decoration:none;line-height:1.2}
-.qcft-btn-primary{background:linear-gradient(135deg,var(--ft-primary),var(--ft-primary-2));color:#fff;box-shadow:0 10px 26px -10px rgba(227,28,100,.85)}
-.qcft-btn-primary:hover:not(:disabled){transform:translateY(-2px);color:#fff}
-.qcft-btn-ghost{background:transparent;border:1.5px solid var(--ft-line);color:#c8cedb}
-.qcft-btn-ghost:hover:not(:disabled){border-color:rgba(255,255,255,.24);color:#fff}
-.qcft-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+/* Actions are centred as a stack: primary first, secondary link underneath, so
+   the eye lands on the one thing to do next on every step and on every width. */
+.qcft-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:26px}
+.qcft-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:230px;height:50px;padding:0 30px;
+  border-radius:12px;border:1.5px solid transparent;font-size:.93rem;font-weight:700;font-family:inherit;cursor:pointer;
+  transition:background .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease,transform .16s ease;
+  text-decoration:none;line-height:1;white-space:nowrap}
+.qcft-btn-primary{background:var(--ft-primary);border-color:var(--ft-primary);color:#fff;box-shadow:0 10px 26px -12px rgba(227,28,100,.9)}
+.qcft-btn-primary:hover:not(:disabled){background:var(--ft-primary-hover,#ee3d80);border-color:var(--ft-primary-hover,#ee3d80);color:#fff;transform:translateY(-1px)}
+.qcft-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(227,28,100,.32)}
+/* Outlined secondary — same footprint as the primary so they stack evenly. */
+.qcft-btn-ghost{background:transparent;border-color:rgba(255,255,255,.22);color:var(--ft-text)}
+.qcft-btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.42);color:#fff}
+.qcft-btn-ghost:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(255,255,255,.14)}
+.qcft-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .qcft-btn .qcft-spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:qcft-rot .7s linear infinite;display:none}
 .qcft-btn.busy .qcft-spin{display:block}
 @keyframes qcft-rot{to{transform:rotate(360deg)}}
-.qcft-link{background:none;border:0;padding:0;color:var(--ft-primary-2);font-size:.84rem;font-weight:650;cursor:pointer;font-family:inherit;text-decoration:none}
-.qcft-link:hover{text-decoration:underline}
-.qcft-link:disabled{opacity:.5;cursor:not-allowed;text-decoration:none}
+/* Quiet tertiary action. Reset UA button styling so <button> and <a> match. */
+.qcft-link{display:inline-block;background:none;border:0;padding:6px 4px;color:var(--ft-muted);font-size:.85rem;font-weight:600;
+  cursor:pointer;font-family:inherit;text-decoration:none;text-align:center;transition:color .18s ease}
+.qcft-link:hover:not(:disabled){color:var(--ft-primary-2);text-decoration:underline}
+.qcft-link:focus-visible{outline:none;color:var(--ft-primary-2);text-decoration:underline}
+.qcft-link:disabled{opacity:.5;cursor:not-allowed;text-decoration:none;color:var(--ft-muted)}
+@media(max-width:560px){.qcft-btn{width:100%;min-width:0}}
 
 /* ---------- alerts ---------- */
 .qcft-alert{display:none;align-items:flex-start;gap:10px;padding:12px 15px;border-radius:12px;font-size:.86rem;line-height:1.55;margin-bottom:16px}
@@ -247,15 +281,14 @@
       {# ---------- 2. code ---------- #}
       <div class="qcft-panel" data-panel="code">
         <div class="qcft-field">
-          <label>{{ 'Enter the 6-digit code'|trans }}</label>
-          <div class="qcft-code" id="qcft-code">
-            <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
-            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
-            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
-            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
-            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5">
-            <input type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6">
-          </div>
+          <label for="qcft-code" class="qcft-label-center">{{ 'Enter your 8-character code'|trans }}</label>
+          <input class="qcft-input qcft-code-input" type="text" id="qcft-code" maxlength="8"
+                 autocomplete="one-time-code" autocapitalize="off" autocorrect="off" spellcheck="false"
+                 placeholder="••••••••" aria-describedby="qcft-code-help">
+          <div class="qcft-code-meter"><span id="qcft-code-count">0</span>/8</div>
+          <p class="qcft-hint" id="qcft-code-help" style="text-align:center">
+            {{ 'Codes mix capitals, small letters, numbers and symbols — type it exactly as shown, including capitals.'|trans }}
+          </p>
           <p class="qcft-hint" style="text-align:center">{{ 'Sent to'|trans }} <strong id="qcft-code-email"></strong> · <button class="qcft-link" type="button" id="qcft-change-email">{{ 'change'|trans }}</button></p>
         </div>
         <div class="qcft-actions">
@@ -537,32 +570,41 @@
 
   /* ---------------- step 1 & 2: email code ---------------- */
 
-  var codeInputs = Array.prototype.slice.call(document.querySelectorAll('#qcft-code input'));
+  var codeField = document.getElementById('qcft-code');
+  var codeCount = document.getElementById('qcft-code-count');
+  var CODE_LENGTH = 8;
 
-  function readCode() { return codeInputs.map(function (i) { return i.value; }).join(''); }
+  function readCode() { return codeField.value.trim(); }
   function clearCode() {
-    codeInputs.forEach(function (i) { i.value = ''; i.classList.remove('filled'); });
-    if (codeInputs[0]) { codeInputs[0].focus(); }
+    codeField.value = '';
+    syncCode();
+    codeField.focus();
   }
 
-  codeInputs.forEach(function (input, index) {
-    input.addEventListener('input', function () {
-      input.value = input.value.replace(/\D/g, '').slice(0, 1);
-      input.classList.toggle('filled', input.value !== '');
-      if (input.value && index < codeInputs.length - 1) { codeInputs[index + 1].focus(); }
-      if (readCode().length === 6) { verifyCode(); }
-    });
-    input.addEventListener('keydown', function (event) {
-      if (event.key === 'Backspace' && !input.value && index > 0) { codeInputs[index - 1].focus(); }
-    });
-    input.addEventListener('paste', function (event) {
-      event.preventDefault();
-      var digits = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
-      digits.split('').forEach(function (digit, position) {
-        if (codeInputs[position]) { codeInputs[position].value = digit; codeInputs[position].classList.add('filled'); }
-      });
-      if (digits.length === 6) { verifyCode(); }
-    });
+  function syncCode() {
+    var length = readCode().length;
+    codeCount.textContent = String(length);
+    var complete = length === CODE_LENGTH;
+    codeField.classList.toggle('complete', complete);
+    codeCount.parentNode.classList.toggle('complete', complete);
+    document.getElementById('qcft-verify-code').disabled = !complete;
+  }
+
+  // Never uppercase, trim or otherwise "helpfully" rewrite the value: case is
+  // part of the code, and symbols must survive untouched.
+  codeField.addEventListener('input', function () {
+    codeField.value = codeField.value.replace(/\s+/g, '');
+    syncCode();
+  });
+
+  // A pasted code is unambiguous, so submit it straight away. Typed input is
+  // not auto-submitted — an accidental wrong character would burn an attempt.
+  codeField.addEventListener('paste', function (event) {
+    event.preventDefault();
+    var pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\s+/g, '');
+    codeField.value = pasted.slice(0, CODE_LENGTH);
+    syncCode();
+    if (readCode().length === CODE_LENGTH) { verifyCode(); }
   });
 
   var resendTimer = null;
@@ -589,7 +631,7 @@
     busy(button, true);
     call('request_code', { email: email }).then(function (result) {
       busy(button, false);
-      document.getElementById('qcft-code-email').textContent = email;
+      document.getElementById('qcft-code-email').textContent = result.email || email;
       clearCode();
       render('code');
       showOk('{{ 'Code sent. Check your inbox — and your spam folder just in case.'|trans|e('js') }}');
@@ -600,7 +642,7 @@
   function verifyCode() {
     var button = document.getElementById('qcft-verify-code');
     var code = readCode();
-    if (code.length !== 6) { showError('{{ 'Please enter all six digits.'|trans|e('js') }}'); return; }
+    if (code.length !== CODE_LENGTH) { showError('{{ 'Please enter all eight characters of your code.'|trans|e('js') }}'); return; }
     clearAlerts();
     busy(button, true);
     call('verify_code', { email: document.getElementById('qcft-email').value.trim(), code: code })
@@ -662,10 +704,15 @@
     '{{ 'Almost there — opening your service dashboard…'|trans|e('js') }}'
   ];
 
+  var LOADER_STEP_MS = 5600;   // dwell per stage
+  var LOADER_MIN_MS = 9000;    // never flash past the animation on a fast build
+  var LOADER_OUTRO_MS = 2800;  // hold on "ready" before the redirect
+
   function runLoader() {
     var tasks = Array.prototype.slice.call(document.querySelectorAll('#qcft-tasks li'));
     var text = document.getElementById('qcft-loader-text');
     var index = 0;
+    var startedAt = Date.now();
     els.loader.classList.add('show');
     document.body.style.overflow = 'hidden';
 
@@ -683,15 +730,22 @@
     var timer = setInterval(function () {
       if (index >= tasks.length) { clearInterval(timer); return; }
       advance();
-    }, 4200);
+    }, LOADER_STEP_MS);
 
     return {
-      finish: function () {
-        clearInterval(timer);
-        tasks.forEach(function (task) { task.classList.remove('active'); task.classList.add('done'); });
-        els.bar.style.width = '100%';
-        document.getElementById('qcft-loader-title').textContent = '{{ 'Your hosting account is ready'|trans|e('js') }}';
-        text.textContent = '{{ 'Taking you to your service details…'|trans|e('js') }}';
+      // Resolves once the animation has had its minimum run, so provisioning
+      // that finishes in three seconds still gets the full reassuring build-up
+      // instead of a blink.
+      finish: function (done) {
+        var wait = Math.max(0, LOADER_MIN_MS - (Date.now() - startedAt));
+        setTimeout(function () {
+          clearInterval(timer);
+          tasks.forEach(function (task) { task.classList.remove('active'); task.classList.add('done'); });
+          els.bar.style.width = '100%';
+          document.getElementById('qcft-loader-title').textContent = '{{ 'Your hosting account is ready'|trans|e('js') }}';
+          text.textContent = '{{ 'Taking you to your service details…'|trans|e('js') }}';
+          if (done) { done(); }
+        }, wait);
       },
       fail: function () {
         clearInterval(timer);
@@ -708,12 +762,13 @@
     var loader = runLoader();
 
     call('provision', {}).then(function (result) {
-      loader.finish();
-      setTimeout(function () {
-        // Trials are ordinary services — land on the normal details page.
-        var target = (result && result.redirect_url) || root.dataset.orderUrl;
-        try { window.top.location.href = target; } catch (e) { window.location.href = target; }
-      }, 1500);
+      loader.finish(function () {
+        setTimeout(function () {
+          // Trials are ordinary services — land on the normal details page.
+          var target = (result && result.redirect_url) || root.dataset.orderUrl;
+          try { window.top.location.href = target; } catch (e) { window.location.href = target; }
+        }, LOADER_OUTRO_MS);
+      });
     }).catch(function (error) {
       loader.fail();
       busy(button, false);
@@ -731,6 +786,7 @@
   document.getElementById('qcft-change-email').addEventListener('click', function () {
     clearAlerts(); clearCode(); render('email');
   });
+  syncCode();
 
   document.getElementById('qcft-save-whatsapp').addEventListener('click', function () {
     submitStep(this, 'set_whatsapp', { whatsapp: document.getElementById('qcft-whatsapp').value.trim() });
